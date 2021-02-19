@@ -24,7 +24,7 @@ export default {
 	plugins: [
 		babel({
 			exclude: 'node_modules/**',
-			babelHelpers: 'bundled'
+			babelHelpers: 'runtime'
 		}),
 		resolve(),
 		commonjs(),
