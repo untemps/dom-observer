@@ -14,16 +14,16 @@ yarn add @untemps/dom-observer
 
 ## Usage
 
-Import `DomObserver`:
+Import `DOMObserver`:
 
 ```javascript
-import { DomObserver } from '@untemps/dom-observer'
+import { DOMObserver } from '@untemps/dom-observer'
 ```
 
-Create an instance of `DomObserver`:
+Create an instance of `DOMObserver`:
 
 ```javascript
-const observer = new DomObserver()
+const observer = new DOMObserver()
 ```
 
 Call the `wait` async method with the selector of the element you want to target, and an optional timeout value (default: 1000ms) to initiate the observation:
@@ -42,11 +42,11 @@ await observer.unwait()
 ## Example
 
 ```javascript
-import { DomObserver } from '@untemps/dom-observer'
+import { DOMObserver } from '@untemps/dom-observer'
 
 const init = async () => {
     try {
-        const observer = new DomObserver()
+        const observer = new DOMObserver()
         const el = await observer.wait('.content', 500)
         console.log(el.textContent) // Element was found, you get access to its API
     } catch(error) {

@@ -1,4 +1,4 @@
-class DomObserver {
+class DOMObserver {
 	_observer = null
 	_timeout = null
 
@@ -42,4 +42,4 @@ class DomObserver {
 	}
 }
 
-export default DomObserver
+export default DOMObserver

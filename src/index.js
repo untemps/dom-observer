@@ -1,1 +1,1 @@
-export { default as DOMObserver } from './DomObserver'
+export { default as DOMObserver } from './DOMObserver'
