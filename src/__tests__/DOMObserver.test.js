@@ -1,8 +1,8 @@
-import DomObserver from '../DomObserver'
+import DOMObserver from '../DOMObserver'
 
-describe('DomObserver', () => {
+describe('DOMObserver', () => {
 	it('Instantiates the class with no error', () => {
-		expect(() => new DomObserver()).not.toThrow()
+		expect(() => new DOMObserver()).not.toThrow()
 	})
 
 	describe('wait', () => {
@@ -11,7 +11,7 @@ describe('DomObserver', () => {
 		})
 
 		it('Waits for an element immediately found', async () => {
-			const instance = new DomObserver()
+			const instance = new DOMObserver()
 			generateDOM()
 			const el = await instance.wait('#foo')
 			expect(el).toBeDefined()
@@ -20,7 +20,7 @@ describe('DomObserver', () => {
 		it('Waits for an element created afterwards', (done) => {
 			const target = generateDOM()
 
-			const instance = new DomObserver()
+			const instance = new DOMObserver()
 			instance.wait('#bar').then((el) => {
 				expect(el).toBeDefined()
 				done()
@@ -34,7 +34,7 @@ describe('DomObserver', () => {
 		it('Throws if element is not found', (done) => {
 			generateDOM()
 
-			const instance = new DomObserver()
+			const instance = new DOMObserver()
 			instance.wait('#gag').catch((err) => {
 				expect(err.message).toBe(`Error: Element #gag cannot be found`)
 				done()
@@ -44,7 +44,7 @@ describe('DomObserver', () => {
 		it('Throws if timeout is set to 0 and element is not immediately found', (done) => {
 			const target = generateDOM()
 
-			const instance = new DomObserver()
+			const instance = new DOMObserver()
 			instance.wait('#bar', 0).catch((err) => {
 				expect(err.message).toBe(`Error: Element #bar cannot be found`)
 				done()
