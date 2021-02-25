@@ -30,11 +30,12 @@ const addElement = () => {
 	const newEl = getElement(newId)
 
 	const domObserver = new DOMObserver()
-	domObserver.wait(`#${newId}`)
+	domObserver
+		.wait(`#${newId}`)
 		.then((a) => {
 			outputEl.value += `Element ${a.id} created\n`
 		})
-		.catch(err => console.log(err))
+		.catch((err) => console.log(err))
 
 	targetEl.appendChild(newEl)
 }

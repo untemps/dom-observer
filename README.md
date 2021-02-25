@@ -55,3 +55,11 @@ const init = async () => {
 }
 init()
 ```
+
+## Development
+
+A demo can be served for development purpose on `http://localhost:10001/` running:
+
+```
+yarn dev
+```
