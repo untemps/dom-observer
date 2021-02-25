@@ -24,3 +24,7 @@ package-lock.json
 # Jest
 coverage/
 __snapshots__/
+
+# dev
+dev/public/index.css
+dev/public/index.js
