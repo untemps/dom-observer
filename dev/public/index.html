@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <title>dom-observer</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&display=swap">
+    <link href="./index.css" rel="stylesheet">
+    <script src="./index.js" type="module"></script>
+    <script src="../../src/index.js" type="module"></script>
+</head>
+<body>
+    <div id="root">
+        <div class='button-container'>
+            <button id='add-button'>Add element</button>
+        </div>
+        <div id='container' class='item-container' aria-label='Dynamic items container'></div>
+        <div class='output-container'>
+            <label for='output'>
+                Logs:
+                <textarea id='output' rows='30'></textarea>
+            </label>
+        </div>
+    </div>
+</body>
+</html>

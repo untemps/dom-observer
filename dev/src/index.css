@@ -1,0 +1,79 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: Rubik, sans-serif;
+    font-size: 14px;
+}
+
+#root {
+    display: grid;
+    grid-template-columns: 70% 1fr;
+    gap: 40px;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.button-container {
+    grid-row: 1;
+    grid-column: 1;
+}
+
+.button-container>button {
+    font-family: Rubik, sans-serif;
+    font-size: 1em;
+    background: #550055;
+    color: white;
+    border: #111111 solid 1px;
+    border-radius: 5px;
+    padding: 10px 12px;
+}
+
+.output-container {
+    grid-row: 1;
+}
+
+.output-container>label {
+    font-size: 1em;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.output-container>label>textarea {
+    font-family: Rubik, sans-serif;
+    margin-top: 10px;
+    height: 100%;
+}
+
+.item-container {
+    grid-row: 1;
+    grid-column: 1;
+    margin-top: 60px;
+}
+
+.item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    color: #550055;
+    font-weight: 600;
+    border-radius: 5px;
+    background-color: #ffa0e5;
+    margin-bottom: 5px;
+}
+
+.item-button {
+    position: absolute;
+    right: 10px;
+    font-family: Rubik, sans-serif;
+    font-size: 1em;
+    background: #550055;
+    color: white;
+    border: #111111 solid 1px;
+    border-radius: 5px;
+    padding: 5px 10px;
+}
