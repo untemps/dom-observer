@@ -33,7 +33,7 @@ const addElement = () => {
 	domObserver
 		.wait(`#${newId}`)
 		.then((a) => {
-			outputEl.value += `Element ${a.id} created\n`
+			outputEl.value += `Element ${a.id} added\n`
 		})
 		.catch((err) => console.log(err))
 
@@ -41,6 +41,16 @@ const addElement = () => {
 }
 
 const removeElement = (e) => {
+	const oldId = e.currentTarget.parentElement.id
+
+	const domObserver = new DOMObserver()
+	domObserver
+		.wait(`#${oldId}`)
+		.then((a) => {
+			outputEl.value += `Element ${a.id} removed\n`
+		})
+		.catch((err) => console.log(err))
+
 	targetEl.removeChild(e.currentTarget.parentElement)
 }
 

@@ -22,7 +22,7 @@ class DOMObserver {
 
 			this._observer = new MutationObserver((mutations) => {
 				mutations.forEach((mutation) => {
-					const nodes = Array.from(mutation.addedNodes)
+					const nodes = [...Array.from(mutation.addedNodes), ...Array.from(mutation.removedNodes)]
 					for (let node of nodes) {
 						if (!!node.matches && node.matches(selector)) {
 							this.unwait()
