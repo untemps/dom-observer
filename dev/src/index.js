@@ -62,8 +62,8 @@ const removeElement = (e) => {
 
 	domObserver
 		.wait(`#${oldId}`)
-		.then((a) => {
-			log(`Element ${a.id} removed`)
+		.then((element) => {
+			log(`Element ${element.id} removed`)
 		})
 		.catch((err) => console.log(err))
 
