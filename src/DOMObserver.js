@@ -59,7 +59,6 @@ class DOMObserver {
 
 			this._observer = new MutationObserver((mutations) => {
 				mutations.forEach((mutation) => {
-					console.log(options)
 					if (mutation.type === 'attributes') {
 						this.clear()
 						resolve({
