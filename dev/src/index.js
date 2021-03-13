@@ -75,7 +75,7 @@ const modifyElement = (e, attributeName, attributeNewValue) => {
 	const id = targetEl.id
 
 	domObserver
-		.watch(`#${id}`, { attributeName: 'class' }, 20000)
+		.watch(`#${id}`, { attributeNames: ['class'] }, 20000)
 		.then(({ target, attributeName, oldValue }) => {
 			const newValue = target.getAttribute(attributeName)
 			log(`Element ${target.id} modified`, {attributeName, oldValue, newValue})

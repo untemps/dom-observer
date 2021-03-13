@@ -3,6 +3,8 @@ class DOMObserver {
 	_timeout = null
 
 	async wait(selector, timeout = 1000) {
+		this.clear()
+
 		return new Promise((resolve, reject) => {
 			const el = document.querySelector(selector)
 
@@ -13,7 +15,7 @@ class DOMObserver {
 			const error = new Error(`Element ${selector} cannot be found`)
 			if (timeout > 0) {
 				this._timeout = setTimeout(() => {
-					this.unwait()
+					this.clear()
 					reject(error)
 				}, timeout)
 			} else {
@@ -26,7 +28,7 @@ class DOMObserver {
 						const nodes = [...Array.from(mutation.addedNodes), ...Array.from(mutation.removedNodes)]
 						for (let node of nodes) {
 							if (!!node.matches && node.matches(selector)) {
-								this.unwait()
+								this.clear()
 								resolve(node)
 							}
 						}
@@ -42,24 +44,24 @@ class DOMObserver {
 	}
 
 	async watch(selector, options = {}, timeout = 0) {
+		this.clear()
+
 		return new Promise((resolve, reject) => {
 			const el = document.querySelector(selector)
 
 			const error = new Error(`Element ${selector} has not been modified before timeout`)
 			if (timeout > 0) {
 				this._timeout = setTimeout(() => {
-					this.unwait()
+					this.clear()
 					reject(error)
 				}, timeout)
 			}
 
 			this._observer = new MutationObserver((mutations) => {
 				mutations.forEach((mutation) => {
-					if (
-						(mutation.type === 'attributes' && !options?.attributeName) ||
-						options?.attributeName === mutation.attributeName
-					) {
-						this.unwait()
+					console.log(options)
+					if (mutation.type === 'attributes') {
+						this.clear()
 						resolve({
 							target: mutation.target,
 							attributeName: mutation.attributeName,
@@ -72,13 +74,14 @@ class DOMObserver {
 			this._observer.observe(el, {
 				attributes: true,
 				attributeOldValue: true,
+				attributeFilter: options?.attributeNames
 			})
 		})
 	}
 
-	unwait() {
-		!!this._observer && this._observer.disconnect()
-		!!this._timeout && clearTimeout(this._timeout)
+	clear() {
+		this._observer?.disconnect()
+		clearTimeout(this._timeout)
 	}
 }
 
