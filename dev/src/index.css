@@ -66,9 +66,46 @@ html, body {
     margin-bottom: 5px;
 }
 
-.item-button {
+.item--modified {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    color: #1e5500;
+    font-weight: 600;
+    border-radius: 5px;
+    background-color: #d0ffa0;
+    margin-bottom: 5px;
+}
+
+.item_delete-button {
     position: absolute;
     right: 10px;
+    font-family: Rubik, sans-serif;
+    font-size: 1em;
+    background: #550055;
+    color: white;
+    border: #111111 solid 1px;
+    border-radius: 5px;
+    padding: 5px 10px;
+}
+
+.item_modify-button {
+    position: absolute;
+    right: 50px;
+    font-family: Rubik, sans-serif;
+    font-size: 1em;
+    background: #550055;
+    color: white;
+    border: #111111 solid 1px;
+    border-radius: 5px;
+    padding: 5px 10px;
+}
+
+.item_modify2-button {
+    position: absolute;
+    right: 160px;
     font-family: Rubik, sans-serif;
     font-size: 1em;
     background: #550055;
