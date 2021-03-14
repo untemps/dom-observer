@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/untemps/dom-observer/compare/v1.1.0...v1.2.0) (2021-03-14)
+
+
+### Features
+
+* Add element modification support ([#11](https://github.com/untemps/dom-observer/issues/11)) ([e06e05a](https://github.com/untemps/dom-observer/commit/e06e05a01922f64666ae59d33d02ec6d1943e9ab))
+
 # [1.1.0](https://github.com/untemps/dom-observer/compare/v1.0.1...v1.1.0) (2021-02-27)
 
 
