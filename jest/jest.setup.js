@@ -7,6 +7,7 @@ global.generateDOM = (text = '') => {
 	const containerElement = document.createElement('div')
 	const contentElement = document.createElement('span')
 	contentElement.setAttribute('id', 'foo')
+	contentElement.setAttribute('class', 'foo')
 	containerElement.appendChild(contentElement)
 	const textNode = document.createTextNode(text)
 	contentElement.appendChild(textNode)
