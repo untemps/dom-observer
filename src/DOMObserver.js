@@ -49,7 +49,7 @@ class DOMObserver {
 		return new Promise((resolve, reject) => {
 			const el = document.querySelector(selector)
 
-			const error = new Error(`Element ${selector} has not been modified before timeout`)
+			const error = new Error(`Element ${selector} has not been modified before timeout expired`)
 			if (timeout > 0) {
 				this._timeout = setTimeout(() => {
 					this.clear()

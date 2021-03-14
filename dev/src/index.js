@@ -49,8 +49,8 @@ const addElement = () => {
 
 	domObserver
 		.wait(`#${newId}`)
-		.then((a) => {
-			log(`Element ${a.id} added`)
+		.then((node) => {
+			log(`Element ${node.id} added`)
 		})
 		.catch((err) => console.log(err))
 
@@ -62,8 +62,8 @@ const removeElement = (e) => {
 
 	domObserver
 		.wait(`#${oldId}`)
-		.then((element) => {
-			log(`Element ${element.id} removed`)
+		.then((node) => {
+			log(`Element ${node.id} removed`)
 		})
 		.catch((err) => console.log(err))
 

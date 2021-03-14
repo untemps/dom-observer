@@ -53,7 +53,7 @@ Call the `watch` async method with the selector of the element you want to targe
 
 If the timeout value is set to 0, observation will keep running until a change is made or the `clear` method is explicitly called.
 
-Once a modification happens, the promise is resolved with an object containing the following properties:
+Once a modification occurs, the promise is resolved with an object containing the following properties:
 
 | Props           | Type   | Description                                       |
 | --------------- | ------ | ------------------------------------------------- |
