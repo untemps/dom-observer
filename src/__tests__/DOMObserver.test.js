@@ -10,106 +10,112 @@ describe('DOMObserver', () => {
 	})
 
 	describe('wait', () => {
-		it('Waits for an element already added', async () => {
+		it('Observes an element already added', () => {
+			const el = createElement('foo')
 			const instance = new DOMObserver()
-			generateDOM()
-			const el = await instance.wait('#foo')
-			expect(el).toBeDefined()
+			const onEvent = jest.fn()
+			instance.wait('#foo', onEvent)
+			expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.ADD)
 		})
 
-		it('Waits for an element to be added', (done) => {
-			const target = generateDOM()
-
+		it('Observes an element to be added', async () => {
 			const instance = new DOMObserver()
-			instance.wait('#bar').then((node) => {
-				expect(node).toBeDefined()
-				expect(node.id).toBe('bar')
-				done()
-			})
-
-			const additionalElement = document.createElement('span')
-			additionalElement.setAttribute('id', 'bar')
-			target.appendChild(additionalElement)
+			const onEvent = jest.fn()
+			instance.wait('#foo', onEvent)
+			const el = createElement('foo')
+			await sleep()
+			expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.ADD)
 		})
 
-		it('Waits for an element to be removed', (done) => {
-			const target = generateDOM()
-			const additionalElement = document.createElement('span')
-			additionalElement.setAttribute('id', 'bar')
-			target.appendChild(additionalElement)
-
+		it('Ignores an element to be added', async () => {
 			const instance = new DOMObserver()
-			instance.wait('#bar').then((node) => {
-				expect(node).toBeDefined()
-				expect(node.id).toBe('bar')
-				done()
-			})
-
-			additionalElement.remove()
+			const onEvent = jest.fn()
+			instance.wait('#foo', onEvent, { events: [DOMObserver.CHANGE] })
+			const el = createElement('foo')
+			await sleep()
+			expect(onEvent).not.toHaveBeenCalled()
 		})
 
-		it('Throws if element is not found', (done) => {
-			generateDOM()
-
+		it('Ignores an element to be added that is not observed', async () => {
 			const instance = new DOMObserver()
-			instance.wait('#gag').catch((err) => {
-				expect(err.message).toBe(`Element #gag cannot be found`)
-				done()
+			const onEvent = jest.fn()
+			instance.wait('#bar', onEvent)
+			const el = createElement('foo')
+			await sleep()
+			expect(onEvent).not.toHaveBeenCalled()
+		})
+
+		it('Observes an element to be removed', async () => {
+			const instance = new DOMObserver()
+			const onEvent = jest.fn()
+			instance.wait('#foo', onEvent)
+			const el = createElement('foo')
+			await sleep()
+			deleteElement('#foo')
+			await sleep()
+			expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.REMOVE)
+		})
+
+		it('Ignores an element to be removed', async () => {
+			const instance = new DOMObserver()
+			const onEvent = jest.fn()
+			instance.wait('#foo', onEvent, { events: [DOMObserver.CHANGE] })
+			const el = createElement('foo')
+			await sleep()
+			deleteElement('#foo')
+			await sleep()
+			expect(onEvent).not.toHaveBeenCalled()
+		})
+
+		it('Observes an element to be modified', async () => {
+			const instance = new DOMObserver()
+			const onEvent = jest.fn()
+			instance.wait('#foo', onEvent)
+			const el = createElement('foo', 'bar')
+			modifyElement('#foo', 'class', 'gag')
+			await sleep()
+			expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.CHANGE, { attributeName: 'class', oldValue: 'bar' })
+		})
+
+		it('Observes an element to be modified at a specific attribute', async () => {
+			const instance = new DOMObserver()
+			const onEvent = jest.fn()
+			instance.wait('#foo', onEvent, { events: [DOMObserver.CHANGE], attributeFilter: ['aria-label'] })
+			const el = createElement('foo', 'bar', 'gag')
+			modifyElement('#foo', 'class', 'gag')
+			await sleep()
+			expect(onEvent).not.toHaveBeenCalled()
+			modifyElement('#foo', 'aria-label', 'bar')
+			await sleep()
+			expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.CHANGE, {
+				attributeName: 'aria-label',
+				oldValue: 'gag',
 			})
 		})
 
-		it('Throws if timeout is set to 0 and element is not immediately found', (done) => {
-			const target = generateDOM()
-
+		it('Ignores an element to be modified', async () => {
 			const instance = new DOMObserver()
-			instance.wait('#bar', 0).catch((err) => {
-				expect(err.message).toBe(`Element #bar cannot be found`)
-				done()
-			})
-
-			const additionalElement = document.createElement('span')
-			additionalElement.setAttribute('id', 'bar')
-			target.appendChild(additionalElement)
-		})
-	})
-
-	describe('watch', () => {
-		it('Watches for an element attribute to change', (done) => {
-			generateDOM()
-
-			const instance = new DOMObserver()
-			instance.watch('#foo').then(({ target, attributeName, oldValue }) => {
-				expect(target).toBe(el)
-				expect(attributeName).toBe('class')
-				expect(oldValue).toBe('foo')
-				done()
-			})
-
-			const el = document.querySelector('.foo')
-			el.setAttribute('class', 'bar')
+			const onEvent = jest.fn()
+			instance.wait('#foo', onEvent, { events: [DOMObserver.REMOVE] })
+			const el = createElement('foo', 'bar')
+			modifyElement('#foo', 'class', 'gag')
+			await sleep()
+			expect(onEvent).not.toHaveBeenCalled()
 		})
 
-		it('Watches for an untracked element attribute to change', (done) => {
-			generateDOM()
-
+		it('Triggers onError when an element is not found after timeout is elapsed', async () => {
 			const instance = new DOMObserver()
-			instance.watch('#foo', { attributeNames: ['id'] }, 1000).catch((err) => {
-				expect(err.message).toBe(`Element #foo has not been modified before timeout expired`)
-				done()
-			})
-
-			const el = document.querySelector('.foo')
-			el.setAttribute('class', 'bar')
+			const onEvent = jest.fn()
+			const onError = jest.fn()
+			instance.wait('#foo', onEvent, { onError, timeout: 50 })
+			await sleep()
+			expect(onError).toHaveBeenCalled()
 		})
 
-		it('Throws if no modification occurs before timeout expiration', (done) => {
-			generateDOM()
-
+		it('Throws when events array is empty', async () => {
 			const instance = new DOMObserver()
-			instance.watch('#foo', {}, 1000).catch((err) => {
-				expect(err.message).toBe(`Element #foo has not been modified before timeout expired`)
-				done()
-			})
+			const onEvent = jest.fn()
+			expect(() => instance.wait('#foo', onEvent, { events: [] })).toThrow()
 		})
 	})
 })

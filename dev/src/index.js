@@ -1,7 +1,7 @@
 import { DOMObserver } from '../../src'
 import './index.css'
 
-const domObserver = new DOMObserver()
+const observer = new DOMObserver()
 
 let count = 0
 const targetEl = document.getElementById('container')
@@ -21,21 +21,21 @@ const createElement = (id) => {
 
 	const deleteBtn = document.createElement('button')
 	deleteBtn.setAttribute('class', 'item_delete-button')
-	deleteBtn.onclick = removeElement
+	deleteBtn.onclick = () => removeElement(addedRect)
 	const deleteLab = document.createTextNode('x')
 	deleteBtn.appendChild(deleteLab)
 	addedRect.appendChild(deleteBtn)
 
 	const modifyBtn = document.createElement('button')
 	modifyBtn.setAttribute('class', 'item_modify-button')
-	modifyBtn.onclick = (e) => modifyElement(e, 'class', 'item--modified')
+	modifyBtn.onclick = (e) => modifyElement(addedRect, 'class', 'item--modified')
 	const modifyLab = document.createTextNode('Modify class')
 	modifyBtn.appendChild(modifyLab)
 	addedRect.appendChild(modifyBtn)
 
 	const modify2Btn = document.createElement('button')
 	modify2Btn.setAttribute('class', 'item_modify2-button')
-	modify2Btn.onclick = (e) => modifyElement(e, 'aria-label', 'Modified item')
+	modify2Btn.onclick = (e) => modifyElement(addedRect, 'aria-label', 'Modified item')
 	const modify2Lab = document.createTextNode('Modify aria-label')
 	modify2Btn.appendChild(modify2Lab)
 	addedRect.appendChild(modify2Btn)
@@ -43,51 +43,24 @@ const createElement = (id) => {
 	return addedRect
 }
 
-const addElement = () => {
-	const newId = getItemId(count++)
-	const newEl = createElement(newId)
-
-	domObserver
-		.wait(`#${newId}`)
-		.then((node) => {
-			log(`Element ${node.id} added`)
-		})
-		.catch((err) => console.log(err))
-
-	targetEl.appendChild(newEl)
+const addElement = (el) => {
+	if (!el) {
+		el = createElement(getItemId(count++))
+	}
+	targetEl.appendChild(el)
 }
 
-const removeElement = (e) => {
-	const oldId = e.currentTarget.parentElement.id
-
-	domObserver
-		.wait(`#${oldId}`)
-		.then((node) => {
-			log(`Element ${node.id} removed`)
-		})
-		.catch((err) => console.log(err))
-
-	targetEl.removeChild(e.currentTarget.parentElement)
+const removeElement = (el) => {
+	el.parentNode.removeChild(el)
 }
 
-const modifyElement = (e, attributeName, attributeNewValue) => {
-	const targetEl = e.currentTarget.parentElement
-	const id = targetEl.id
-
-	domObserver
-		.watch(`#${id}`, { attributeNames: ['class'] }, 20000)
-		.then(({ target, attributeName, oldValue }) => {
-			const newValue = target.getAttribute(attributeName)
-			log(`Element ${target.id} modified`, {attributeName, oldValue, newValue})
-		})
-		.catch((err) => console.log(err))
-
-	targetEl.setAttribute(attributeName, attributeNewValue)
+const modifyElement = (el, attributeName, attributeNewValue) => {
+	el.setAttribute(attributeName, attributeNewValue)
 }
 
 const log = (message, values = null) => {
 	outputEl.value += `${message}`
-	if(!!values) {
+	if (!!values) {
 		outputEl.value += `\n\t{`
 		for (let z in values) {
 			outputEl.value += `\n\t\t${z}: '${values[z]}'`
@@ -98,4 +71,29 @@ const log = (message, values = null) => {
 }
 
 const btn = document.getElementById('add-button')
-btn.onclick = addElement
+btn.onclick = () => {
+	const el = document.querySelector('#new-element')
+	if (!!el) {
+		removeElement(el)
+	} else {
+		addElement(createElement('new-element'))
+	}
+}
+
+const onEvent = (node, event, { attributeName } = {}) => {
+	switch (event) {
+		case DOMObserver.ADD: {
+			log(`Element ${node.id} added`)
+			break
+		}
+		case DOMObserver.REMOVE: {
+			log(`Element ${node.id} removed`)
+			break
+		}
+		default: {
+			log(`Attribute ${attributeName} for element ${node.id} changed`)
+		}
+	}
+}
+
+observer.wait(`#new-element`, onEvent, { events: [DOMObserver.CHANGE], attributeFilter: ['aria-label'] })
