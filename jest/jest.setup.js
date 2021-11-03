@@ -3,7 +3,7 @@ import '@testing-library/jest-dom/extend-expect'
 
 expect.extend({ toBeInTheDocument, toHaveAttribute, toHaveStyle })
 
-global.createElement = (id = 'foo', className = 'bar', ariaLabel = 'gag') => {
+global.createAndAddElement = (id = 'foo', className = 'bar', ariaLabel = 'gag') => {
 	const el = document.createElement('div')
 	el.setAttribute('id', id)
 	el.setAttribute('class', className)

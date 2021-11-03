@@ -33,13 +33,13 @@ class DOMObserver {
 						...(events.includes(DOMObserver.REMOVE) ? Array.from(removedNodes) : []),
 					]
 					for (let node of nodes) {
-						if (node?.matches(selector)) {
+						if (node.matches?.(selector)) {
 							onEvent(node, Array.from(addedNodes).includes(node) ? DOMObserver.ADD : DOMObserver.REMOVE)
 						}
 					}
 				}
 				if (type === 'attributes' && events.includes(DOMObserver.CHANGE)) {
-					if (target === document.querySelector(selector)) {
+					if (target.matches?.(selector)) {
 						onEvent(target, DOMObserver.CHANGE, {
 							attributeName,
 							oldValue,
