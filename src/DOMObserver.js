@@ -1,80 +1,60 @@
 class DOMObserver {
-	_observer = null
-	_timeout = null
+	static ADD = 'DOMObserver_add'
+	static REMOVE = 'DOMObserver_remove'
+	static CHANGE = 'DOMObserver_change'
+	static EVENTS = [DOMObserver.ADD, DOMObserver.REMOVE, DOMObserver.CHANGE]
 
-	async wait(selector, timeout = 1000) {
+	_observer = null
+
+	wait(
+		selector,
+		onEvent,
+		{ events = DOMObserver.EVENTS, timeout = 0, attributeFilter = undefined, onError = undefined } = {}
+	) {
 		this.clear()
 
-		return new Promise((resolve, reject) => {
-			const el = document.querySelector(selector)
+		const el = document.querySelector(selector)
+		if (!!el) {
+			onEvent(el, DOMObserver.ADD)
+		}
 
-			if (!!el) {
-				resolve(el)
-			}
+		if (timeout > 0) {
+			this._timeout = setTimeout(() => {
+				this.clear()
+				onError?.(new Error(`[TIMEOUT]: Element ${selector} cannot be found after ${timeout}ms`))
+			}, timeout)
+		}
 
-			const error = new Error(`Element ${selector} cannot be found`)
-			if (timeout > 0) {
-				this._timeout = setTimeout(() => {
-					this.clear()
-					reject(error)
-				}, timeout)
-			} else {
-				reject(error)
-			}
-
-			this._observer = new MutationObserver((mutations) => {
-				mutations.forEach((mutation) => {
-					if (mutation.type === 'childList') {
-						const nodes = [...Array.from(mutation.addedNodes), ...Array.from(mutation.removedNodes)]
-						for (let node of nodes) {
-							if (!!node.matches && node.matches(selector)) {
-								this.clear()
-								resolve(node)
-							}
+		this._observer = new MutationObserver((mutations) => {
+			mutations.forEach(({ type, target, addedNodes, removedNodes, attributeName, oldValue }) => {
+				if (type === 'childList' && (events.includes(DOMObserver.ADD) || events.includes(DOMObserver.REMOVE))) {
+					const nodes = [
+						...(events.includes(DOMObserver.ADD) ? Array.from(addedNodes) : []),
+						...(events.includes(DOMObserver.REMOVE) ? Array.from(removedNodes) : []),
+					]
+					for (let node of nodes) {
+						if (node?.matches(selector)) {
+							onEvent(node, Array.from(addedNodes).includes(node) ? DOMObserver.ADD : DOMObserver.REMOVE)
 						}
 					}
-				})
-			})
-
-			this._observer.observe(document.documentElement, {
-				childList: true,
-				subtree: true,
-			})
-		})
-	}
-
-	async watch(selector, options = {}, timeout = 0) {
-		this.clear()
-
-		return new Promise((resolve, reject) => {
-			const el = document.querySelector(selector)
-
-			const error = new Error(`Element ${selector} has not been modified before timeout expired`)
-			if (timeout > 0) {
-				this._timeout = setTimeout(() => {
-					this.clear()
-					reject(error)
-				}, timeout)
-			}
-
-			this._observer = new MutationObserver((mutations) => {
-				mutations.forEach((mutation) => {
-					if (mutation.type === 'attributes') {
-						this.clear()
-						resolve({
-							target: mutation.target,
-							attributeName: mutation.attributeName,
-							oldValue: mutation.oldValue,
+				}
+				if (type === 'attributes' && events.includes(DOMObserver.CHANGE)) {
+					if (target === document.querySelector(selector)) {
+						onEvent(target, DOMObserver.CHANGE, {
+							attributeName,
+							oldValue,
 						})
 					}
-				})
+				}
 			})
+		})
 
-			this._observer.observe(el, {
-				attributes: true,
-				attributeOldValue: true,
-				attributeFilter: options?.attributeNames
-			})
+		this._observer.observe(document.documentElement, {
+			subtree: true,
+			childList: events.includes(DOMObserver.ADD) || events.includes(DOMObserver.REMOVE),
+			attributes: events.includes(DOMObserver.CHANGE),
+			attributeOldValue: events.includes(DOMObserver.CHANGE),
+			attributeFilter,
 		})
 	}
 
