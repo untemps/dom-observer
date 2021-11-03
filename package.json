@@ -1,9 +1,14 @@
 {
 	"name": "@untemps/dom-observer",
-	"version": "1.2.0",
+	"version": "2.0.0-beta.1",
 	"description": "Class to observe DOM mutations",
 	"repository": "git@github.com:untemps/dom-observer.git",
-	"keywords": ["dom", "mutations-observer", "class", "javascript"],
+	"keywords": [
+		"dom",
+		"mutations-observer",
+		"class",
+		"javascript"
+	],
 	"author": "Vincent Le Badezet <v.lebadezet@untemps.net>",
 	"license": "MIT",
 	"private": false,
@@ -44,7 +49,9 @@
 	"jest": {
 		"coverageDirectory": "./coverage/",
 		"collectCoverage": true,
-		"setupFilesAfterEnv": ["<rootDir>/jest/jest.setup.js"],
+		"setupFilesAfterEnv": [
+			"<rootDir>/jest/jest.setup.js"
+		],
 		"restoreMocks": true
 	},
 	"release": {

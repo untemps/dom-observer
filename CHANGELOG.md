@@ -1,3 +1,15 @@
+# [2.0.0-beta.1](https://github.com/untemps/dom-observer/compare/v1.2.0...v2.0.0-beta.1) (2021-11-03)
+
+
+### Code Refactoring
+
+* Refactor wait method in-depth and merge into watch method ([7213938](https://github.com/untemps/dom-observer/commit/72139380db9fcec0f5d622c59146db3d112d6795))
+
+
+### BREAKING CHANGES
+
+* The signature of the wait method has changed and the watch method has been removed
+
 # [1.2.0](https://github.com/untemps/dom-observer/compare/v1.1.0...v1.2.0) (2021-03-14)
 
 
