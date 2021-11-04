@@ -1,3 +1,10 @@
+# [2.0.0-beta.2](https://github.com/untemps/dom-observer/compare/v2.0.0-beta.1...v2.0.0-beta.2) (2021-11-04)
+
+
+### Bug Fixes
+
+* Change node with selector matching to be more consistent and fix issue with matches is not a function ([3dceec7](https://github.com/untemps/dom-observer/commit/3dceec73fafe13dc502a36ad94240ee743a4dbb0))
+
 # [2.0.0-beta.1](https://github.com/untemps/dom-observer/compare/v1.2.0...v2.0.0-beta.1) (2021-11-03)
 
 
