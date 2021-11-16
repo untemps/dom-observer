@@ -1,3 +1,10 @@
+# [2.0.0-beta.3](https://github.com/untemps/dom-observer/compare/v2.0.0-beta.2...v2.0.0-beta.3) (2021-11-16)
+
+
+### Features
+
+* Allow to trigger observation event with promise resolution ([4e22343](https://github.com/untemps/dom-observer/commit/4e22343d2a90f23c8d362de2d5ea5a4efb3e1883))
+
 # [2.0.0-beta.2](https://github.com/untemps/dom-observer/compare/v2.0.0-beta.1...v2.0.0-beta.2) (2021-11-04)
 
 
