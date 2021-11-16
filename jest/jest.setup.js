@@ -3,7 +3,7 @@ import '@testing-library/jest-dom/extend-expect'
 
 expect.extend({ toBeInTheDocument, toHaveAttribute, toHaveStyle })
 
-global.createAndAddElement = (id = 'foo', className = 'bar', ariaLabel = 'gag') => {
+global._createElement = (id = 'foo', className = 'bar', ariaLabel = 'gag') => {
 	const el = document.createElement('div')
 	el.setAttribute('id', id)
 	el.setAttribute('class', className)
@@ -12,20 +12,20 @@ global.createAndAddElement = (id = 'foo', className = 'bar', ariaLabel = 'gag') 
 	return el
 }
 
-global.deleteElement = (selector) => {
+global._removeElement = (selector) => {
 	const el = document.querySelector(selector)
 	if (!!el) {
 		el.parentNode.removeChild(el)
 	}
 }
 
-global.modifyElement = (selector, attributeName, attributeValue) => {
+global._modifyElement = (selector, attributeName, attributeValue) => {
 	const el = document.querySelector(selector)
 	if (!!el) {
 		el.setAttribute(attributeName, attributeValue)
 	}
 }
 
-global.sleep = (ms = 100) => {
+global._sleep = (ms = 100) => {
 	return new Promise((resolve) => setTimeout(resolve, ms))
 }
