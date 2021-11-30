@@ -1,6 +1,6 @@
 {
 	"name": "@untemps/dom-observer",
-	"version": "2.0.0-beta.3",
+	"version": "2.0.0-beta.4",
 	"description": "Class to observe DOM mutations",
 	"repository": "git@github.com:untemps/dom-observer.git",
 	"keywords": [

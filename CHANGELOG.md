@@ -1,3 +1,10 @@
+# [2.0.0-beta.4](https://github.com/untemps/dom-observer/compare/v2.0.0-beta.3...v2.0.0-beta.4) (2021-11-30)
+
+
+### Features
+
+* Allow to target a DOM element directly ([2b9c5b5](https://github.com/untemps/dom-observer/commit/2b9c5b5c1af74c96266d5779b4915e9c222377a4))
+
 # [2.0.0-beta.3](https://github.com/untemps/dom-observer/compare/v2.0.0-beta.2...v2.0.0-beta.3) (2021-11-16)
 
 
