@@ -96,4 +96,4 @@ const onEvent = (node, event, { attributeName } = {}) => {
 	}
 }
 
-observer.wait(`#new-element`, onEvent, { events: [DOMObserver.CHANGE], attributeFilter: ['aria-label'] })
+observer.wait(`#new-element`, onEvent)

@@ -84,7 +84,7 @@
 	},
 	"scripts": {
 		"dev": "cd dev && yarn && yarn start",
-		"test": "jest -u --watch",
+		"test": "jest -u --watch --coverage",
 		"test:ci": "jest -u -b --ci --coverage",
 		"build": " rm -rf dist && yarn build:cjs && yarn build:es && yarn build:umd",
 		"build:cjs": "cross-env NODE_ENV=production BABEL_ENV=cjs rollup -c",

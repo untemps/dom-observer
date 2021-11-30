@@ -7,14 +7,14 @@ class DOMObserver {
 	_observer = null
 
 	wait(
-		selector,
+		target,
 		onEvent = null,
 		{ events = DOMObserver.EVENTS, timeout = 0, attributeFilter = undefined, onError = undefined } = {}
 	) {
 		this.clear()
 
 		return new Promise((resolve, reject) => {
-			const el = document.querySelector(selector)
+			const el = target instanceof Element ? target : document.querySelector(target)
 			if (!!el && events.includes(DOMObserver.ADD)) {
 				if (onEvent) {
 					onEvent(el, DOMObserver.ADD)
@@ -26,7 +26,7 @@ class DOMObserver {
 			if (timeout > 0) {
 				this._timeout = setTimeout(() => {
 					this.clear()
-					const error = new Error(`[TIMEOUT]: Element ${selector} cannot be found after ${timeout}ms`)
+					const error = new Error(`[TIMEOUT]: Element ${target} cannot be found after ${timeout}ms`)
 					if (onEvent) {
 						onError?.(error)
 					} else {
@@ -36,7 +36,7 @@ class DOMObserver {
 			}
 
 			this._observer = new MutationObserver((mutations) => {
-				mutations.forEach(({ type, target, addedNodes, removedNodes, attributeName, oldValue }) => {
+				mutations.forEach(({ type, target: targetNode, addedNodes, removedNodes, attributeName, oldValue }) => {
 					if (
 						type === 'childList' &&
 						(events.includes(DOMObserver.ADD) || events.includes(DOMObserver.REMOVE))
@@ -46,7 +46,7 @@ class DOMObserver {
 							...(events.includes(DOMObserver.REMOVE) ? Array.from(removedNodes) : []),
 						]
 						for (let node of nodes) {
-							if (node.matches?.(selector)) {
+							if (node === target || node.matches?.(target)) {
 								if (onEvent) {
 									onEvent(
 										node,
@@ -64,15 +64,15 @@ class DOMObserver {
 						}
 					}
 					if (type === 'attributes' && events.includes(DOMObserver.CHANGE)) {
-						if (target.matches?.(selector)) {
+						if (targetNode === target || targetNode.matches?.(target)) {
 							if (onEvent) {
-								onEvent(target, DOMObserver.CHANGE, {
+								onEvent(targetNode, DOMObserver.CHANGE, {
 									attributeName,
 									oldValue,
 								})
 							} else {
 								resolve({
-									node: target,
+									node: targetNode,
 									event: DOMObserver.CHANGE,
 									options: {
 										attributeName,
