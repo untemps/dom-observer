@@ -2,6 +2,9 @@
 
 Class to observe DOM mutations of a specific element in one-shot or continuous mode.
 
+The class is a wrapper around the MutationObserver API to target an element in particular.  
+That means you can observe an element to be added to the DOM and access to its properties, an attribute from that element to be changed and get the old and the new values, the element to be removed from the DOM and destroy all its dependencies.
+
 ![npm](https://img.shields.io/npm/v/@untemps/dom-observer?style=for-the-badge)
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/untemps/dom-observer/deploy?style=for-the-badge)
 ![Codecov](https://img.shields.io/codecov/c/github/untemps/dom-observer?style=for-the-badge)
@@ -36,7 +39,7 @@ Two observation modes are available :
 To switch from one mode to another, you just have to pass a callback as second parameter to turn continuous mode on or leave it null to get a promise.
 
 ##### Continuous mode
-Call the `wait` method with the selector of the element you want to target, a callback function and an optional object to initiate the observation.
+Call the `wait` method with the element or the selector of the element you want to target, a callback function and an optional object to initiate the observation.
 
 Once the element is added to, removed from or changed in the DOM, the callback function is triggered with various number of arguments depending on the observed event.
 
@@ -59,7 +62,7 @@ observer.wait('#foo', onEvent, {events: [DOMObserver.ADD, DOMObserver.REMOVE]})
 
 ##### One-shot mode
 
-Call the `wait` method with the selector of the element you want to target, null as second parameter and an optional object to initiate the observation.
+Call the `wait` method with the element or the selector of the element you want to target, null as second parameter and an optional object to initiate the observation.
 
 Once the element is added to, removed from or changed in the DOM, the promise is resolved with various number of arguments depending on the observed event.
 
@@ -84,7 +87,7 @@ switch (event) {
 
 | Props                | Type                 | Description                                                                                                                                                                                                  |
 | -------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `selector`           | String               | Selector of the element to observe. See [querySelector spec](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector)                                                                        |
+| `target`             | Element or String    | DOM element or selector of the DOM element to observe. See [querySelector spec](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector)                                                     |
 | `onEvent`            | Function or `null`   | Callback triggered when an event occurred with the observed element (depending on the events listed in `events` option. Pass `null` to activate one-shot mode and retrieve a promise from the method         |
 | `options        `    | Object               | Options object:                                                                                                                                                                                              |
 | - `events`           | Array                | List of events to observe (All events are observed by default)                                                                                                                                               |
