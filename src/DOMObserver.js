@@ -1,3 +1,5 @@
+import isString from './utils/isString'
+
 class DOMObserver {
 	static ADD = 'DOMObserver_add'
 	static REMOVE = 'DOMObserver_remove'
@@ -14,7 +16,7 @@ class DOMObserver {
 		this.clear()
 
 		return new Promise((resolve, reject) => {
-			const el = target instanceof Element ? target : document.querySelector(target)
+			const el = isString(target) ? document.querySelector(target) : target
 			if (!!el && events.includes(DOMObserver.ADD)) {
 				if (onEvent) {
 					onEvent(el, DOMObserver.ADD)
@@ -46,7 +48,7 @@ class DOMObserver {
 							...(events.includes(DOMObserver.REMOVE) ? Array.from(removedNodes) : []),
 						]
 						for (let node of nodes) {
-							if (node === target || node.matches?.(target)) {
+							if (node === target || (isString(target) && node.matches?.(target))) {
 								if (onEvent) {
 									onEvent(
 										node,
@@ -64,7 +66,7 @@ class DOMObserver {
 						}
 					}
 					if (type === 'attributes' && events.includes(DOMObserver.CHANGE)) {
-						if (targetNode === target || targetNode.matches?.(target)) {
+						if (targetNode === target || (isString(target) && targetNode.matches?.(target))) {
 							if (onEvent) {
 								onEvent(targetNode, DOMObserver.CHANGE, {
 									attributeName,
