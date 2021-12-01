@@ -169,5 +169,39 @@ describe('DOMObserver', () => {
 				})
 			})
 		})
+
+		describe('The target can be an DOM element', () => {
+			beforeEach(() => {
+				onEvent = jest.fn()
+			})
+
+			describe('Element is already created and mounted in the DOM', () => {
+				beforeEach(() => {
+					el = _createElement('foo')
+				})
+
+				it('Observes an element to be added', () => {
+					instance.wait(el, onEvent)
+					expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.ADD)
+				})
+
+				it('Observes an element to be removed', async () => {
+					instance.wait(el, onEvent)
+					_removeElement('#foo')
+					await _sleep()
+					expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.REMOVE)
+				})
+
+				it('Observes an element to be modified', async () => {
+					instance.wait(el, onEvent)
+					_modifyElement('#foo', 'class', 'gag')
+					await _sleep()
+					expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.CHANGE, {
+						attributeName: 'class',
+						oldValue: 'bar',
+					})
+				})
+			})
+		})
 	})
 })
