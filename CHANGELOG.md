@@ -1,3 +1,10 @@
+# [2.0.0-beta.6](https://github.com/untemps/dom-observer/compare/v2.0.0-beta.5...v2.0.0-beta.6) (2021-12-02)
+
+
+### Bug Fixes
+
+* Fix console error when target is a DOM element - new attempt ([5e0eb6c](https://github.com/untemps/dom-observer/commit/5e0eb6c650d8c3f17ae11909c6d062a82795c062))
+
 # [2.0.0-beta.5](https://github.com/untemps/dom-observer/compare/v2.0.0-beta.4...v2.0.0-beta.5) (2021-12-01)
 
 
