@@ -1,9 +1,14 @@
 {
 	"name": "@untemps/dom-observer",
-	"version": "2.0.0-beta.5",
+	"version": "2.0.0-beta.6",
 	"description": "Class to observe DOM mutations",
 	"repository": "git@github.com:untemps/dom-observer.git",
-	"keywords": ["dom", "mutations-observer", "class", "javascript"],
+	"keywords": [
+		"dom",
+		"mutations-observer",
+		"class",
+		"javascript"
+	],
 	"author": "Vincent Le Badezet <v.lebadezet@untemps.net>",
 	"license": "MIT",
 	"private": false,
@@ -12,7 +17,9 @@
 	},
 	"main": "dist/index.js",
 	"module": "dist/index.es.js",
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"devDependencies": {
 		"@babel/cli": "^7.10.1",
 		"@babel/core": "^7.10.2",
@@ -45,7 +52,9 @@
 	"jest": {
 		"coverageDirectory": "./coverage/",
 		"collectCoverage": true,
-		"setupFilesAfterEnv": ["<rootDir>/jest/jest.setup.js"],
+		"setupFilesAfterEnv": [
+			"<rootDir>/jest/jest.setup.js"
+		],
 		"restoreMocks": true
 	},
 	"release": {
