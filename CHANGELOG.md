@@ -1,3 +1,10 @@
+# [2.0.0-beta.7](https://github.com/untemps/dom-observer/compare/v2.0.0-beta.6...v2.0.0-beta.7) (2022-01-07)
+
+
+### Features
+
+* Add exist event ([#13](https://github.com/untemps/dom-observer/issues/13)) ([a636cdf](https://github.com/untemps/dom-observer/commit/a636cdfdb8f372f3c551b6f9c42474c6da211f05))
+
 # [2.0.0-beta.6](https://github.com/untemps/dom-observer/compare/v2.0.0-beta.5...v2.0.0-beta.6) (2021-12-02)
 
 
