@@ -1,10 +1,11 @@
 import isElement from './utils/isElement'
 
 class DOMObserver {
+	static EXIST = 'DOMObserver_exist'
 	static ADD = 'DOMObserver_add'
 	static REMOVE = 'DOMObserver_remove'
 	static CHANGE = 'DOMObserver_change'
-	static EVENTS = [DOMObserver.ADD, DOMObserver.REMOVE, DOMObserver.CHANGE]
+	static EVENTS = [DOMObserver.EXIST, DOMObserver.ADD, DOMObserver.REMOVE, DOMObserver.CHANGE]
 
 	_observer = null
 
@@ -17,11 +18,11 @@ class DOMObserver {
 
 		return new Promise((resolve, reject) => {
 			const el = isElement(target) ? target : document.querySelector(target)
-			if (!!el && events.includes(DOMObserver.ADD)) {
+			if (!!el && events.includes(DOMObserver.EXIST)) {
 				if (onEvent) {
-					onEvent(el, DOMObserver.ADD)
+					onEvent(el, DOMObserver.EXIST)
 				} else {
-					resolve({ node: el, event: DOMObserver.ADD })
+					resolve({ node: el, event: DOMObserver.EXIST })
 				}
 			}
 
