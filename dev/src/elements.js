@@ -4,7 +4,7 @@ export const createTooltip = () => {
 	return createElement({
 		id: 'tooltip',
 		class: 'tooltip',
-		content: 'This tooltip is tracked continuously',
+		content: 'This tooltip is observed continuously',
 	})
 }
 
@@ -50,11 +50,12 @@ export const createCard = () => {
 	})
 	const descriptionText1 = createElement({
 		tagName: 'p',
-		content: 'The addition of this card is tracked one-shot then rerun continuously to track changes and deletion',
+		content:
+			'The addition of this card is observed one-shot then rerun continuously to observe changes and deletion',
 	})
 	const descriptionText2 = createElement({
 		tagName: 'p',
-		content: 'Click the bottom button to log attribute modifications',
+		content: 'Click the bottom button to log attribute changes',
 	})
 	addElement(descriptionText1, description)
 	addElement(descriptionText2, description)
