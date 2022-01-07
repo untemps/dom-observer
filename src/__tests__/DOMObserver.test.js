@@ -31,7 +31,7 @@ describe('DOMObserver', () => {
 
 				it('Observes an element to be added', () => {
 					instance.wait('#foo', onEvent)
-					expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.ADD)
+					expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.EXIST)
 				})
 
 				it('Ignores an element to be added', async () => {
@@ -119,7 +119,7 @@ describe('DOMObserver', () => {
 				it('Observes an element to be added', async () => {
 					const { node, event } = await instance.wait('#foo')
 					expect(node).toEqual(el)
-					expect(event).toBe(DOMObserver.ADD)
+					expect(event).toBe(DOMObserver.EXIST)
 				})
 
 				it('Observes an element to be removed', async () => {
@@ -182,7 +182,7 @@ describe('DOMObserver', () => {
 
 				it('Observes an element to be added', () => {
 					instance.wait(el, onEvent)
-					expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.ADD)
+					expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.EXIST)
 				})
 
 				it('Observes an element to be removed', async () => {
