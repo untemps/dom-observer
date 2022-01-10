@@ -66,7 +66,7 @@ Call the `wait` method with the element or the selector of the element you want 
 
 Once the element is added to, removed from or changed in the DOM, the promise is resolved with various number of arguments depending on the observed event.
 
-In this method, if the element is not added before the timeout elapses, the promise will be rejected with an error object.
+In this mode, if the element is not added before the timeout elapses, the promise will be rejected with an error object.
 
 ```javascript
 import { DOMObserver } from '@untemps/dom-observer'
@@ -85,15 +85,15 @@ switch (event) {
 
 #### `wait` method arguments
 
-| Props                | Type                 | Description                                                                                                                                                                                                  |
-| -------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `target`             | Element or String    | DOM element or selector of the DOM element to observe. See [querySelector spec](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector)                                                     |
-| `onEvent`            | Function or `null`   | Callback triggered when an event occurred with the observed element (depending on the events listed in `events` option. Pass `null` to activate one-shot mode and retrieve a promise from the method         |
-| `options        `    | Object               | Options object:                                                                                                                                                                                              |
-| - `events`           | Array                | List of events to observe (All events are observed by default)                                                                                                                                               |
-| - `timeout`          | Number               | Duration of observation before triggering the onError callback  (DOMObserver.ADD event only)                                                                                                                 |
-| - `onError`          | Function             | Callback triggered when timeout elapses (DOMObserver.ADD event only)                                                                                                                                         |
-| - `attributeFilter`  | Array                | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                                                                           |
+| Props                | Type                 | Description                                                                                                                                                                                          |
+| -------------------- | -------------------- |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `target`             | Element or String    | DOM element or selector of the DOM element to observe. See [querySelector spec](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector)                                             |
+| `onEvent`            | Function or `null`   | Callback triggered when an event occurred with the observed element (depending on the events listed in `events` option. Pass `null` to activate one-shot mode and retrieve a promise from the method |
+| `options        `    | Object               | Options object:                                                                                                                                                                                      |
+| - `events`           | Array                | List of [events](#events) to observe (All events are observed by default)                                                                                                                            |
+| - `timeout`          | Number               | Duration (in ms) of observation before triggering the onError callback  (DOMObserver.ADD event only)                                                                                                 |
+| - `onError`          | Function             | Callback triggered when timeout elapses (DOMObserver.ADD event only)                                                                                                                                 |
+| - `attributeFilter`  | Array                | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                                                                   |
 
 #### `onEvent` arguments
 
@@ -115,12 +115,13 @@ switch (event) {
 
 DOMObserver static properties list all observable events.
 
-| Props                 | Description                                                                                                                                          |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DOMObserver.ADD`     | Observe when the element is added to the DOM                                                                                                         |
-| `DOMObserver.REMOVE`  | Observe when the element is removed from the DOM                                                                                                     |
-| `DOMObserver.CHANGE`  | Observe when an attribute has changed on the element                                                                                                 |
-| `DOMObserver.EVENTS`  | Array of all three events                                                                                                                            |
+| Props                | Description                                                                               |
+|----------------------|-------------------------------------------------------------------------------------------|
+| `DOMObserver.EXIST`  | Observe whether the element is already created (not necessarily added to the DOM though) |
+| `DOMObserver.ADD`    | Observe when the element is added to the DOM                                              |
+| `DOMObserver.REMOVE` | Observe when the element is removed from the DOM                                          |
+| `DOMObserver.CHANGE` | Observe when an attribute has changed on the element                                      |
+| `DOMObserver.EVENTS` | Array of all four events                                                                  |
 
 One or more events can be passed to the `events` option of the  `wait` method. By default, all events are observed.
 
@@ -144,6 +145,9 @@ import { DOMObserver } from '@untemps/dom-observer'
 
 const onEvent = (node, event, { attributeName } = {}) => {
 	switch (event) {
+		case DOMObserver.EXIST: { 
+			console.log('Element ' + node.id + 'exists already')
+		}
 		case DOMObserver.ADD: {
 			console.log('Element ' + node.id + 'has been added')
 		}
@@ -163,7 +167,7 @@ observer.wait(
     '.foo',
     onEvent,
     {
-    	events: [DOMObserver.ADD, DOMObserver.REMOVE, DOMObserver.CHANGE],
+    	events: [DOMObserver.EXIST, DOMObserver.ADD, DOMObserver.REMOVE, DOMObserver.CHANGE],
         timeout: 2000,
         onError,
         attributeFilter: ['class']
