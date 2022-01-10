@@ -1,3 +1,29 @@
+# [2.0.0](https://github.com/untemps/dom-observer/compare/v1.2.0...v2.0.0) (2022-01-10)
+
+
+### Bug Fixes
+
+* Change node with selector matching to be more consistent and fix issue with matches is not a function ([d02b839](https://github.com/untemps/dom-observer/commit/d02b83917fe82a18b21c945109c9602425ecb42a))
+* Fix console error when target is a DOM element ([390d42f](https://github.com/untemps/dom-observer/commit/390d42f5181a3b77fd79724fb406dd59b9d23f58))
+* Fix console error when target is a DOM element - new attempt ([8260eb4](https://github.com/untemps/dom-observer/commit/8260eb45abede1845eb14088d3ec6ab009752210))
+
+
+### Code Refactoring
+
+* Refactor wait method in-depth and merge into watch method ([ac2bc0a](https://github.com/untemps/dom-observer/commit/ac2bc0a06f5fe4537fd43371bcd651fcd3924f41))
+
+
+### Features
+
+* Add exist event ([#13](https://github.com/untemps/dom-observer/issues/13)) ([79faa5e](https://github.com/untemps/dom-observer/commit/79faa5e4b91f5fb9c59eae32afcc3914e939efcd))
+* Allow to target a DOM element directly ([5467b6a](https://github.com/untemps/dom-observer/commit/5467b6a0647aad14971a5707f4a55b7a89a8fd4c))
+* Allow to trigger observation event with promise resolution ([1f774be](https://github.com/untemps/dom-observer/commit/1f774be690ad49d855735d96750f2e2cee0be017))
+
+
+### BREAKING CHANGES
+
+* The signature of the wait method has changed and the watch method has been removed
+
 # [2.0.0-beta.7](https://github.com/untemps/dom-observer/compare/v2.0.0-beta.6...v2.0.0-beta.7) (2022-01-07)
 
 
