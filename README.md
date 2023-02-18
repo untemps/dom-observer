@@ -6,7 +6,7 @@ The class is a wrapper around the MutationObserver API to target an element in p
 That means you can observe an element to be added to the DOM and access to its properties, an attribute from that element to be changed and get the old and the new values, the element to be removed from the DOM and destroy all its dependencies.
 
 ![npm](https://img.shields.io/npm/v/@untemps/dom-observer?style=for-the-badge)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/untemps/dom-observer/deploy?style=for-the-badge)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/untemps/dom-observer/index.yml?style=for-the-badge)](https://github.com/untemps/dom-observer/actions)
 ![Codecov](https://img.shields.io/codecov/c/github/untemps/dom-observer?style=for-the-badge)
 
 ## Installation
