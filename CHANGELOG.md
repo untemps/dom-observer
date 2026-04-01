@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/untemps/dom-observer/compare/v2.0.0...v2.0.1) (2026-04-01)
+
+
+### Bug Fixes
+
+* Validate events array is not empty with explicit error ([#20](https://github.com/untemps/dom-observer/issues/20)) ([7070d6b](https://github.com/untemps/dom-observer/commit/7070d6bcfbec2f4b5c0277aa72d618f3519854a4))
+
 # [2.0.0](https://github.com/untemps/dom-observer/compare/v1.2.0...v2.0.0) (2022-01-10)
 
 
