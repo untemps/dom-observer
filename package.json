@@ -62,6 +62,6 @@
 		"build": "vite build",
 		"format": "biome format --write .",
 		"lint": "biome lint --write .",
-		"check": "biome check --write ."
+		"biome": "biome check --write ."
 	}
 }
