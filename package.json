@@ -11,6 +11,7 @@
 	],
 	"author": "Vincent Le Badezet <v.lebadezet@untemps.net>",
 	"license": "MIT",
+	"type": "module",
 	"private": false,
 	"publishConfig": {
 		"access": "public"
