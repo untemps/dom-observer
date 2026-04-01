@@ -14,6 +14,10 @@ class DOMObserver {
 		onEvent = null,
 		{ events = DOMObserver.EVENTS, timeout = 0, attributeFilter = undefined, onError = undefined } = {}
 	) {
+		if (events.length === 0) {
+			return Promise.reject(new Error('[EVENTS]: events array cannot be empty'))
+		}
+
 		this.clear()
 
 		return new Promise((resolve, reject) => {
