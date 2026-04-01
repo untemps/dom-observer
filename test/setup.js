@@ -1,7 +1,4 @@
-const { toBeInTheDocument, toHaveAttribute, toHaveStyle } = require('@testing-library/jest-dom/matchers')
-import '@testing-library/jest-dom/extend-expect'
-
-expect.extend({ toBeInTheDocument, toHaveAttribute, toHaveStyle })
+import '@testing-library/jest-dom/vitest'
 
 global._createElement = (id = 'foo', className = 'bar', ariaLabel = 'gag') => {
 	const el = document.createElement('div')
@@ -14,14 +11,14 @@ global._createElement = (id = 'foo', className = 'bar', ariaLabel = 'gag') => {
 
 global._removeElement = (selector) => {
 	const el = document.querySelector(selector)
-	if (!!el) {
+	if (el) {
 		el.parentNode.removeChild(el)
 	}
 }
 
 global._modifyElement = (selector, attributeName, attributeValue) => {
 	const el = document.querySelector(selector)
-	if (!!el) {
+	if (el) {
 		el.setAttribute(attributeName, attributeValue)
 	}
 }

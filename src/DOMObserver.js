@@ -48,7 +48,7 @@ class DOMObserver {
 							...(events.includes(DOMObserver.ADD) ? Array.from(addedNodes) : []),
 							...(events.includes(DOMObserver.REMOVE) ? Array.from(removedNodes) : []),
 						]
-						for (let node of nodes) {
+						for (const node of nodes) {
 							if (node === target || (!isElement(target) && node.matches?.(target))) {
 								if (onEvent) {
 									onEvent(
