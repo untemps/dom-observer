@@ -11,11 +11,11 @@
 	"publishConfig": {
 		"access": "public"
 	},
-	"main": "dist/index.js",
+	"main": "dist/index.cjs",
 	"module": "dist/index.es.js",
 	"exports": {
 		"import": "./dist/index.es.js",
-		"require": "./dist/index.js"
+		"require": "./dist/index.cjs"
 	},
 	"files": ["dist"],
 	"devDependencies": {
