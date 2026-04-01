@@ -39,7 +39,6 @@ class DOMObserver {
 			}
 
 			this._observer = new MutationObserver((mutations) => {
-				// biome-ignore lint/complexity/noForEach: will be refactored to for...of in refactor/optimize branch
 				mutations.forEach(({ type, target: targetNode, addedNodes, removedNodes, attributeName, oldValue }) => {
 					if (
 						type === 'childList' &&
