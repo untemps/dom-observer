@@ -20,9 +20,14 @@ class DOMObserver {
 
 		this.clear()
 
+		const hasExist  = events.includes(DOMObserver.EXIST)
+		const hasAdd    = events.includes(DOMObserver.ADD)
+		const hasRemove = events.includes(DOMObserver.REMOVE)
+		const hasChange = events.includes(DOMObserver.CHANGE)
+
 		return new Promise((resolve, reject) => {
 			const el = isElement(target) ? target : document.querySelector(target)
-			if (!!el && events.includes(DOMObserver.EXIST)) {
+			if (!!el && hasExist) {
 				if (onEvent) {
 					onEvent(el, DOMObserver.EXIST)
 				} else {
@@ -44,13 +49,10 @@ class DOMObserver {
 
 			this._observer = new MutationObserver((mutations) => {
 				mutations.forEach(({ type, target: targetNode, addedNodes, removedNodes, attributeName, oldValue }) => {
-					if (
-						type === 'childList' &&
-						(events.includes(DOMObserver.ADD) || events.includes(DOMObserver.REMOVE))
-					) {
+					if (type === 'childList' && (hasAdd || hasRemove)) {
 						const nodes = [
-							...(events.includes(DOMObserver.ADD) ? Array.from(addedNodes) : []),
-							...(events.includes(DOMObserver.REMOVE) ? Array.from(removedNodes) : []),
+							...(hasAdd ? Array.from(addedNodes) : []),
+							...(hasRemove ? Array.from(removedNodes) : []),
 						]
 						for (const node of nodes) {
 							if (node === target || (!isElement(target) && node.matches?.(target))) {
@@ -70,7 +72,7 @@ class DOMObserver {
 							}
 						}
 					}
-					if (type === 'attributes' && events.includes(DOMObserver.CHANGE)) {
+					if (type === 'attributes' && hasChange) {
 						if (targetNode === target || (!isElement(target) && targetNode.matches?.(target))) {
 							if (onEvent) {
 								onEvent(targetNode, DOMObserver.CHANGE, {
@@ -94,9 +96,9 @@ class DOMObserver {
 
 			this._observer.observe(document.documentElement, {
 				subtree: true,
-				childList: events.includes(DOMObserver.ADD) || events.includes(DOMObserver.REMOVE),
-				attributes: events.includes(DOMObserver.CHANGE),
-				attributeOldValue: events.includes(DOMObserver.CHANGE),
+				childList: hasAdd || hasRemove,
+				attributes: hasChange,
+				attributeOldValue: hasChange,
 				attributeFilter,
 			})
 		})
