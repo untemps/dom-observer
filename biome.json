@@ -19,6 +19,6 @@
 		}
 	},
 	"files": {
-		"includes": ["src/**", "test/**", "vite.config.js", "biome.json"]
+		"includes": ["src/**", "test/**", "vite.config.js", "biome.json", "*.json"]
 	}
 }

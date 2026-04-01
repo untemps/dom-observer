@@ -3,7 +3,12 @@
 	"version": "2.0.0",
 	"description": "Class to observe DOM mutations",
 	"repository": "git@github.com:untemps/dom-observer.git",
-	"keywords": ["dom", "mutations-observer", "class", "javascript"],
+	"keywords": [
+		"dom",
+		"mutations-observer",
+		"class",
+		"javascript"
+	],
 	"author": "Vincent Le Badezet <v.lebadezet@untemps.net>",
 	"license": "MIT",
 	"type": "module",
@@ -15,9 +20,12 @@
 	"module": "dist/index.es.js",
 	"exports": {
 		"import": "./dist/index.es.js",
-		"require": "./dist/index.cjs"
+		"require": "./dist/index.cjs",
+		"default": "./dist/index.es.js"
 	},
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"devDependencies": {
 		"@biomejs/biome": "^2.0.0",
 		"@semantic-release/changelog": "^6.0.0",
