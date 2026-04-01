@@ -1,3 +1,10 @@
+## [2.0.2](https://github.com/untemps/dom-observer/compare/v2.0.1...v2.0.2) (2026-04-01)
+
+
+### Performance Improvements
+
+* Precompute event flag checks outside MutationObserver callback ([#21](https://github.com/untemps/dom-observer/issues/21)) ([ac0dc81](https://github.com/untemps/dom-observer/commit/ac0dc8150247862caf8a322fcccfe6189ae24d0a))
+
 ## [2.0.1](https://github.com/untemps/dom-observer/compare/v2.0.0...v2.0.1) (2026-04-01)
 
 
