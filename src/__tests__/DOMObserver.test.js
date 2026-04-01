@@ -23,7 +23,7 @@ describe('DOMObserver', () => {
 	describe('wait', () => {
 		describe('The onEvent callback is triggered as soon as an event occurs', () => {
 			beforeEach(() => {
-				onEvent = jest.fn()
+				onEvent = vi.fn()
 			})
 
 			describe('Element is already created and mounted in the DOM', () => {
@@ -91,7 +91,7 @@ describe('DOMObserver', () => {
 				})
 
 				it('Triggers onError when an element is not found after timeout is elapsed', async () => {
-					const onError = jest.fn()
+					const onError = vi.fn()
 					instance.wait('#foo', onEvent, { onError, timeout: 50 })
 					await _sleep()
 					expect(onError).toHaveBeenCalled()
@@ -174,7 +174,7 @@ describe('DOMObserver', () => {
 
 		describe('The target can be an DOM element', () => {
 			beforeEach(() => {
-				onEvent = jest.fn()
+				onEvent = vi.fn()
 			})
 
 			describe('Element is already created and mounted in the DOM', () => {
