@@ -39,6 +39,7 @@ class DOMObserver {
 			}
 
 			this._observer = new MutationObserver((mutations) => {
+				// biome-ignore lint/complexity/noForEach: will be refactored to for...of in refactor/optimize branch
 				mutations.forEach(({ type, target: targetNode, addedNodes, removedNodes, attributeName, oldValue }) => {
 					if (
 						type === 'childList' &&
@@ -48,7 +49,7 @@ class DOMObserver {
 							...(events.includes(DOMObserver.ADD) ? Array.from(addedNodes) : []),
 							...(events.includes(DOMObserver.REMOVE) ? Array.from(removedNodes) : []),
 						]
-						for (let node of nodes) {
+						for (const node of nodes) {
 							if (node === target || (!isElement(target) && node.matches?.(target))) {
 								if (onEvent) {
 									onEvent(

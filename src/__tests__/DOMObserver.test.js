@@ -1,7 +1,9 @@
 import DOMObserver from '../DOMObserver'
 
 describe('DOMObserver', () => {
-	let instance, el, onEvent
+	let instance
+	let el
+	let onEvent
 
 	beforeEach(() => {
 		instance = new DOMObserver()
@@ -153,7 +155,7 @@ describe('DOMObserver', () => {
 					try {
 						await instance.wait('#foo', null, { timeout: 50 })
 					} catch (error) {
-						expect(error.message).toMatch(`[TIMEOUT]`)
+						expect(error.message).toMatch('[TIMEOUT]')
 					}
 				})
 			})

@@ -15,14 +15,14 @@ global._createElement = (id = 'foo', className = 'bar', ariaLabel = 'gag') => {
 
 global._removeElement = (selector) => {
 	const el = document.querySelector(selector)
-	if (!!el) {
+	if (el) {
 		el.parentNode.removeChild(el)
 	}
 }
 
 global._modifyElement = (selector, attributeName, attributeValue) => {
 	const el = document.querySelector(selector)
-	if (!!el) {
+	if (el) {
 		el.setAttribute(attributeName, attributeValue)
 	}
 }
