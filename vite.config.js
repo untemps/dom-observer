@@ -22,7 +22,7 @@ export default defineConfig({
 			provider: 'v8',
 			reporter: ['text', 'lcov'],
 			include: ['src/**'],
-			exclude: ['src/**/__tests__/**'],
+			exclude: ['src/**/__tests__/**', 'src/index.js'],
 		},
 		restoreMocks: true,
 	},

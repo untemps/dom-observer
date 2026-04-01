@@ -1,4 +1,4 @@
-import DOMObserver from '../DOMObserver'
+import { DOMObserver } from '../index'
 
 describe('DOMObserver', () => {
 	let instance
