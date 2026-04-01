@@ -1,7 +1,4 @@
-const { toBeInTheDocument, toHaveAttribute, toHaveStyle } = require('@testing-library/jest-dom/matchers')
-import '@testing-library/jest-dom/extend-expect'
-
-expect.extend({ toBeInTheDocument, toHaveAttribute, toHaveStyle })
+import '@testing-library/jest-dom'
 
 global._createElement = (id = 'foo', className = 'bar', ariaLabel = 'gag') => {
 	const el = document.createElement('div')
