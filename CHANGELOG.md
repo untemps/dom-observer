@@ -1,3 +1,10 @@
+## [2.0.4](https://github.com/untemps/dom-observer/compare/v2.0.3...v2.0.4) (2026-04-02)
+
+
+### Bug Fixes
+
+* Remove redundant double negation on el ([#24](https://github.com/untemps/dom-observer/issues/24)) ([d6f0fbb](https://github.com/untemps/dom-observer/commit/d6f0fbb58fc451f2fd28f8b0167a041e38b2944e))
+
 ## [2.0.3](https://github.com/untemps/dom-observer/compare/v2.0.2...v2.0.3) (2026-04-02)
 
 
