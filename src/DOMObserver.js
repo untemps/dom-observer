@@ -9,6 +9,8 @@ class DOMObserver {
 
 	_observer = null
 	_pendingReject = null
+	_signal = null
+	_abortHandler = null
 
 	wait(
 		target,
@@ -34,18 +36,30 @@ class DOMObserver {
 		this.clear()
 
 		return new Promise((resolve, reject) => {
-			if (!onEvent) this._pendingReject = reject
-			const settle = (value) => {
+			let onAbort = null
+
+			const cleanup = () => {
+				signal?.removeEventListener('abort', onAbort)
 				this._pendingReject = null
+			}
+			const settle = (value) => {
+				cleanup()
 				resolve(value)
 			}
+			const cancel = (error) => {
+				cleanup()
+				reject(error)
+			}
+
+			if (!onEvent) this._pendingReject = cancel
+
 			const callback =
 				onEvent ?? ((node, event, options) => settle(options ? { node, event, options } : { node, event }))
 
 			if (signal) {
-				const onAbort = () => {
+				onAbort = () => {
 					this.clear()
-					reject(signal.reason ?? new DOMException('Aborted', 'AbortError'))
+					if (!onEvent) cancel(signal.reason ?? new DOMException('Aborted', 'AbortError'))
 				}
 				signal.addEventListener('abort', onAbort, { once: true })
 			}
@@ -54,7 +68,7 @@ class DOMObserver {
 				this._timeout = setTimeout(() => {
 					this.clear()
 					const error = new Error(`[TIMEOUT]: Element ${target} cannot be found after ${timeout}ms`)
-					onEvent ? onError?.(error) : reject(error)
+					onEvent ? onError?.(error) : cancel(error)
 				}, timeout)
 			}
 
@@ -76,7 +90,9 @@ class DOMObserver {
 		this.clear()
 
 		if (signal) {
-			signal.addEventListener('abort', () => this.clear(), { once: true })
+			this._abortHandler = () => this.clear()
+			this._signal = signal
+			signal.addEventListener('abort', this._abortHandler, { once: true })
 		}
 
 		this._observe(target, onEvent, { events, attributeFilter })
@@ -125,6 +141,9 @@ class DOMObserver {
 	}
 
 	clear() {
+		this._signal?.removeEventListener('abort', this._abortHandler)
+		this._signal = null
+		this._abortHandler = null
 		this._pendingReject = null
 		this._observer?.disconnect()
 		clearTimeout(this._timeout)

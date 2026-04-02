@@ -110,6 +110,18 @@ describe('DOMObserver', () => {
 				it('Throws when events array is empty', async () => {
 					await expect(() => instance.wait('#foo', onEvent, { events: [] })).rejects.toThrow()
 				})
+
+				it('Stops observation when signal is aborted in continuous mode', async () => {
+					const controller = new AbortController()
+					instance.wait('#foo', onEvent, { events: [DOMObserver.CHANGE], signal: controller.signal })
+					_modifyElement('#foo', 'class', 'change1')
+					await _sleep()
+					expect(onEvent).toHaveBeenCalledTimes(1)
+					controller.abort()
+					_modifyElement('#foo', 'class', 'change2')
+					await _sleep()
+					expect(onEvent).toHaveBeenCalledTimes(1)
+				})
 			})
 
 			describe('Element creation and mounting are delayed', () => {
@@ -185,7 +197,10 @@ describe('DOMObserver', () => {
 
 				it('Rejects and disconnects when signal is aborted during observation', async () => {
 					const controller = new AbortController()
-					const promise = instance.wait('#bar', null, { events: [DOMObserver.ADD], signal: controller.signal })
+					const promise = instance.wait('#bar', null, {
+						events: [DOMObserver.ADD],
+						signal: controller.signal,
+					})
 					setTimeout(() => controller.abort(), 50)
 					await expect(promise).rejects.toMatchObject({ name: 'AbortError' })
 				})
