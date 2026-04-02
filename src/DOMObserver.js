@@ -8,6 +8,7 @@ class DOMObserver {
 	static EVENTS = [DOMObserver.EXIST, DOMObserver.ADD, DOMObserver.REMOVE, DOMObserver.CHANGE]
 
 	_observer = null
+	_pendingReject = null
 
 	wait(
 		target,
@@ -18,6 +19,8 @@ class DOMObserver {
 			return Promise.reject(new Error('[EVENTS]: events array cannot be empty'))
 		}
 
+		this._pendingReject?.(new Error('[ABORT]: Observation replaced by a new wait() call'))
+		this._pendingReject = null
 		this.clear()
 
 		const hasExist  = events.includes(DOMObserver.EXIST)
@@ -26,6 +29,7 @@ class DOMObserver {
 		const hasChange = events.includes(DOMObserver.CHANGE)
 
 		return new Promise((resolve, reject) => {
+			if (!onEvent) this._pendingReject = reject
 			const el = isElement(target) ? target : document.querySelector(target)
 			if (el && hasExist) {
 				if (onEvent) {
@@ -96,6 +100,7 @@ class DOMObserver {
 	}
 
 	clear() {
+		this._pendingReject = null
 		this._observer?.disconnect()
 		clearTimeout(this._timeout)
 	}
