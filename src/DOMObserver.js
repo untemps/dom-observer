@@ -27,7 +27,7 @@ class DOMObserver {
 
 		return new Promise((resolve, reject) => {
 			const el = isElement(target) ? target : document.querySelector(target)
-			if (!!el && hasExist) {
+			if (el && hasExist) {
 				if (onEvent) {
 					onEvent(el, DOMObserver.EXIST)
 				} else {
