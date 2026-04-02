@@ -188,6 +188,60 @@ describe('DOMObserver', () => {
 			})
 		})
 
+	describe('watch', () => {
+		beforeEach(() => {
+			onEvent = vi.fn()
+		})
+
+		describe('Element is already created and mounted in the DOM', () => {
+			beforeEach(() => {
+				el = _createElement('foo')
+			})
+
+			it('Triggers onEvent immediately with EXIST when element is present', () => {
+				instance.watch('#foo', onEvent)
+				expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.EXIST)
+			})
+
+			it('Triggers onEvent on every successive attribute change', async () => {
+				instance.watch('#foo', onEvent, { events: [DOMObserver.CHANGE] })
+				_modifyElement('#foo', 'class', 'change1')
+				await _sleep()
+				_modifyElement('#foo', 'class', 'change2')
+				await _sleep()
+				expect(onEvent).toHaveBeenCalledTimes(2)
+				expect(onEvent).toHaveBeenNthCalledWith(1, el, DOMObserver.CHANGE, { attributeName: 'class', oldValue: 'bar' })
+				expect(onEvent).toHaveBeenNthCalledWith(2, el, DOMObserver.CHANGE, { attributeName: 'class', oldValue: 'change1' })
+			})
+
+			it('Triggers onEvent for each matching added and removed node', async () => {
+				instance.watch('.item', onEvent, { events: [DOMObserver.ADD, DOMObserver.REMOVE] })
+				const a = _createElementWithClass('item')
+				const b = _createElementWithClass('item')
+				await _sleep()
+				expect(onEvent).toHaveBeenCalledTimes(2)
+				expect(onEvent).toHaveBeenCalledWith(a, DOMObserver.ADD)
+				expect(onEvent).toHaveBeenCalledWith(b, DOMObserver.ADD)
+				document.body.removeChild(a)
+				await _sleep()
+				expect(onEvent).toHaveBeenCalledWith(a, DOMObserver.REMOVE)
+			})
+
+			it('Throws when events array is empty', () => {
+				expect(() => instance.watch('#foo', onEvent, { events: [] })).toThrow('[EVENTS]')
+			})
+		})
+
+		describe('Element creation and mounting are delayed', () => {
+			it('Triggers onEvent when element is added', async () => {
+				instance.watch('#foo', onEvent)
+				el = _createElement('foo')
+				await _sleep()
+				expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.ADD)
+			})
+		})
+	})
+
 		describe('The target can be an DOM element', () => {
 			beforeEach(() => {
 				onEvent = vi.fn()

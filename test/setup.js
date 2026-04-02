@@ -23,6 +23,13 @@ global._modifyElement = (selector, attributeName, attributeValue) => {
 	}
 }
 
+global._createElementWithClass = (className) => {
+	const el = document.createElement('div')
+	el.setAttribute('class', className)
+	document.body.appendChild(el)
+	return el
+}
+
 global._sleep = (ms = 100) => {
 	return new Promise((resolve) => setTimeout(resolve, ms))
 }
