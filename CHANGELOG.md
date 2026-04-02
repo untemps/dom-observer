@@ -1,3 +1,10 @@
+# [3.0.0-beta.2](https://github.com/untemps/dom-observer/compare/v3.0.0-beta.1...v3.0.0-beta.2) (2026-04-02)
+
+
+### Features
+
+* Add AbortSignal support to wait() and watch() ([#30](https://github.com/untemps/dom-observer/issues/30)) ([17406c2](https://github.com/untemps/dom-observer/commit/17406c2aecfe2f26673c0baff7afcbbd5624d4ed))
+
 # [3.0.0-beta.1](https://github.com/untemps/dom-observer/compare/v2.1.0-beta.1...v3.0.0-beta.1) (2026-04-02)
 
 
