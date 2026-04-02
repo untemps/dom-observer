@@ -1,3 +1,10 @@
+## [2.0.5](https://github.com/untemps/dom-observer/compare/v2.0.4...v2.0.5) (2026-04-02)
+
+
+### Performance Improvements
+
+* Observe element directly when only CHANGE events are watched ([#25](https://github.com/untemps/dom-observer/issues/25)) ([64ae8d6](https://github.com/untemps/dom-observer/commit/64ae8d63ceae14f58003207b49c8e88572c2d73e))
+
 ## [2.0.4](https://github.com/untemps/dom-observer/compare/v2.0.3...v2.0.4) (2026-04-02)
 
 
