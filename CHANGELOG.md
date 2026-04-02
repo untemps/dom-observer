@@ -1,3 +1,11 @@
+# [2.1.0](https://github.com/untemps/dom-observer/compare/v2.0.6...v2.1.0) (2026-04-02)
+
+
+### Features
+
+* Add AbortSignal support to wait() and watch() ([#30](https://github.com/untemps/dom-observer/issues/30)) ([2e26fcb](https://github.com/untemps/dom-observer/commit/2e26fcbe95b0dcee644ae2a6385caa893ee3209f))
+* Add watch() method for recurring mutation callbacks ([#29](https://github.com/untemps/dom-observer/issues/29)) ([2366741](https://github.com/untemps/dom-observer/commit/2366741ee318a42d834b99548b85bd4a02c478d9))
+
 # [3.0.0-beta.2](https://github.com/untemps/dom-observer/compare/v3.0.0-beta.1...v3.0.0-beta.2) (2026-04-02)
 
 
