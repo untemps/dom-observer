@@ -1,3 +1,20 @@
+# [3.0.0-beta.1](https://github.com/untemps/dom-observer/compare/v2.1.0-beta.1...v3.0.0-beta.1) (2026-04-02)
+
+
+### Bug Fixes
+
+* Flag watch() as breaking change for correct semver bump ([4a74e47](https://github.com/untemps/dom-observer/commit/4a74e478aae44ef3d1078d50bf84f0c03f67577a))
+
+
+### BREAKING CHANGES
+
+* watch() shares the observer slot with wait().
+Calling watch() rejects any pending wait() Promise with [ABORT]
+and stops any ongoing observation.
+Use separate instances for parallel observations.
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+
 # [2.1.0-beta.1](https://github.com/untemps/dom-observer/compare/v2.0.6...v2.1.0-beta.1) (2026-04-02)
 
 
