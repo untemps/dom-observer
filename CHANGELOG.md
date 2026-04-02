@@ -1,3 +1,10 @@
+# [2.1.0-beta.1](https://github.com/untemps/dom-observer/compare/v2.0.6...v2.1.0-beta.1) (2026-04-02)
+
+
+### Features
+
+* Add watch() method for recurring mutation callbacks ([#29](https://github.com/untemps/dom-observer/issues/29)) ([7376e8b](https://github.com/untemps/dom-observer/commit/7376e8bb7cd0de787a32d409b15c7b7f02e80542))
+
 ## [2.0.6](https://github.com/untemps/dom-observer/compare/v2.0.5...v2.0.6) (2026-04-02)
 
 
