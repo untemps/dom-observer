@@ -36,10 +36,18 @@ Use the `watch` method when you want to be notified **every time** a mutation oc
 ```javascript
 import { DOMObserver } from '@untemps/dom-observer'
 
+// Track every attribute change on an element
 const observer = new DOMObserver()
 observer.watch('#foo', (node, event, { attributeName, oldValue } = {}) => {
-    console.log(`${attributeName} changed from ${oldValue} to ${node.getAttribute(attributeName)}`)
+	console.log(`${attributeName} changed from ${oldValue} to ${node.getAttribute(attributeName)}`)
 }, { events: [DOMObserver.CHANGE] })
+
+// React to every matching node added or removed
+const listObserver = new DOMObserver()
+listObserver.watch('.list-item', (node, event) => {
+	if (event === DOMObserver.ADD) console.log(`Item added: ${node.textContent}`)
+	if (event === DOMObserver.REMOVE) console.log(`Item removed: ${node.textContent}`)
+}, { events: [DOMObserver.ADD, DOMObserver.REMOVE] })
 ```
 
 Unlike `wait`, `watch` does not return a Promise and has no timeout. Call `clear()` to stop the observation.

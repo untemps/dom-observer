@@ -255,8 +255,14 @@ describe('DOMObserver', () => {
 				_modifyElement('#foo', 'class', 'change2')
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledTimes(2)
-				expect(onEvent).toHaveBeenNthCalledWith(1, el, DOMObserver.CHANGE, { attributeName: 'class', oldValue: 'bar' })
-				expect(onEvent).toHaveBeenNthCalledWith(2, el, DOMObserver.CHANGE, { attributeName: 'class', oldValue: 'change1' })
+				expect(onEvent).toHaveBeenNthCalledWith(1, el, DOMObserver.CHANGE, {
+					attributeName: 'class',
+					oldValue: 'bar',
+				})
+				expect(onEvent).toHaveBeenNthCalledWith(2, el, DOMObserver.CHANGE, {
+					attributeName: 'class',
+					oldValue: 'change1',
+				})
 			})
 
 			it('Triggers onEvent for each matching added and removed node', async () => {
@@ -270,6 +276,7 @@ describe('DOMObserver', () => {
 				document.body.removeChild(a)
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledWith(a, DOMObserver.REMOVE)
+				expect(onEvent).toHaveBeenCalledTimes(3)
 			})
 
 			it('Throws when events array is empty', () => {
