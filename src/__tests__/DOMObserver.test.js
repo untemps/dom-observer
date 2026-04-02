@@ -213,6 +213,16 @@ describe('DOMObserver', () => {
 						oldValue: 'bar',
 					})
 				})
+
+				it('Observes an element to be modified (CHANGE only — direct element scope)', async () => {
+					instance.wait(el, onEvent, { events: [DOMObserver.CHANGE] })
+					_modifyElement('#foo', 'class', 'gag')
+					await _sleep()
+					expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.CHANGE, {
+						attributeName: 'class',
+						oldValue: 'bar',
+					})
+				})
 			})
 		})
 	})
