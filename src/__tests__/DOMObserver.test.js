@@ -70,6 +70,16 @@ describe('DOMObserver', () => {
 					})
 				})
 
+				it('Observes an element to be modified (CHANGE only — direct element scope)', async () => {
+					instance.wait('#foo', onEvent, { events: [DOMObserver.CHANGE] })
+					_modifyElement('#foo', 'class', 'gag')
+					await _sleep()
+					expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.CHANGE, {
+						attributeName: 'class',
+						oldValue: 'bar',
+					})
+				})
+
 				it('Observes an element to be modified at a specific attribute', async () => {
 					instance.wait('#foo', onEvent, { events: [DOMObserver.CHANGE], attributeFilter: ['aria-label'] })
 					_modifyElement('#foo', 'class', 'gag')

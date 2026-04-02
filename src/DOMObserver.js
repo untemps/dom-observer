@@ -84,8 +84,9 @@ class DOMObserver {
 				})
 			})
 
-			this._observer.observe(document.documentElement, {
-				subtree: true,
+			const observerTarget = hasChange && !hasAdd && !hasRemove && el ? el : document.documentElement
+			this._observer.observe(observerTarget, {
+				subtree: observerTarget === document.documentElement,
 				childList: hasAdd || hasRemove,
 				attributes: hasChange,
 				attributeOldValue: hasChange,
