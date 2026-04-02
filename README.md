@@ -83,9 +83,11 @@ const { node, event, options: { attributeName } } = await observer.wait('#foo', 
 switch (event) {
 	case DOMObserver.REMOVE: {
 		console.log('Element ' + node.id + 'has been removed')
+		break
 	}
 	case DOMObserver.CHANGE: {
 		console.log('Element ' + node.id + 'has been changed (' + attributeName + ')')
+		break
 	}
 }
 ```
@@ -102,9 +104,11 @@ const onEvent = (node, event, { attributeName } = {}) => {
 	switch (event) {
 		case DOMObserver.REMOVE: {
 			console.log('Element ' + node.id + 'has been removed')
+			break
 		}
 		case DOMObserver.CHANGE: {
 			console.log('Element ' + node.id + 'has been changed (' + attributeName + ')')
+			break
 		}
 	}
 }
@@ -184,17 +188,21 @@ import { DOMObserver } from '@untemps/dom-observer'
 
 const onEvent = (node, event, { attributeName } = {}) => {
 	switch (event) {
-		case DOMObserver.EXIST: { 
+		case DOMObserver.EXIST: {
 			console.log('Element ' + node.id + 'exists already')
+			break
 		}
 		case DOMObserver.ADD: {
 			console.log('Element ' + node.id + 'has been added')
+			break
 		}
 		case DOMObserver.REMOVE: {
 			console.log('Element ' + node.id + 'has been removed')
+			break
 		}
 		case DOMObserver.CHANGE: {
 			console.log('Element ' + node.id + 'has been changed (' + attributeName + ')')
+			break
 		}
 	}
 }
