@@ -13,10 +13,20 @@ class DOMObserver {
 	wait(
 		target,
 		onEvent = null,
-		{ events = DOMObserver.EVENTS, timeout = 0, attributeFilter = undefined, onError = undefined } = {}
+		{
+			events = DOMObserver.EVENTS,
+			timeout = 0,
+			attributeFilter = undefined,
+			onError = undefined,
+			signal = undefined,
+		} = {}
 	) {
 		if (!events?.length) {
 			return Promise.reject(new Error('[EVENTS]: events array cannot be empty'))
+		}
+
+		if (signal?.aborted) {
+			return Promise.reject(signal.reason ?? new DOMException('Aborted', 'AbortError'))
 		}
 
 		this._pendingReject?.(new Error('[ABORT]: Observation replaced by a new wait() call'))
@@ -32,6 +42,14 @@ class DOMObserver {
 			const callback =
 				onEvent ?? ((node, event, options) => settle(options ? { node, event, options } : { node, event }))
 
+			if (signal) {
+				const onAbort = () => {
+					this.clear()
+					reject(signal.reason ?? new DOMException('Aborted', 'AbortError'))
+				}
+				signal.addEventListener('abort', onAbort, { once: true })
+			}
+
 			if (timeout > 0) {
 				this._timeout = setTimeout(() => {
 					this.clear()
@@ -44,14 +62,22 @@ class DOMObserver {
 		})
 	}
 
-	watch(target, onEvent, { events = DOMObserver.EVENTS, attributeFilter = undefined } = {}) {
+	watch(target, onEvent, { events = DOMObserver.EVENTS, attributeFilter = undefined, signal = undefined } = {}) {
 		if (!events?.length) {
 			throw new Error('[EVENTS]: events array cannot be empty')
+		}
+
+		if (signal?.aborted) {
+			return this
 		}
 
 		this._pendingReject?.(new Error('[ABORT]: Observation replaced by a new watch() call'))
 		this._pendingReject = null
 		this.clear()
+
+		if (signal) {
+			signal.addEventListener('abort', () => this.clear(), { once: true })
+		}
 
 		this._observe(target, onEvent, { events, attributeFilter })
 
@@ -59,8 +85,8 @@ class DOMObserver {
 	}
 
 	_observe(target, callback, { events, attributeFilter }) {
-		const hasExist  = events.includes(DOMObserver.EXIST)
-		const hasAdd    = events.includes(DOMObserver.ADD)
+		const hasExist = events.includes(DOMObserver.EXIST)
+		const hasAdd = events.includes(DOMObserver.ADD)
 		const hasRemove = events.includes(DOMObserver.REMOVE)
 		const hasChange = events.includes(DOMObserver.CHANGE)
 

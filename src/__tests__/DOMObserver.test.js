@@ -174,6 +174,21 @@ describe('DOMObserver', () => {
 					instance.wait('#baz', null, { events: [DOMObserver.ADD] })
 					await expect(first).rejects.toThrow('[ABORT]')
 				})
+
+				it('Rejects immediately when signal is already aborted', async () => {
+					const controller = new AbortController()
+					controller.abort()
+					await expect(instance.wait('#foo', null, { signal: controller.signal })).rejects.toMatchObject({
+						name: 'AbortError',
+					})
+				})
+
+				it('Rejects and disconnects when signal is aborted during observation', async () => {
+					const controller = new AbortController()
+					const promise = instance.wait('#bar', null, { events: [DOMObserver.ADD], signal: controller.signal })
+					setTimeout(() => controller.abort(), 50)
+					await expect(promise).rejects.toMatchObject({ name: 'AbortError' })
+				})
 			})
 
 			describe('Element creation and mounting are delayed', () => {
@@ -292,6 +307,26 @@ describe('DOMObserver', () => {
 			it('Returns the instance for chaining', () => {
 				const result = instance.watch('#foo', onEvent)
 				expect(result).toBe(instance)
+			})
+
+			it('Does nothing when signal is already aborted', () => {
+				const controller = new AbortController()
+				controller.abort()
+				instance.watch('#foo', onEvent, { signal: controller.signal })
+				expect(onEvent).not.toHaveBeenCalled()
+				expect(instance._observer).toBeNull()
+			})
+
+			it('Stops observation when signal is aborted', async () => {
+				const controller = new AbortController()
+				instance.watch('#foo', onEvent, { events: [DOMObserver.CHANGE], signal: controller.signal })
+				_modifyElement('#foo', 'class', 'change1')
+				await _sleep()
+				expect(onEvent).toHaveBeenCalledTimes(1)
+				controller.abort()
+				_modifyElement('#foo', 'class', 'change2')
+				await _sleep()
+				expect(onEvent).toHaveBeenCalledTimes(1)
 			})
 		})
 
