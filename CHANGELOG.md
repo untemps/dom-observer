@@ -1,3 +1,20 @@
+# [3.0.0](https://github.com/untemps/dom-observer/compare/v2.1.0...v3.0.0) (2026-04-02)
+
+
+### Bug Fixes
+
+* Trigger major version bump for breaking changes ([3836c92](https://github.com/untemps/dom-observer/commit/3836c9204306a365610fe9145afead26723e3aa4))
+
+
+### BREAKING CHANGES
+
+* watch() is a new dedicated method for recurring
+mutations. wait() with a callback still works but watch() is the
+preferred API going forward.
+* AbortSignal support added to both wait() and watch().
+Passing an already-aborted signal to wait() now rejects immediately
+with an AbortError instead of starting observation.
+
 # [2.1.0](https://github.com/untemps/dom-observer/compare/v2.0.6...v2.1.0) (2026-04-02)
 
 
