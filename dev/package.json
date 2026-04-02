@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "license": "MIT",
   "devDependencies": {
+    "@emnapi/core": "^1.7.1",
+    "@emnapi/runtime": "^1.7.1",
     "vite": "^8.0.0"
   },
   "scripts": {
