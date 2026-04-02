@@ -1,5 +1,34 @@
 import isElement from './utils/isElement'
 
+export type DOMTarget = Element | string
+
+export interface ChangeOptions {
+	attributeName: string | null
+	oldValue: string | null
+}
+
+export type OnEventCallback = (node: Element, event: string, options?: ChangeOptions) => void
+
+export interface WaitResult {
+	node: Element
+	event: string
+	options?: ChangeOptions
+}
+
+export interface WaitOptions {
+	events?: string[]
+	timeout?: number
+	attributeFilter?: string[]
+	onError?: (error: Error) => void
+	signal?: AbortSignal
+}
+
+export interface WatchOptions {
+	events?: string[]
+	attributeFilter?: string[]
+	signal?: AbortSignal
+}
+
 class DOMObserver {
 	static EXIST = 'DOMObserver_exist'
 	static ADD = 'DOMObserver_add'
@@ -7,22 +36,25 @@ class DOMObserver {
 	static CHANGE = 'DOMObserver_change'
 	static EVENTS = [DOMObserver.EXIST, DOMObserver.ADD, DOMObserver.REMOVE, DOMObserver.CHANGE]
 
-	_observer = null
-	_pendingReject = null
-	_signal = null
-	_abortHandler = null
+	private _observer: MutationObserver | null = null
+	private _pendingReject: ((error: Error | DOMException) => void) | null = null
+	private _signal: AbortSignal | null = null
+	private _abortHandler: (() => void) | null = null
+	private _timeout: ReturnType<typeof setTimeout> | undefined = undefined
 
+	wait(target: DOMTarget, onEvent?: null, options?: WaitOptions): Promise<WaitResult>
+	wait(target: DOMTarget, onEvent: OnEventCallback, options?: WaitOptions): Promise<WaitResult | undefined>
 	wait(
-		target,
-		onEvent = null,
+		target: DOMTarget,
+		onEvent: OnEventCallback | null = null,
 		{
 			events = DOMObserver.EVENTS,
 			timeout = 0,
 			attributeFilter = undefined,
 			onError = undefined,
 			signal = undefined,
-		} = {}
-	) {
+		}: WaitOptions = {}
+	): Promise<WaitResult | undefined> {
 		if (!events?.length) {
 			return Promise.reject(new Error('[EVENTS]: events array cannot be empty'))
 		}
@@ -35,25 +67,25 @@ class DOMObserver {
 		this._pendingReject = null
 		this.clear()
 
-		return new Promise((resolve, reject) => {
-			let onAbort = null
+		return new Promise<WaitResult | undefined>((resolve, reject) => {
+			let onAbort: (() => void) | null = null
 
 			const cleanup = () => {
-				signal?.removeEventListener('abort', onAbort)
+				if (onAbort) signal?.removeEventListener('abort', onAbort)
 				this._pendingReject = null
 			}
-			const settle = (value) => {
+			const settle = (value: WaitResult) => {
 				cleanup()
 				resolve(value)
 			}
-			const cancel = (error) => {
+			const cancel = (error: Error | DOMException) => {
 				cleanup()
 				reject(error)
 			}
 
 			if (!onEvent) this._pendingReject = cancel
 
-			const callback =
+			const callback: OnEventCallback =
 				onEvent ?? ((node, event, options) => settle(options ? { node, event, options } : { node, event }))
 
 			if (signal) {
@@ -76,7 +108,11 @@ class DOMObserver {
 		})
 	}
 
-	watch(target, onEvent, { events = DOMObserver.EVENTS, attributeFilter = undefined, signal = undefined } = {}) {
+	watch(
+		target: DOMTarget,
+		onEvent: OnEventCallback,
+		{ events = DOMObserver.EVENTS, attributeFilter = undefined, signal = undefined }: WatchOptions = {}
+	): this {
 		if (!events?.length) {
 			throw new Error('[EVENTS]: events array cannot be empty')
 		}
@@ -100,13 +136,17 @@ class DOMObserver {
 		return this
 	}
 
-	_observe(target, callback, { events, attributeFilter }) {
+	private _observe(
+		target: DOMTarget,
+		callback: OnEventCallback,
+		{ events, attributeFilter }: { events: string[]; attributeFilter?: string[] }
+	): void {
 		const hasExist = events.includes(DOMObserver.EXIST)
 		const hasAdd = events.includes(DOMObserver.ADD)
 		const hasRemove = events.includes(DOMObserver.REMOVE)
 		const hasChange = events.includes(DOMObserver.CHANGE)
 
-		const el = isElement(target) ? target : document.querySelector(target)
+		const el = isElement(target) ? target : document.querySelector(target as string)
 		if (el && hasExist) {
 			callback(el, DOMObserver.EXIST)
 		}
@@ -114,17 +154,20 @@ class DOMObserver {
 		this._observer = new MutationObserver((mutations) => {
 			mutations.forEach(({ type, target: targetNode, addedNodes, removedNodes, attributeName, oldValue }) => {
 				if (type === 'childList' && (hasAdd || hasRemove)) {
-					const notify = (node, event) => {
-						if (node === target || (!isElement(target) && node.matches?.(target))) {
-							callback(node, event)
+					const notify = (node: Node, event: string) => {
+						if (node === target || (!isElement(target) && (node as Element).matches?.(target as string))) {
+							callback(node as Element, event)
 						}
 					}
 					if (hasAdd) for (const node of addedNodes) notify(node, DOMObserver.ADD)
 					if (hasRemove) for (const node of removedNodes) notify(node, DOMObserver.REMOVE)
 				}
 				if (type === 'attributes' && hasChange) {
-					if (targetNode === target || (!isElement(target) && targetNode.matches?.(target))) {
-						callback(targetNode, DOMObserver.CHANGE, { attributeName, oldValue })
+					if (
+						targetNode === target ||
+						(!isElement(target) && (targetNode as Element).matches?.(target as string))
+					) {
+						callback(targetNode as Element, DOMObserver.CHANGE, { attributeName, oldValue })
 					}
 				}
 			})
@@ -140,8 +183,10 @@ class DOMObserver {
 		})
 	}
 
-	clear() {
-		this._signal?.removeEventListener('abort', this._abortHandler)
+	clear(): void {
+		if (this._signal && this._abortHandler) {
+			this._signal.removeEventListener('abort', this._abortHandler)
+		}
 		this._signal = null
 		this._abortHandler = null
 		this._pendingReject = null

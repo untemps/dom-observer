@@ -7,7 +7,7 @@
 		"dom",
 		"mutations-observer",
 		"class",
-		"javascript"
+		"typescript"
 	],
 	"author": "Vincent Le Badezet <v.lebadezet@untemps.net>",
 	"license": "MIT",
@@ -18,10 +18,12 @@
 	},
 	"main": "dist/index.cjs",
 	"module": "dist/index.es.js",
+	"types": "dist/index.d.ts",
 	"exports": {
 		"import": "./dist/index.es.js",
 		"require": "./dist/index.cjs",
-		"default": "./dist/index.es.js"
+		"default": "./dist/index.es.js",
+		"types": "./dist/index.d.ts"
 	},
 	"files": [
 		"dist"
@@ -40,7 +42,9 @@
 		"husky": "^9.0.0",
 		"jsdom": "^29.0.0",
 		"semantic-release": "^25.0.0",
+		"typescript": "^6.0.2",
 		"vite": "^8.0.0",
+		"vite-plugin-dts": "^4.5.4",
 		"vitest": "^4.0.0"
 	},
 	"release": {

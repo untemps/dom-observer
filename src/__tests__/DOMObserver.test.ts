@@ -1,9 +1,9 @@
 import { DOMObserver } from '../index'
 
 describe('DOMObserver', () => {
-	let instance
-	let el
-	let onEvent
+	let instance: DOMObserver | null
+	let el: HTMLElement
+	let onEvent: ReturnType<typeof vi.fn>
 
 	beforeEach(() => {
 		instance = new DOMObserver()
@@ -162,7 +162,7 @@ describe('DOMObserver', () => {
 					const {
 						node,
 						event,
-						options: { attributeName, oldValue },
+						options: { attributeName, oldValue } = {},
 					} = await instance.wait('#foo', null, {
 						events: [DOMObserver.CHANGE],
 					})
@@ -177,7 +177,7 @@ describe('DOMObserver', () => {
 					try {
 						await instance.wait('#foo', null, { timeout: 50 })
 					} catch (error) {
-						expect(error.message).toMatch('[TIMEOUT]')
+						expect((error as Error).message).toMatch('[TIMEOUT]')
 					}
 				})
 
@@ -329,7 +329,8 @@ describe('DOMObserver', () => {
 				controller.abort()
 				instance.watch('#foo', onEvent, { signal: controller.signal })
 				expect(onEvent).not.toHaveBeenCalled()
-				expect(instance._observer).toBeNull()
+				// biome-ignore lint/complexity/useLiteralKeys: accessing private field in test
+				expect(instance?.['_observer']).toBeNull()
 			})
 
 			it('Stops observation when signal is aborted', async () => {
