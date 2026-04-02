@@ -9,14 +9,26 @@ class DOMObserver {
 
 	_observer = null
 	_pendingReject = null
+	_signal = null
+	_abortHandler = null
 
 	wait(
 		target,
 		onEvent = null,
-		{ events = DOMObserver.EVENTS, timeout = 0, attributeFilter = undefined, onError = undefined } = {}
+		{
+			events = DOMObserver.EVENTS,
+			timeout = 0,
+			attributeFilter = undefined,
+			onError = undefined,
+			signal = undefined,
+		} = {}
 	) {
 		if (!events?.length) {
 			return Promise.reject(new Error('[EVENTS]: events array cannot be empty'))
+		}
+
+		if (signal?.aborted) {
+			return Promise.reject(signal.reason ?? new DOMException('Aborted', 'AbortError'))
 		}
 
 		this._pendingReject?.(new Error('[ABORT]: Observation replaced by a new wait() call'))
@@ -24,19 +36,39 @@ class DOMObserver {
 		this.clear()
 
 		return new Promise((resolve, reject) => {
-			if (!onEvent) this._pendingReject = reject
-			const settle = (value) => {
+			let onAbort = null
+
+			const cleanup = () => {
+				signal?.removeEventListener('abort', onAbort)
 				this._pendingReject = null
+			}
+			const settle = (value) => {
+				cleanup()
 				resolve(value)
 			}
+			const cancel = (error) => {
+				cleanup()
+				reject(error)
+			}
+
+			if (!onEvent) this._pendingReject = cancel
+
 			const callback =
 				onEvent ?? ((node, event, options) => settle(options ? { node, event, options } : { node, event }))
+
+			if (signal) {
+				onAbort = () => {
+					this.clear()
+					if (!onEvent) cancel(signal.reason ?? new DOMException('Aborted', 'AbortError'))
+				}
+				signal.addEventListener('abort', onAbort, { once: true })
+			}
 
 			if (timeout > 0) {
 				this._timeout = setTimeout(() => {
 					this.clear()
 					const error = new Error(`[TIMEOUT]: Element ${target} cannot be found after ${timeout}ms`)
-					onEvent ? onError?.(error) : reject(error)
+					onEvent ? onError?.(error) : cancel(error)
 				}, timeout)
 			}
 
@@ -44,14 +76,24 @@ class DOMObserver {
 		})
 	}
 
-	watch(target, onEvent, { events = DOMObserver.EVENTS, attributeFilter = undefined } = {}) {
+	watch(target, onEvent, { events = DOMObserver.EVENTS, attributeFilter = undefined, signal = undefined } = {}) {
 		if (!events?.length) {
 			throw new Error('[EVENTS]: events array cannot be empty')
+		}
+
+		if (signal?.aborted) {
+			return this
 		}
 
 		this._pendingReject?.(new Error('[ABORT]: Observation replaced by a new watch() call'))
 		this._pendingReject = null
 		this.clear()
+
+		if (signal) {
+			this._abortHandler = () => this.clear()
+			this._signal = signal
+			signal.addEventListener('abort', this._abortHandler, { once: true })
+		}
 
 		this._observe(target, onEvent, { events, attributeFilter })
 
@@ -59,8 +101,8 @@ class DOMObserver {
 	}
 
 	_observe(target, callback, { events, attributeFilter }) {
-		const hasExist  = events.includes(DOMObserver.EXIST)
-		const hasAdd    = events.includes(DOMObserver.ADD)
+		const hasExist = events.includes(DOMObserver.EXIST)
+		const hasAdd = events.includes(DOMObserver.ADD)
 		const hasRemove = events.includes(DOMObserver.REMOVE)
 		const hasChange = events.includes(DOMObserver.CHANGE)
 
@@ -99,6 +141,9 @@ class DOMObserver {
 	}
 
 	clear() {
+		this._signal?.removeEventListener('abort', this._abortHandler)
+		this._signal = null
+		this._abortHandler = null
 		this._pendingReject = null
 		this._observer?.disconnect()
 		clearTimeout(this._timeout)
