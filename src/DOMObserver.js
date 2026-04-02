@@ -50,11 +50,7 @@ class DOMObserver {
 			this._observer = new MutationObserver((mutations) => {
 				mutations.forEach(({ type, target: targetNode, addedNodes, removedNodes, attributeName, oldValue }) => {
 					if (type === 'childList' && (hasAdd || hasRemove)) {
-						const pairs = [
-							...(hasAdd ? Array.from(addedNodes).map((n) => [n, DOMObserver.ADD]) : []),
-							...(hasRemove ? Array.from(removedNodes).map((n) => [n, DOMObserver.REMOVE]) : []),
-						]
-						for (const [node, event] of pairs) {
+						const notify = (node, event) => {
 							if (node === target || (!isElement(target) && node.matches?.(target))) {
 								if (onEvent) {
 									onEvent(node, event)
@@ -63,6 +59,8 @@ class DOMObserver {
 								}
 							}
 						}
+						if (hasAdd) for (const node of addedNodes) notify(node, DOMObserver.ADD)
+						if (hasRemove) for (const node of removedNodes) notify(node, DOMObserver.REMOVE)
 					}
 					if (type === 'attributes' && hasChange) {
 						if (targetNode === target || (!isElement(target) && targetNode.matches?.(target))) {
