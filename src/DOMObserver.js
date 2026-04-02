@@ -30,12 +30,16 @@ class DOMObserver {
 
 		return new Promise((resolve, reject) => {
 			if (!onEvent) this._pendingReject = reject
+			const settle = (value) => {
+				this._pendingReject = null
+				resolve(value)
+			}
 			const el = isElement(target) ? target : document.querySelector(target)
 			if (el && hasExist) {
 				if (onEvent) {
 					onEvent(el, DOMObserver.EXIST)
 				} else {
-					resolve({ node: el, event: DOMObserver.EXIST })
+					settle({ node: el, event: DOMObserver.EXIST })
 				}
 			}
 
@@ -59,7 +63,7 @@ class DOMObserver {
 								if (onEvent) {
 									onEvent(node, event)
 								} else {
-									resolve({ node, event })
+									settle({ node, event })
 								}
 							}
 						}
@@ -74,7 +78,7 @@ class DOMObserver {
 									oldValue,
 								})
 							} else {
-								resolve({
+								settle({
 									node: targetNode,
 									event: DOMObserver.CHANGE,
 									options: {
