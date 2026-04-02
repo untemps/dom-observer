@@ -20,10 +20,10 @@
 	"module": "dist/index.es.js",
 	"types": "dist/index.d.ts",
 	"exports": {
+		"types": "./dist/index.d.ts",
 		"import": "./dist/index.es.js",
 		"require": "./dist/index.cjs",
-		"default": "./dist/index.es.js",
-		"types": "./dist/index.d.ts"
+		"default": "./dist/index.es.js"
 	},
 	"files": [
 		"dist"
@@ -80,6 +80,7 @@
 		"test": "vitest",
 		"test:ci": "vitest run --coverage",
 		"build": "vite build",
+		"typecheck": "tsc --noEmit",
 		"format": "biome check --write .",
 		"prepare": "husky"
 	}

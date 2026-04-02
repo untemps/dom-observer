@@ -30,11 +30,11 @@ export interface WatchOptions {
 }
 
 class DOMObserver {
-	static EXIST = 'DOMObserver_exist'
-	static ADD = 'DOMObserver_add'
-	static REMOVE = 'DOMObserver_remove'
-	static CHANGE = 'DOMObserver_change'
-	static EVENTS = [DOMObserver.EXIST, DOMObserver.ADD, DOMObserver.REMOVE, DOMObserver.CHANGE]
+	static EXIST = 'DOMObserver_exist' as const
+	static ADD = 'DOMObserver_add' as const
+	static REMOVE = 'DOMObserver_remove' as const
+	static CHANGE = 'DOMObserver_change' as const
+	static EVENTS: string[] = [DOMObserver.EXIST, DOMObserver.ADD, DOMObserver.REMOVE, DOMObserver.CHANGE]
 
 	private _observer: MutationObserver | null = null
 	private _pendingReject: ((error: Error | DOMException) => void) | null = null
@@ -42,8 +42,12 @@ class DOMObserver {
 	private _abortHandler: (() => void) | null = null
 	private _timeout: ReturnType<typeof setTimeout> | undefined = undefined
 
+	get isObserving(): boolean {
+		return this._observer !== null
+	}
+
 	wait(target: DOMTarget, onEvent?: null, options?: WaitOptions): Promise<WaitResult>
-	wait(target: DOMTarget, onEvent: OnEventCallback, options?: WaitOptions): Promise<WaitResult | undefined>
+	wait(target: DOMTarget, onEvent: OnEventCallback, options?: WaitOptions): Promise<void>
 	wait(
 		target: DOMTarget,
 		onEvent: OnEventCallback | null = null,
@@ -54,7 +58,7 @@ class DOMObserver {
 			onError = undefined,
 			signal = undefined,
 		}: WaitOptions = {}
-	): Promise<WaitResult | undefined> {
+	): Promise<unknown> {
 		if (!events?.length) {
 			return Promise.reject(new Error('[EVENTS]: events array cannot be empty'))
 		}
@@ -67,7 +71,7 @@ class DOMObserver {
 		this._pendingReject = null
 		this.clear()
 
-		return new Promise<WaitResult | undefined>((resolve, reject) => {
+		return new Promise<WaitResult>((resolve, reject) => {
 			let onAbort: (() => void) | null = null
 
 			const cleanup = () => {
