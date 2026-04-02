@@ -1,3 +1,10 @@
+## [2.0.3](https://github.com/untemps/dom-observer/compare/v2.0.2...v2.0.3) (2026-04-02)
+
+
+### Performance Improvements
+
+* Eliminate redundant Array.from conversions in childList handler ([#22](https://github.com/untemps/dom-observer/issues/22)) ([4744c3c](https://github.com/untemps/dom-observer/commit/4744c3c445c61dca2192e84fc099818c7bb086ca))
+
 ## [2.0.2](https://github.com/untemps/dom-observer/compare/v2.0.1...v2.0.2) (2026-04-01)
 
 
