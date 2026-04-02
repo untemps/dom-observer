@@ -61,6 +61,7 @@ Unlike `wait`, `watch` does not return a Promise and has no timeout. Call `clear
 | `options`           | Object            | Options object:                                                                                                                                          |
 | - `events`          | Array             | List of [events](#events) to observe (All events are observed by default)                                                                                |
 | - `attributeFilter` | Array             | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                       |
+| - `signal`          | AbortSignal       | An `AbortSignal` to stop the observation. If already aborted, `watch()` returns immediately without observing. |
 
 ### Wait for a one-shot mutation
 
@@ -126,6 +127,7 @@ observer.wait('#foo', onEvent, {events: [DOMObserver.ADD, DOMObserver.REMOVE]})
 | - `timeout`          | Number               | Duration (in ms) of observation before triggering the onError callback  (DOMObserver.ADD event only)                                                                                                 |
 | - `onError`          | Function             | Callback triggered when timeout elapses (DOMObserver.ADD event only)                                                                                                                                 |
 | - `attributeFilter`  | Array                | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                                                                   |
+| - `signal`           | AbortSignal          | An `AbortSignal` to cancel the observation. If already aborted, the Promise rejects immediately with an `AbortError`. |
 
 #### `onEvent` arguments
 
