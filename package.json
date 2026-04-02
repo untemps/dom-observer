@@ -28,6 +28,8 @@
 	],
 	"devDependencies": {
 		"@biomejs/biome": "^2.0.0",
+		"@commitlint/cli": "^19.0.0",
+		"@commitlint/config-conventional": "^19.0.0",
 		"@emnapi/core": "^1.7.1",
 		"@emnapi/runtime": "^1.7.1",
 		"@semantic-release/changelog": "^6.0.0",
@@ -74,6 +76,7 @@
 		"test": "vitest",
 		"test:ci": "vitest run --coverage",
 		"build": "vite build",
-		"biome": "biome check --write ."
+		"biome": "biome check --write .",
+		"prepare": "husky"
 	}
 }
