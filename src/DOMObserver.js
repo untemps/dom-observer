@@ -149,6 +149,8 @@ class DOMObserver {
 			attributeOldValue: hasChange,
 			attributeFilter,
 		})
+
+		return this
 	}
 
 	clear() {

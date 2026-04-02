@@ -188,6 +188,51 @@ describe('DOMObserver', () => {
 			})
 		})
 
+		describe('The target can be an DOM element', () => {
+			beforeEach(() => {
+				onEvent = vi.fn()
+			})
+
+			describe('Element is already created and mounted in the DOM', () => {
+				beforeEach(() => {
+					el = _createElement('foo')
+				})
+
+				it('Observes an element to be added', () => {
+					instance.wait(el, onEvent)
+					expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.EXIST)
+				})
+
+				it('Observes an element to be removed', async () => {
+					instance.wait(el, onEvent)
+					_removeElement('#foo')
+					await _sleep()
+					expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.REMOVE)
+				})
+
+				it('Observes an element to be modified', async () => {
+					instance.wait(el, onEvent)
+					_modifyElement('#foo', 'class', 'gag')
+					await _sleep()
+					expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.CHANGE, {
+						attributeName: 'class',
+						oldValue: 'bar',
+					})
+				})
+
+				it('Observes an element to be modified (CHANGE only — direct element scope)', async () => {
+					instance.wait(el, onEvent, { events: [DOMObserver.CHANGE] })
+					_modifyElement('#foo', 'class', 'gag')
+					await _sleep()
+					expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.CHANGE, {
+						attributeName: 'class',
+						oldValue: 'bar',
+					})
+				})
+			})
+		})
+	})
+
 	describe('watch', () => {
 		beforeEach(() => {
 			onEvent = vi.fn()
@@ -230,6 +275,17 @@ describe('DOMObserver', () => {
 			it('Throws when events array is empty', () => {
 				expect(() => instance.watch('#foo', onEvent, { events: [] })).toThrow('[EVENTS]')
 			})
+
+			it('Rejects the pending wait() promise when watch() is called', async () => {
+				const pending = instance.wait('#bar', null, { events: [DOMObserver.ADD] })
+				instance.watch('#foo', onEvent)
+				await expect(pending).rejects.toThrow('[ABORT]')
+			})
+
+			it('Returns the instance for chaining', () => {
+				const result = instance.watch('#foo', onEvent)
+				expect(result).toBe(instance)
+			})
 		})
 
 		describe('Element creation and mounting are delayed', () => {
@@ -238,51 +294,6 @@ describe('DOMObserver', () => {
 				el = _createElement('foo')
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.ADD)
-			})
-		})
-	})
-
-		describe('The target can be an DOM element', () => {
-			beforeEach(() => {
-				onEvent = vi.fn()
-			})
-
-			describe('Element is already created and mounted in the DOM', () => {
-				beforeEach(() => {
-					el = _createElement('foo')
-				})
-
-				it('Observes an element to be added', () => {
-					instance.wait(el, onEvent)
-					expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.EXIST)
-				})
-
-				it('Observes an element to be removed', async () => {
-					instance.wait(el, onEvent)
-					_removeElement('#foo')
-					await _sleep()
-					expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.REMOVE)
-				})
-
-				it('Observes an element to be modified', async () => {
-					instance.wait(el, onEvent)
-					_modifyElement('#foo', 'class', 'gag')
-					await _sleep()
-					expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.CHANGE, {
-						attributeName: 'class',
-						oldValue: 'bar',
-					})
-				})
-
-				it('Observes an element to be modified (CHANGE only — direct element scope)', async () => {
-					instance.wait(el, onEvent, { events: [DOMObserver.CHANGE] })
-					_modifyElement('#foo', 'class', 'gag')
-					await _sleep()
-					expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.CHANGE, {
-						attributeName: 'class',
-						oldValue: 'bar',
-					})
-				})
 			})
 		})
 	})
