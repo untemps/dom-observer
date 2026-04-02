@@ -168,6 +168,12 @@ describe('DOMObserver', () => {
 						expect(error.message).toMatch('[TIMEOUT]')
 					}
 				})
+
+				it('Rejects the pending promise when wait() is called again', async () => {
+					const first = instance.wait('#bar', null, { events: [DOMObserver.ADD] })
+					instance.wait('#baz', null, { events: [DOMObserver.ADD] })
+					await expect(first).rejects.toThrow('[ABORT]')
+				})
 			})
 
 			describe('Element creation and mounting are delayed', () => {

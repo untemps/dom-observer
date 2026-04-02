@@ -138,6 +138,17 @@ Call the `clear` method to discard observation:
 await observer.clear()
 ```
 
+> **Note:** Calling `wait()` on an instance that already has a pending Promise (one-shot mode) will automatically reject the previous Promise with an `[ABORT]` error before starting the new observation. Handle this rejection if necessary:
+>
+> ```javascript
+> const observer = new DOMObserver()
+> observer.wait('#foo').catch((err) => {
+>     if (err.message.startsWith('[ABORT]')) return // replaced by a new wait() call
+>     throw err
+> })
+> observer.wait('#bar') // previous promise is rejected with [ABORT]
+> ```
+
 ## Example
 
 ```javascript
@@ -177,7 +188,7 @@ observer.wait(
 
 ## Development
 
-A demo can be served for development purpose on `http://localhost:10001/` running:
+A demo can be served for development purpose on `http://localhost:5173/` running:
 
 ```
 yarn dev
