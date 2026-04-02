@@ -29,19 +29,72 @@ Create an instance of `DOMObserver`:
 const observer = new DOMObserver()
 ```
 
-### Wait for an element to be added to, removed from or changed in the DOM
+### Watch for recurring mutations
 
-Two observation modes are available :
+Use the `watch` method when you want to be notified **every time** a mutation occurs — for instance, tracking all successive attribute changes on an element or reacting to every matching node added to the DOM.
 
-- One-shot: Get a promise from the `wait` method to observe a mutation once.
-- Continuous: Register a callback in the `wait` method and be notified every time a mutation you declare to be observed occurs.
+```javascript
+import { DOMObserver } from '@untemps/dom-observer'
 
-To switch from one mode to another, you just have to pass a callback as second parameter to turn continuous mode on or leave it null to get a promise.
+// Track every attribute change on an element
+const observer = new DOMObserver()
+observer.watch('#foo', (node, event, { attributeName, oldValue } = {}) => {
+	console.log(`${attributeName} changed from ${oldValue} to ${node.getAttribute(attributeName)}`)
+}, { events: [DOMObserver.CHANGE] })
+
+// React to every matching node added or removed
+const listObserver = new DOMObserver()
+listObserver.watch('.list-item', (node, event) => {
+	if (event === DOMObserver.ADD) console.log(`Item added: ${node.textContent}`)
+	if (event === DOMObserver.REMOVE) console.log(`Item removed: ${node.textContent}`)
+}, { events: [DOMObserver.ADD, DOMObserver.REMOVE] })
+```
+
+Unlike `wait`, `watch` does not return a Promise and has no timeout. Call `clear()` to stop the observation.
+
+#### `watch` method arguments
+
+| Props               | Type              | Description                                                                                                                                              |
+| ------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `target`            | Element or String | DOM element or selector of the DOM element to observe. See [querySelector spec](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector) |
+| `onEvent`           | Function          | Callback triggered each time an event occurs on the observed element                                                                                    |
+| `options`           | Object            | Options object:                                                                                                                                          |
+| - `events`          | Array             | List of [events](#events) to observe (All events are observed by default)                                                                                |
+| - `attributeFilter` | Array             | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                       |
+
+### Wait for a one-shot mutation
+
+Two observation modes are available for `wait`:
+
+- One-shot (default): Get a promise resolved on the first matching mutation.
+- Continuous: Pass a callback to be notified on every matching mutation (same as `watch` with timeout support).
+
+##### One-shot mode
+
+Call the `wait` method with the element or the selector of the element you want to target, `null` as second parameter and an optional object to initiate the observation.
+
+Once the element is added to, removed from or changed in the DOM, the promise is resolved. If the element is not found before the timeout elapses, the promise is rejected.
+
+```javascript
+import { DOMObserver } from '@untemps/dom-observer'
+
+const observer = new DOMObserver()
+const { node, event, options: { attributeName } } = await observer.wait('#foo', null, {events: [DOMObserver.REMOVE, DOMObserver.CHANGE]})
+switch (event) {
+	case DOMObserver.REMOVE: {
+		console.log('Element ' + node.id + 'has been removed')
+		break
+	}
+	case DOMObserver.CHANGE: {
+		console.log('Element ' + node.id + 'has been changed (' + attributeName + ')')
+		break
+	}
+}
+```
 
 ##### Continuous mode
-Call the `wait` method with the element or the selector of the element you want to target, a callback function and an optional object to initiate the observation.
 
-Once the element is added to, removed from or changed in the DOM, the callback function is triggered with various number of arguments depending on the observed event.
+Call the `wait` method with a callback as second parameter. The callback is triggered on every matching mutation (equivalent to `watch` but with timeout support).
 
 ```javascript
 import { DOMObserver } from '@untemps/dom-observer'
@@ -51,36 +104,15 @@ const onEvent = (node, event, { attributeName } = {}) => {
 	switch (event) {
 		case DOMObserver.REMOVE: {
 			console.log('Element ' + node.id + 'has been removed')
+			break
 		}
 		case DOMObserver.CHANGE: {
 			console.log('Element ' + node.id + 'has been changed (' + attributeName + ')')
+			break
 		}
 	}
 }
 observer.wait('#foo', onEvent, {events: [DOMObserver.ADD, DOMObserver.REMOVE]})
-```
-
-##### One-shot mode
-
-Call the `wait` method with the element or the selector of the element you want to target, null as second parameter and an optional object to initiate the observation.
-
-Once the element is added to, removed from or changed in the DOM, the promise is resolved with various number of arguments depending on the observed event.
-
-In this mode, if the element is not added before the timeout elapses, the promise will be rejected with an error object.
-
-```javascript
-import { DOMObserver } from '@untemps/dom-observer'
-
-const observer = new DOMObserver()
-const { node, event, options: { attributeName } } = observer.wait('#foo', null, {events: [DOMObserver.REMOVE, DOMObserver.CHANGE]})
-switch (event) {
-	case DOMObserver.REMOVE: {
-		console.log('Element ' + node.id + 'has been removed')
-	}
-	case DOMObserver.CHANGE: {
-		console.log('Element ' + node.id + 'has been changed (' + attributeName + ')')
-	}
-}
 ```
 
 #### `wait` method arguments
@@ -156,17 +188,21 @@ import { DOMObserver } from '@untemps/dom-observer'
 
 const onEvent = (node, event, { attributeName } = {}) => {
 	switch (event) {
-		case DOMObserver.EXIST: { 
+		case DOMObserver.EXIST: {
 			console.log('Element ' + node.id + 'exists already')
+			break
 		}
 		case DOMObserver.ADD: {
 			console.log('Element ' + node.id + 'has been added')
+			break
 		}
 		case DOMObserver.REMOVE: {
 			console.log('Element ' + node.id + 'has been removed')
+			break
 		}
 		case DOMObserver.CHANGE: {
 			console.log('Element ' + node.id + 'has been changed (' + attributeName + ')')
+			break
 		}
 	}
 }
