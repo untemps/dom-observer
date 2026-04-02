@@ -1,3 +1,10 @@
+## [2.0.6](https://github.com/untemps/dom-observer/compare/v2.0.5...v2.0.6) (2026-04-02)
+
+
+### Bug Fixes
+
+* Reject pending Promise when wait() is called again ([#26](https://github.com/untemps/dom-observer/issues/26)) ([7c60776](https://github.com/untemps/dom-observer/commit/7c6077699f8fbbbde91f95c1a6481899ef7dcb91))
+
 ## [2.0.5](https://github.com/untemps/dom-observer/compare/v2.0.4...v2.0.5) (2026-04-02)
 
 
