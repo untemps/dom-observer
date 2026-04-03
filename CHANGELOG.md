@@ -1,3 +1,16 @@
+# [4.0.0](https://github.com/untemps/dom-observer/compare/v3.1.0...v4.0.0) (2026-04-03)
+
+
+### Features
+
+* Move timeout/onError to watch(), remove continuous mode from wait() ([#34](https://github.com/untemps/dom-observer/issues/34)) ([2eaef59](https://github.com/untemps/dom-observer/commit/2eaef59851d4e254cb99f7b226cab0cfd35c698f))
+
+
+### BREAKING CHANGES
+
+* wait() no longer accepts an onEvent callback. Use watch() instead.
+* onError removed from WaitOptions; moved to WatchOptions.
+
 # [3.1.0](https://github.com/untemps/dom-observer/compare/v3.0.0...v3.1.0) (2026-04-03)
 
 
