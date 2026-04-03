@@ -1,9 +1,10 @@
+import dts from 'vite-plugin-dts'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
 	build: {
 		lib: {
-			entry: 'src/index.js',
+			entry: 'src/index.ts',
 			name: 'DOMObserver',
 			formats: ['es', 'cjs', 'umd'],
 			fileName: (format) => {
@@ -14,15 +15,16 @@ export default defineConfig({
 		},
 		sourcemap: true,
 	},
+	plugins: [dts({ tsconfigPath: './tsconfig.build.json' })],
 	test: {
 		environment: 'jsdom',
 		globals: true,
-		setupFiles: ['./test/setup.js'],
+		setupFiles: ['./test/setup.ts'],
 		coverage: {
 			provider: 'v8',
 			reporter: ['text', 'lcov'],
 			include: ['src/**'],
-			exclude: ['src/**/__tests__/**', 'src/index.js'],
+			exclude: ['src/**/__tests__/**', 'src/index.ts'],
 		},
 		restoreMocks: true,
 	},

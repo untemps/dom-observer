@@ -1,9 +1,9 @@
-import { DOMObserver } from '../index'
+import { DOMObserver, type OnEventCallback } from '../index'
 
 describe('DOMObserver', () => {
-	let instance
-	let el
-	let onEvent
+	let instance: DOMObserver
+	let el: HTMLElement
+	let onEvent: ReturnType<typeof vi.fn<OnEventCallback>>
 
 	beforeEach(() => {
 		instance = new DOMObserver()
@@ -11,7 +11,6 @@ describe('DOMObserver', () => {
 
 	afterEach(() => {
 		instance.clear()
-		instance = null
 
 		document.body.innerHTML = ''
 	})
@@ -23,7 +22,7 @@ describe('DOMObserver', () => {
 	describe('wait', () => {
 		describe('The onEvent callback is triggered as soon as an event occurs', () => {
 			beforeEach(() => {
-				onEvent = vi.fn()
+				onEvent = vi.fn<OnEventCallback>()
 			})
 
 			describe('Element is already created and mounted in the DOM', () => {
@@ -162,7 +161,7 @@ describe('DOMObserver', () => {
 					const {
 						node,
 						event,
-						options: { attributeName, oldValue },
+						options: { attributeName, oldValue } = {},
 					} = await instance.wait('#foo', null, {
 						events: [DOMObserver.CHANGE],
 					})
@@ -177,7 +176,7 @@ describe('DOMObserver', () => {
 					try {
 						await instance.wait('#foo', null, { timeout: 50 })
 					} catch (error) {
-						expect(error.message).toMatch('[TIMEOUT]')
+						expect((error as Error).message).toMatch('[TIMEOUT]')
 					}
 				})
 
@@ -220,7 +219,7 @@ describe('DOMObserver', () => {
 
 		describe('The target can be an DOM element', () => {
 			beforeEach(() => {
-				onEvent = vi.fn()
+				onEvent = vi.fn<OnEventCallback>()
 			})
 
 			describe('Element is already created and mounted in the DOM', () => {
@@ -265,7 +264,7 @@ describe('DOMObserver', () => {
 
 	describe('watch', () => {
 		beforeEach(() => {
-			onEvent = vi.fn()
+			onEvent = vi.fn<OnEventCallback>()
 		})
 
 		describe('Element is already created and mounted in the DOM', () => {
@@ -329,7 +328,7 @@ describe('DOMObserver', () => {
 				controller.abort()
 				instance.watch('#foo', onEvent, { signal: controller.signal })
 				expect(onEvent).not.toHaveBeenCalled()
-				expect(instance._observer).toBeNull()
+				expect(instance.isObserving).toBe(false)
 			})
 
 			it('Stops observation when signal is aborted', async () => {
