@@ -50,7 +50,20 @@ listObserver.watch('.list-item', (node, event) => {
 }, { events: [DOMObserver.ADD, DOMObserver.REMOVE] })
 ```
 
-Unlike `wait`, `watch` does not return a Promise and has no timeout. It returns `this`, allowing method chaining. Call `clear()` to stop the observation.
+Unlike `wait`, `watch` does not return a Promise. It returns `this`, allowing method chaining. Call `clear()` to stop the observation.
+
+Pass a `timeout` to automatically stop the observation if no matching mutation occurs within the allotted time:
+
+```javascript
+const observer = new DOMObserver()
+observer.watch('#foo', (node, event) => {
+	console.log(`Event: ${event}`)
+}, {
+	events: [DOMObserver.ADD],
+	timeout: 3000,
+	onError: (err) => console.error(err.message),
+})
+```
 
 #### `watch` method arguments
 
@@ -61,89 +74,59 @@ Unlike `wait`, `watch` does not return a Promise and has no timeout. It returns 
 | `options`           | Object            | Options object:                                                                                                                                          |
 | - `events`          | Array             | List of [events](#events) to observe (All events are observed by default)                                                                                |
 | - `attributeFilter` | Array             | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                       |
-| - `signal`          | AbortSignal       | An `AbortSignal` to stop the observation. If already aborted, `watch()` returns immediately without observing. |
+| - `timeout`         | Number            | Duration (in ms) after which observation stops if no matching mutation occurred. Triggers `onError` when elapsed.                                        |
+| - `onError`         | Function          | Callback triggered when `timeout` elapses with no matching mutation                                                                                      |
+| - `signal`          | AbortSignal       | An `AbortSignal` to stop the observation. If already aborted, `watch()` returns immediately without observing.                                           |
 
 ### Wait for a one-shot mutation
 
-Two observation modes are available for `wait`:
-
-- One-shot (default): Get a promise resolved on the first matching mutation.
-- Continuous: Pass a callback to be notified on every matching mutation (same as `watch` with timeout support).
-
-##### One-shot mode
-
-Call the `wait` method with the element or the selector of the element you want to target, `null` as second parameter and an optional object to initiate the observation.
-
-Once the element is added to, removed from or changed in the DOM, the promise is resolved. If the element is not found before the timeout elapses, the promise is rejected.
+Use the `wait` method to get a Promise that resolves on the **first** matching mutation.
 
 ```javascript
 import { DOMObserver } from '@untemps/dom-observer'
 
 const observer = new DOMObserver()
-const { node, event, options: { attributeName } } = await observer.wait('#foo', null, {events: [DOMObserver.REMOVE, DOMObserver.CHANGE]})
+const { node, event, options: { attributeName } = {} } = await observer.wait('#foo', { events: [DOMObserver.REMOVE, DOMObserver.CHANGE] })
 switch (event) {
 	case DOMObserver.REMOVE: {
-		console.log('Element ' + node.id + 'has been removed')
+		console.log('Element ' + node.id + ' has been removed')
 		break
 	}
 	case DOMObserver.CHANGE: {
-		console.log('Element ' + node.id + 'has been changed (' + attributeName + ')')
+		console.log('Element ' + node.id + ' has been changed (' + attributeName + ')')
 		break
 	}
 }
 ```
 
-##### Continuous mode
-
-Call the `wait` method with a callback as second parameter. The callback is triggered on every matching mutation (equivalent to `watch` but with timeout support).
-
-```javascript
-import { DOMObserver } from '@untemps/dom-observer'
-
-const observer = new DOMObserver()
-const onEvent = (node, event, { attributeName } = {}) => {
-	switch (event) {
-		case DOMObserver.REMOVE: {
-			console.log('Element ' + node.id + 'has been removed')
-			break
-		}
-		case DOMObserver.CHANGE: {
-			console.log('Element ' + node.id + 'has been changed (' + attributeName + ')')
-			break
-		}
-	}
-}
-observer.wait('#foo', onEvent, {events: [DOMObserver.ADD, DOMObserver.REMOVE]})
-```
+Once the first matching mutation occurs, the Promise is resolved and the observation stops. If a `timeout` is set and elapses before any matching mutation, the Promise is rejected.
 
 #### `wait` method arguments
 
-| Props                | Type                 | Description                                                                                                                                                                                          |
-| -------------------- | -------------------- |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `target`             | Element or String    | DOM element or selector of the DOM element to observe. See [querySelector spec](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector)                                             |
-| `onEvent`            | Function or `null`   | Callback triggered when an event occurred with the observed element (depending on the events listed in `events` option. Pass `null` to activate one-shot mode and retrieve a promise from the method |
-| `options        `    | Object               | Options object:                                                                                                                                                                                      |
-| - `events`           | Array                | List of [events](#events) to observe (All events are observed by default)                                                                                                                            |
-| - `timeout`          | Number               | Duration (in ms) of observation before triggering the onError callback. If elapsed with no matching mutation, the promise is rejected (one-shot mode) or `onError` is called (continuous mode)      |
-| - `onError`          | Function             | Callback triggered when timeout elapses (continuous mode only)                                                                                                                                       |
-| - `attributeFilter`  | Array                | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                                                                   |
-| - `signal`           | AbortSignal          | An `AbortSignal` to cancel the observation. If already aborted, the Promise rejects immediately with an `AbortError`. |
+| Props               | Type              | Description                                                                                                                                              |
+| ------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `target`            | Element or String | DOM element or selector of the DOM element to observe. See [querySelector spec](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector) |
+| `options`           | Object            | Options object:                                                                                                                                          |
+| - `events`          | Array             | List of [events](#events) to observe (All events are observed by default)                                                                                |
+| - `timeout`         | Number            | Duration (in ms) of observation before rejecting the Promise                                                                                             |
+| - `attributeFilter` | Array             | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                       |
+| - `signal`          | AbortSignal       | An `AbortSignal` to cancel the observation. If already aborted, the Promise rejects immediately with an `AbortError`.                                    |
 
-#### `onEvent` arguments
+#### `onEvent` callback arguments
 
-| Props              | Type     | Description                                                                                                                                  |
-| ------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `node`             | Node     | Observed element node                                                                                                                        |
-| `event`            | String   | Event that triggered the callback                                                                                                            |
-| `options        `  | Object   | Options object:                                                                                                                              |
-| - `attributeName`  | String   | Name of the attribute that has changed (DOMObserver.CHANGE event only)                                                                       |
-| - `oldValue`       | String or null | Old value of the attribute that has changed (DOMObserver.CHANGE event only)                                                           |
+| Props             | Type           | Description                                                            |
+| ----------------- | -------------- | ---------------------------------------------------------------------- |
+| `node`            | Element        | Observed element node                                                  |
+| `event`           | String         | Event that triggered the callback                                      |
+| `options`         | Object         | Options object:                                                        |
+| - `attributeName` | String         | Name of the attribute that has changed (DOMObserver.CHANGE event only) |
+| - `oldValue`      | String or null | Old value of the attribute that has changed (DOMObserver.CHANGE event only) |
 
-#### `onError` arguments
+#### `onError` callback arguments
 
-| Props              | Type     | Description                                                                                                                                  |
-| ------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `error`            | Error    | Error thrown                                                                                                                                 |
+| Props   | Type  | Description  |
+| ------- | ----- | ------------ |
+| `error` | Error | Error thrown |
 
 #### Events
 
@@ -151,13 +134,13 @@ DOMObserver static properties list all observable events.
 
 | Props                | Description                                                                               |
 |----------------------|-------------------------------------------------------------------------------------------|
-| `DOMObserver.EXIST`  | Observe whether the element is already present in the DOM at observation start           |
+| `DOMObserver.EXIST`  | Observe whether the element is already present in the DOM at observation start            |
 | `DOMObserver.ADD`    | Observe when the element is added to the DOM                                              |
 | `DOMObserver.REMOVE` | Observe when the element is removed from the DOM                                          |
 | `DOMObserver.CHANGE` | Observe when an attribute has changed on the element                                      |
 | `DOMObserver.EVENTS` | Array of all four events                                                                  |
 
-One or more events can be passed to the `events` option of the  `wait` method. By default, all events are observed.
+One or more events can be passed to the `events` option of `wait` or `watch`. By default, all events are observed.
 
 ```javascript
 { events: [DOMObserver.ADD, DOMObserver.REMOVE] }
@@ -184,7 +167,7 @@ Call the `clear` method to discard observation:
 observer.clear()
 ```
 
-> **Note:** Calling `wait()` on an instance that already has a pending Promise (one-shot mode) will automatically reject the previous Promise with an `[ABORT]` error before starting the new observation. Handle this rejection if necessary:
+> **Note:** Calling `wait()` on an instance that already has a pending Promise will automatically reject the previous Promise with an `[ABORT]` error before starting the new observation. Handle this rejection if necessary:
 >
 > ```javascript
 > const observer = new DOMObserver()
@@ -200,38 +183,36 @@ observer.clear()
 ```javascript
 import { DOMObserver } from '@untemps/dom-observer'
 
-const onEvent = (node, event, { attributeName } = {}) => {
-	switch (event) {
-		case DOMObserver.EXIST: {
-			console.log('Element ' + node.id + 'exists already')
-			break
-		}
-		case DOMObserver.ADD: {
-			console.log('Element ' + node.id + 'has been added')
-			break
-		}
-		case DOMObserver.REMOVE: {
-			console.log('Element ' + node.id + 'has been removed')
-			break
-		}
-		case DOMObserver.CHANGE: {
-			console.log('Element ' + node.id + 'has been changed (' + attributeName + ')')
-			break
-		}
-	}
-}
-const onError = (err) => {
-	console.error(err.message)
-}
+// Continuous observation with timeout
+const onError = (err) => console.error(err.message)
 const observer = new DOMObserver()
-observer.wait(
+observer.watch(
     '.foo',
-    onEvent,
+    (node, event, { attributeName } = {}) => {
+        switch (event) {
+            case DOMObserver.EXIST: {
+                console.log('Element ' + node.id + ' exists already')
+                break
+            }
+            case DOMObserver.ADD: {
+                console.log('Element ' + node.id + ' has been added')
+                break
+            }
+            case DOMObserver.REMOVE: {
+                console.log('Element ' + node.id + ' has been removed')
+                break
+            }
+            case DOMObserver.CHANGE: {
+                console.log('Element ' + node.id + ' has been changed (' + attributeName + ')')
+                break
+            }
+        }
+    },
     {
-    	events: [DOMObserver.EXIST, DOMObserver.ADD, DOMObserver.REMOVE, DOMObserver.CHANGE],
+        events: [DOMObserver.EXIST, DOMObserver.ADD, DOMObserver.REMOVE, DOMObserver.CHANGE],
         timeout: 2000,
         onError,
-        attributeFilter: ['class']
+        attributeFilter: ['class'],
     }
 )
 ```
