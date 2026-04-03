@@ -21,13 +21,14 @@ export interface WaitOptions {
 	events?: DOMObserverEvent[]
 	timeout?: number
 	attributeFilter?: string[]
-	onError?: (error: Error) => void
 	signal?: AbortSignal
 }
 
 export interface WatchOptions {
 	events?: DOMObserverEvent[]
 	attributeFilter?: string[]
+	timeout?: number
+	onError?: (error: Error) => void
 	signal?: AbortSignal
 }
 
@@ -48,19 +49,15 @@ class DOMObserver {
 		return this._observer !== null
 	}
 
-	wait(target: DOMTarget, onEvent?: null, options?: WaitOptions): Promise<WaitResult>
-	wait(target: DOMTarget, onEvent: OnEventCallback, options?: WaitOptions): Promise<void>
 	wait(
 		target: DOMTarget,
-		onEvent: OnEventCallback | null = null,
 		{
 			events = DOMObserver.EVENTS,
 			timeout = 0,
 			attributeFilter = undefined,
-			onError = undefined,
 			signal = undefined,
 		}: WaitOptions = {}
-	): Promise<unknown> {
+	): Promise<WaitResult> {
 		if (!events?.length) {
 			return Promise.reject(new Error('[EVENTS]: events array cannot be empty'))
 		}
@@ -89,15 +86,15 @@ class DOMObserver {
 				reject(error)
 			}
 
-			if (!onEvent) this._pendingReject = cancel
+			this._pendingReject = cancel
 
-			const callback: OnEventCallback =
-				onEvent ?? ((node, event, options) => settle(options ? { node, event, options } : { node, event }))
+			const callback: OnEventCallback = (node, event, options) =>
+				settle(options ? { node, event, options } : { node, event })
 
 			if (signal) {
 				onAbort = () => {
 					this.clear()
-					if (!onEvent) cancel(signal.reason ?? new DOMException('Aborted', 'AbortError'))
+					cancel(signal.reason ?? new DOMException('Aborted', 'AbortError'))
 				}
 				signal.addEventListener('abort', onAbort, { once: true })
 			}
@@ -105,8 +102,7 @@ class DOMObserver {
 			if (timeout > 0) {
 				this._timeout = setTimeout(() => {
 					this.clear()
-					const error = new Error(`[TIMEOUT]: Element ${target} cannot be found after ${timeout}ms`)
-					onEvent ? onError?.(error) : cancel(error)
+					cancel(new Error(`[TIMEOUT]: Element ${target} cannot be found after ${timeout}ms`))
 				}, timeout)
 			}
 
@@ -117,7 +113,13 @@ class DOMObserver {
 	watch(
 		target: DOMTarget,
 		onEvent: OnEventCallback,
-		{ events = DOMObserver.EVENTS, attributeFilter = undefined, signal = undefined }: WatchOptions = {}
+		{
+			events = DOMObserver.EVENTS,
+			attributeFilter = undefined,
+			timeout = 0,
+			onError = undefined,
+			signal = undefined,
+		}: WatchOptions = {}
 	): this {
 		if (!events?.length) {
 			throw new Error('[EVENTS]: events array cannot be empty')
@@ -137,7 +139,22 @@ class DOMObserver {
 			signal.addEventListener('abort', this._abortHandler, { once: true })
 		}
 
-		this._observe(target, onEvent, { events, attributeFilter })
+		const callback: OnEventCallback =
+			timeout > 0
+				? (...args) => {
+						clearTimeout(this._timeout)
+						onEvent(...args)
+					}
+				: onEvent
+
+		if (timeout > 0) {
+			this._timeout = setTimeout(() => {
+				this.clear()
+				onError?.(new Error(`[TIMEOUT]: Element ${target} cannot be found after ${timeout}ms`))
+			}, timeout)
+		}
+
+		this._observe(target, callback, { events, attributeFilter })
 
 		return this
 	}
@@ -197,6 +214,7 @@ class DOMObserver {
 		this._abortHandler = null
 		this._pendingReject = null
 		this._observer?.disconnect()
+		this._observer = null
 		clearTimeout(this._timeout)
 	}
 }
