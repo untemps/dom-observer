@@ -4,7 +4,8 @@
 		"noEmit": false,
 		"declaration": true,
 		"declarationDir": "dist",
-		"rootDir": "src"
+		"rootDir": "src",
+		"types": []
 	},
 	"include": ["src"],
 	"exclude": ["src/**/__tests__/**"]

@@ -2,16 +2,18 @@ import isElement from './utils/isElement'
 
 export type DOMTarget = Element | string
 
+export type DOMObserverEvent = 'DOMObserver_exist' | 'DOMObserver_add' | 'DOMObserver_remove' | 'DOMObserver_change'
+
 export interface ChangeOptions {
 	attributeName: string | null
 	oldValue: string | null
 }
 
-export type OnEventCallback = (node: Element, event: string, options?: ChangeOptions) => void
+export type OnEventCallback = (node: Element, event: DOMObserverEvent, options?: ChangeOptions) => void
 
 export interface WaitResult {
 	node: Element
-	event: string
+	event: DOMObserverEvent
 	options?: ChangeOptions
 }
 
@@ -158,7 +160,7 @@ class DOMObserver {
 		this._observer = new MutationObserver((mutations) => {
 			mutations.forEach(({ type, target: targetNode, addedNodes, removedNodes, attributeName, oldValue }) => {
 				if (type === 'childList' && (hasAdd || hasRemove)) {
-					const notify = (node: Node, event: string) => {
+					const notify = (node: Node, event: DOMObserverEvent) => {
 						if (node === target || (!isElement(target) && (node as Element).matches?.(target as string))) {
 							callback(node as Element, event)
 						}

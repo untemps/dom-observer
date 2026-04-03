@@ -78,7 +78,7 @@
 	"scripts": {
 		"dev": "cd dev && yarn && yarn start",
 		"test": "vitest",
-		"test:ci": "vitest run --coverage",
+		"test:ci": "tsc --noEmit && vitest run --coverage",
 		"build": "vite build",
 		"typecheck": "tsc --noEmit",
 		"format": "biome check --write .",
