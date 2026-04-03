@@ -139,6 +139,14 @@ class DOMObserver {
 			signal.addEventListener('abort', this._abortHandler, { once: true })
 		}
 
+		const callback: OnEventCallback =
+			timeout > 0
+				? (...args) => {
+						clearTimeout(this._timeout)
+						onEvent(...args)
+					}
+				: onEvent
+
 		if (timeout > 0) {
 			this._timeout = setTimeout(() => {
 				this.clear()
@@ -146,7 +154,7 @@ class DOMObserver {
 			}, timeout)
 		}
 
-		this._observe(target, onEvent, { events, attributeFilter })
+		this._observe(target, callback, { events, attributeFilter })
 
 		return this
 	}
@@ -206,6 +214,7 @@ class DOMObserver {
 		this._abortHandler = null
 		this._pendingReject = null
 		this._observer?.disconnect()
+		this._observer = null
 		clearTimeout(this._timeout)
 	}
 }
