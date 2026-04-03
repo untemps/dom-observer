@@ -1,3 +1,10 @@
+# [3.1.0](https://github.com/untemps/dom-observer/compare/v3.0.0...v3.1.0) (2026-04-03)
+
+
+### Features
+
+* Migrate project to TypeScript ([#33](https://github.com/untemps/dom-observer/issues/33)) ([e14496a](https://github.com/untemps/dom-observer/commit/e14496a573a2fef51410b78702ab4a736ec4fbc1))
+
 # [3.0.0](https://github.com/untemps/dom-observer/compare/v2.1.0...v3.0.0) (2026-04-02)
 
 
