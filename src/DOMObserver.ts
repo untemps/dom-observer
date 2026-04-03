@@ -18,7 +18,7 @@ export interface WaitResult {
 }
 
 export interface WaitOptions {
-	events?: string[]
+	events?: DOMObserverEvent[]
 	timeout?: number
 	attributeFilter?: string[]
 	onError?: (error: Error) => void
@@ -26,17 +26,17 @@ export interface WaitOptions {
 }
 
 export interface WatchOptions {
-	events?: string[]
+	events?: DOMObserverEvent[]
 	attributeFilter?: string[]
 	signal?: AbortSignal
 }
 
 class DOMObserver {
-	static EXIST = 'DOMObserver_exist' as const
-	static ADD = 'DOMObserver_add' as const
-	static REMOVE = 'DOMObserver_remove' as const
-	static CHANGE = 'DOMObserver_change' as const
-	static EVENTS: string[] = [DOMObserver.EXIST, DOMObserver.ADD, DOMObserver.REMOVE, DOMObserver.CHANGE]
+	static EXIST = 'DOMObserver_exist' as const satisfies DOMObserverEvent
+	static ADD = 'DOMObserver_add' as const satisfies DOMObserverEvent
+	static REMOVE = 'DOMObserver_remove' as const satisfies DOMObserverEvent
+	static CHANGE = 'DOMObserver_change' as const satisfies DOMObserverEvent
+	static EVENTS: DOMObserverEvent[] = [DOMObserver.EXIST, DOMObserver.ADD, DOMObserver.REMOVE, DOMObserver.CHANGE]
 
 	private _observer: MutationObserver | null = null
 	private _pendingReject: ((error: Error | DOMException) => void) | null = null
@@ -145,7 +145,7 @@ class DOMObserver {
 	private _observe(
 		target: DOMTarget,
 		callback: OnEventCallback,
-		{ events, attributeFilter }: { events: string[]; attributeFilter?: string[] }
+		{ events, attributeFilter }: { events: DOMObserverEvent[]; attributeFilter?: string[] }
 	): void {
 		const hasExist = events.includes(DOMObserver.EXIST)
 		const hasAdd = events.includes(DOMObserver.ADD)
