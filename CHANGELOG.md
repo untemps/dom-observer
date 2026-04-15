@@ -1,3 +1,10 @@
+## [4.0.1](https://github.com/untemps/dom-observer/compare/v4.0.0...v4.0.1) (2026-04-15)
+
+
+### Bug Fixes
+
+* Disconnect observer and clear timeout after wait() resolves ([#57](https://github.com/untemps/dom-observer/issues/57)) ([08f9251](https://github.com/untemps/dom-observer/commit/08f925161ddfd1f4254cc0120777bd969ac27a67))
+
 # [4.0.0](https://github.com/untemps/dom-observer/compare/v3.1.0...v4.0.0) (2026-04-03)
 
 
