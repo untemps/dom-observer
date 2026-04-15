@@ -74,6 +74,10 @@ describe('DOMObserver', () => {
 					await expect(() => instance.wait('#foo', { events: [] })).rejects.toThrow()
 				})
 
+				it('Rejects with [TARGET] error when selector is invalid', async () => {
+					await expect(instance.wait('##invalid')).rejects.toThrow('[TARGET]')
+				})
+
 				it('Rejects immediately when signal is already aborted', async () => {
 					const controller = new AbortController()
 					controller.abort()
@@ -133,6 +137,11 @@ describe('DOMObserver', () => {
 				expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.EXIST)
 			})
 
+			it('Accepts an Element reference as target', () => {
+				instance.watch(el, onEvent)
+				expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.EXIST)
+			})
+
 			it('Triggers onEvent on every successive attribute change', async () => {
 				instance.watch('#foo', onEvent, { events: [DOMObserver.CHANGE] })
 				_modifyElement('#foo', 'class', 'change1')
@@ -166,6 +175,10 @@ describe('DOMObserver', () => {
 
 			it('Throws when events array is empty', () => {
 				expect(() => instance.watch('#foo', onEvent, { events: [] })).toThrow('[EVENTS]')
+			})
+
+			it('Throws with [TARGET] error when selector is invalid', () => {
+				expect(() => instance.watch('##invalid', onEvent)).toThrow('[TARGET]')
 			})
 
 			it('Rejects the pending wait() promise when watch() is called', async () => {

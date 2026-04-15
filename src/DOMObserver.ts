@@ -163,7 +163,14 @@ class DOMObserver {
 		const hasRemove = events.includes(DOMObserver.REMOVE)
 		const hasChange = events.includes(DOMObserver.CHANGE)
 
-		const el = isElement(target) ? target : document.querySelector(target as string)
+		let el: Element | null = isElement(target) ? target : null
+		if (!el) {
+			try {
+				el = document.querySelector(target as string)
+			} catch {
+				throw new Error(`[TARGET]: "${target}" is not a valid CSS selector`)
+			}
+		}
 		if (el && hasExist) {
 			callback(el, DOMObserver.EXIST)
 		}
