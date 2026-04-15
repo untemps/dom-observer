@@ -87,18 +87,15 @@ class DOMObserver {
 				settle(options ? { node, event, options } : { node, event })
 
 			if (signal) {
-				onAbort = () => {
-					this.clear()
-					cancel(signal.reason ?? new DOMException('Aborted', 'AbortError'))
-				}
+				onAbort = () => cancel(signal.reason ?? new DOMException('Aborted', 'AbortError'))
 				signal.addEventListener('abort', onAbort, { once: true })
 			}
 
 			if (timeout > 0) {
-				this._timeout = setTimeout(() => {
-					this.clear()
-					cancel(new Error(`[TIMEOUT]: Element ${target} cannot be found after ${timeout}ms`))
-				}, timeout)
+				this._timeout = setTimeout(
+					() => cancel(new Error(`[TIMEOUT]: Element ${target} cannot be found after ${timeout}ms`)),
+					timeout
+				)
 			}
 
 			this._observe(target, callback, { events, attributeFilter })
