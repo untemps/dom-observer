@@ -59,12 +59,9 @@ describe('DOMObserver', () => {
 				})
 
 				it('Rejects promise when an element is not found after timeout is elapsed', async () => {
-					const instance = new DOMObserver()
-					try {
-						await instance.wait('#foo', { timeout: 50 })
-					} catch (error) {
-						expect((error as Error).message).toMatch('[TIMEOUT]')
-					}
+					await expect(instance.wait('#bar', { events: [DOMObserver.ADD], timeout: 50 })).rejects.toThrow(
+						'[TIMEOUT]'
+					)
 				})
 
 				it('Rejects the pending promise when wait() is called again', async () => {
