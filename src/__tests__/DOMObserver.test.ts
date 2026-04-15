@@ -98,9 +98,9 @@ describe('DOMObserver', () => {
 				})
 
 				it('Does not clear a subsequent watch() when timeout was set', async () => {
-					await instance.wait('#foo', { timeout: 200 })
+					await instance.wait('#foo', { timeout: 100 })
 					instance.watch('#foo', vi.fn<OnEventCallback>(), { events: [DOMObserver.CHANGE] })
-					await _sleep(250)
+					await _sleep(150)
 					expect(instance.isObserving).toBe(true)
 				})
 			})
