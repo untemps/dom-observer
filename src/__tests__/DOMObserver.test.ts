@@ -59,12 +59,9 @@ describe('DOMObserver', () => {
 				})
 
 				it('Rejects promise when an element is not found after timeout is elapsed', async () => {
-					const instance = new DOMObserver()
-					try {
-						await instance.wait('#foo', { timeout: 50 })
-					} catch (error) {
-						expect((error as Error).message).toMatch('[TIMEOUT]')
-					}
+					await expect(instance.wait('#bar', { events: [DOMObserver.ADD], timeout: 50 })).rejects.toThrow(
+						'[TIMEOUT]'
+					)
 				})
 
 				it('Rejects the pending promise when wait() is called again', async () => {
@@ -93,6 +90,18 @@ describe('DOMObserver', () => {
 					})
 					setTimeout(() => controller.abort(), 50)
 					await expect(promise).rejects.toMatchObject({ name: 'AbortError' })
+				})
+
+				it('Sets isObserving to false after the promise resolves', async () => {
+					await instance.wait('#foo')
+					expect(instance.isObserving).toBe(false)
+				})
+
+				it('Does not clear a subsequent watch() when timeout was set', async () => {
+					await instance.wait('#foo', { timeout: 100 })
+					instance.watch('#foo', vi.fn<OnEventCallback>(), { events: [DOMObserver.CHANGE] })
+					await _sleep(150)
+					expect(instance.isObserving).toBe(true)
 				})
 			})
 
