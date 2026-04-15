@@ -94,6 +94,18 @@ describe('DOMObserver', () => {
 					setTimeout(() => controller.abort(), 50)
 					await expect(promise).rejects.toMatchObject({ name: 'AbortError' })
 				})
+
+				it('Sets isObserving to false after the promise resolves', async () => {
+					await instance.wait('#foo')
+					expect(instance.isObserving).toBe(false)
+				})
+
+				it('Does not clear a subsequent watch() when timeout was set', async () => {
+					await instance.wait('#foo', { timeout: 200 })
+					instance.watch('#foo', vi.fn<OnEventCallback>(), { events: [DOMObserver.CHANGE] })
+					await _sleep(250)
+					expect(instance.isObserving).toBe(true)
+				})
 			})
 
 			describe('Element creation and mounting are delayed', () => {

@@ -51,12 +51,7 @@ class DOMObserver {
 
 	wait(
 		target: DOMTarget,
-		{
-			events = DOMObserver.EVENTS,
-			timeout = 0,
-			attributeFilter = undefined,
-			signal = undefined,
-		}: WaitOptions = {}
+		{ events = DOMObserver.EVENTS, timeout = 0, attributeFilter = undefined, signal = undefined }: WaitOptions = {}
 	): Promise<WaitResult> {
 		if (!events?.length) {
 			return Promise.reject(new Error('[EVENTS]: events array cannot be empty'))
@@ -107,6 +102,8 @@ class DOMObserver {
 			}
 
 			this._observe(target, callback, { events, attributeFilter })
+		}).finally(() => {
+			this.clear()
 		})
 	}
 
