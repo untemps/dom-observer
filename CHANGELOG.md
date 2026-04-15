@@ -1,3 +1,10 @@
+## [4.0.2](https://github.com/untemps/dom-observer/compare/v4.0.1...v4.0.2) (2026-04-15)
+
+
+### Bug Fixes
+
+* Throw [TARGET] error on invalid CSS selector instead of propagating SyntaxError ([#58](https://github.com/untemps/dom-observer/issues/58)) ([60fed6f](https://github.com/untemps/dom-observer/commit/60fed6f9ee6b20ad3b2a0670b846e07e877921b0))
+
 ## [4.0.1](https://github.com/untemps/dom-observer/compare/v4.0.0...v4.0.1) (2026-04-15)
 
 
