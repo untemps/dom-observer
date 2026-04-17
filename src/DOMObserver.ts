@@ -1,42 +1,77 @@
 import isElement from './utils/isElement'
 
+/** A CSS selector string or a direct DOM Element reference used to identify the observed target. */
 export type DOMTarget = Element | string
 
+/** Union of all event types emitted by DOMObserver. */
 export type DOMObserverEvent = 'DOMObserver_exist' | 'DOMObserver_add' | 'DOMObserver_remove' | 'DOMObserver_change'
 
+/** Metadata attached to a `CHANGE` event, mirroring the relevant fields of `MutationRecord`. */
 export interface ChangeOptions {
+	/** Name of the attribute that changed. */
 	attributeName: string | null
+	/** Value of the attribute before the mutation. */
 	oldValue: string | null
 }
 
+/**
+ * Callback invoked by `watch()` whenever an observed event occurs.
+ *
+ * @param node - The matching DOM element.
+ * @param event - The event type that fired.
+ * @param options - Additional mutation metadata, present only for `CHANGE` events.
+ */
 export type OnEventCallback = (node: Element, event: DOMObserverEvent, options?: ChangeOptions) => void
 
+/** Resolved value of the Promise returned by `wait()`. */
 export interface WaitResult {
+	/** The matching DOM element. */
 	node: Element
+	/** The event type that caused the Promise to settle. */
 	event: DOMObserverEvent
+	/** Additional mutation metadata, present only for `CHANGE` events. */
 	options?: ChangeOptions
 }
 
+/** Options accepted by `wait()`. */
 export interface WaitOptions {
+	/** Event types to listen for. Defaults to all four event types. */
 	events?: DOMObserverEvent[]
+	/** Maximum time in milliseconds to wait before rejecting with a `[TIMEOUT]` error. `0` disables the timeout. */
 	timeout?: number
+	/** Restrict attribute observation to these attribute names. Passed directly to `MutationObserver.observe()`. */
 	attributeFilter?: string[]
+	/** When provided, aborting the signal rejects the Promise with an `AbortError`. */
 	signal?: AbortSignal
 }
 
+/** Options accepted by `watch()`. */
 export interface WatchOptions {
+	/** Event types to listen for. Defaults to all four event types. */
 	events?: DOMObserverEvent[]
+	/** Restrict attribute observation to these attribute names. Passed directly to `MutationObserver.observe()`. */
 	attributeFilter?: string[]
+	/**
+	 * Maximum time in milliseconds to wait for the first matching mutation before stopping observation.
+	 * The timeout is cancelled as soon as any mutation fires. `0` disables the timeout.
+	 */
 	timeout?: number
+	/** Called with a `[TIMEOUT]` error when the timeout elapses with no matching mutation. */
 	onError?: (error: Error) => void
+	/** When provided, aborting the signal stops observation immediately. */
 	signal?: AbortSignal
 }
 
 class DOMObserver {
+	/** Fired synchronously when the target element is already present in the DOM at observation time. */
 	static EXIST = 'DOMObserver_exist' as const satisfies DOMObserverEvent
+	/** Fired when the target element is added to the DOM. */
 	static ADD = 'DOMObserver_add' as const satisfies DOMObserverEvent
+	/** Fired when the target element is removed from the DOM. */
 	static REMOVE = 'DOMObserver_remove' as const satisfies DOMObserverEvent
+	/** Fired when an attribute of the target element changes. */
 	static CHANGE = 'DOMObserver_change' as const satisfies DOMObserverEvent
+	/** Convenience array containing all four event types, used as the default value for the `events` option. */
 	static EVENTS: DOMObserverEvent[] = [DOMObserver.EXIST, DOMObserver.ADD, DOMObserver.REMOVE, DOMObserver.CHANGE]
 
 	private _observer: MutationObserver | null = null
@@ -45,10 +80,27 @@ class DOMObserver {
 	private _abortHandler: (() => void) | null = null
 	private _timeout: ReturnType<typeof setTimeout> | undefined = undefined
 
+	/** `true` while an observation is active, `false` after `clear()` is called or the observation settles. */
 	get isObserving(): boolean {
 		return this._observer !== null
 	}
 
+	/**
+	 * Observes the target once and returns a Promise that resolves with the first matching event.
+	 *
+	 * If the target already exists in the DOM and `EXIST` is among the requested events, the Promise
+	 * resolves synchronously on the next microtask. The observer is automatically disconnected as soon
+	 * as the Promise settles — whether by resolution, rejection, timeout, or abort.
+	 *
+	 * Calling `wait()` while a previous call is still pending rejects the previous Promise with `[ABORT]`
+	 * and starts a fresh observation.
+	 *
+	 * @param target - CSS selector or Element to observe.
+	 * @param options - Observation options.
+	 * @returns A Promise that resolves with the matching node, event type, and optional change metadata.
+	 * @throws `[EVENTS]` when the `events` array is empty.
+	 * @throws `[TARGET]` when `target` is a string that is not a valid CSS selector.
+	 */
 	wait(
 		target: DOMTarget,
 		{ events = DOMObserver.EVENTS, timeout = 0, attributeFilter = undefined, signal = undefined }: WaitOptions = {}
@@ -104,6 +156,25 @@ class DOMObserver {
 		})
 	}
 
+	/**
+	 * Observes the target continuously and invokes `onEvent` for every matching mutation.
+	 *
+	 * If the target already exists in the DOM and `EXIST` is among the requested events, `onEvent` is
+	 * called synchronously before this method returns.
+	 *
+	 * Calling `watch()` while a previous `wait()` is still pending rejects that Promise with `[ABORT]`
+	 * and starts a fresh observation.
+	 *
+	 * When `timeout` is set, the observation stops automatically after the first matching mutation —
+	 * subsequent mutations will not fire `onEvent`.
+	 *
+	 * @param target - CSS selector or Element to observe.
+	 * @param onEvent - Callback invoked on every matching event.
+	 * @param options - Observation options.
+	 * @returns The `DOMObserver` instance, allowing method chaining.
+	 * @throws `[EVENTS]` when the `events` array is empty.
+	 * @throws `[TARGET]` when `target` is a string that is not a valid CSS selector.
+	 */
 	watch(
 		target: DOMTarget,
 		onEvent: OnEventCallback,
@@ -207,6 +278,11 @@ class DOMObserver {
 		})
 	}
 
+	/**
+	 * Stops the active observation and resets all internal state.
+	 *
+	 * Safe to call at any time — including when no observation is active.
+	 */
 	clear(): void {
 		if (this._signal && this._abortHandler) {
 			this._signal.removeEventListener('abort', this._abortHandler)
