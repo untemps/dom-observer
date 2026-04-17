@@ -1,3 +1,10 @@
+## [4.0.3](https://github.com/untemps/dom-observer/compare/v4.0.2...v4.0.3) (2026-04-17)
+
+
+### Bug Fixes
+
+* Restrict CHANGE-only observer optimization to Element references ([#59](https://github.com/untemps/dom-observer/issues/59)) ([63d5369](https://github.com/untemps/dom-observer/commit/63d5369b31cda3f6cd441a0da4d33718ce707f9b))
+
 ## [4.0.2](https://github.com/untemps/dom-observer/compare/v4.0.1...v4.0.2) (2026-04-15)
 
 
