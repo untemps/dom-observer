@@ -78,6 +78,22 @@ observer.watch('#foo', (node, event) => {
 | - `onError`         | Function          | Callback triggered when `timeout` elapses with no matching mutation                                                                                      |
 | - `signal`          | AbortSignal       | An `AbortSignal` to stop the observation. If already aborted, `watch()` returns immediately without observing.                                           |
 
+#### `onEvent` callback arguments
+
+| Props             | Type           | Description                                                                 |
+| ----------------- | -------------- | --------------------------------------------------------------------------- |
+| `node`            | Element        | Observed element node                                                       |
+| `event`           | String         | Event that triggered the callback                                           |
+| `options`         | Object         | Present only for `CHANGE` events:                                           |
+| - `attributeName` | String         | Name of the attribute that changed                                          |
+| - `oldValue`      | String or null | Value of the attribute before the mutation                                  |
+
+#### `onError` callback arguments
+
+| Props   | Type  | Description  |
+| ------- | ----- | ------------ |
+| `error` | Error | Error thrown |
+
 ### Wait for a one-shot mutation
 
 Use the `wait` method to get a Promise that resolves on the **first** matching mutation.
@@ -99,7 +115,7 @@ switch (event) {
 }
 ```
 
-Once the first matching mutation occurs, the Promise is resolved and the observation stops. If a `timeout` is set and elapses before any matching mutation, the Promise is rejected.
+Once the first matching mutation occurs, the Promise resolves and the observation stops automatically. If a `timeout` is set and elapses before any matching mutation, the Promise rejects with a `[TIMEOUT]` error.
 
 #### `wait` method arguments
 
@@ -108,25 +124,19 @@ Once the first matching mutation occurs, the Promise is resolved and the observa
 | `target`            | Element or String | DOM element or selector of the DOM element to observe. See [querySelector spec](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector) |
 | `options`           | Object            | Options object:                                                                                                                                          |
 | - `events`          | Array             | List of [events](#events) to observe (All events are observed by default)                                                                                |
-| - `timeout`         | Number            | Duration (in ms) of observation before rejecting the Promise                                                                                             |
+| - `timeout`         | Number            | Duration (in ms) before rejecting the Promise with a `[TIMEOUT]` error. `0` disables the timeout.                                                       |
 | - `attributeFilter` | Array             | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                       |
 | - `signal`          | AbortSignal       | An `AbortSignal` to cancel the observation. If already aborted, the Promise rejects immediately with an `AbortError`.                                    |
 
-#### `onEvent` callback arguments
+#### Resolved value
 
-| Props             | Type           | Description                                                            |
-| ----------------- | -------------- | ---------------------------------------------------------------------- |
-| `node`            | Element        | Observed element node                                                  |
-| `event`           | String         | Event that triggered the callback                                      |
-| `options`         | Object         | Options object:                                                        |
-| - `attributeName` | String         | Name of the attribute that has changed (DOMObserver.CHANGE event only) |
-| - `oldValue`      | String or null | Old value of the attribute that has changed (DOMObserver.CHANGE event only) |
-
-#### `onError` callback arguments
-
-| Props   | Type  | Description  |
-| ------- | ----- | ------------ |
-| `error` | Error | Error thrown |
+| Props             | Type           | Description                                                                 |
+| ----------------- | -------------- | --------------------------------------------------------------------------- |
+| `node`            | Element        | The matching DOM element                                                    |
+| `event`           | String         | The event type that caused the Promise to settle                            |
+| `options`         | Object         | Present only for `CHANGE` events:                                           |
+| - `attributeName` | String         | Name of the attribute that changed                                          |
+| - `oldValue`      | String or null | Value of the attribute before the mutation                                  |
 
 #### Events
 
@@ -167,15 +177,16 @@ Call the `clear` method to discard observation:
 observer.clear()
 ```
 
-> **Note:** Calling `wait()` on an instance that already has a pending Promise will automatically reject the previous Promise with an `[ABORT]` error before starting the new observation. Handle this rejection if necessary:
+> **Note:** Calling `wait()` or `watch()` on an instance that already has a pending `wait()` Promise will automatically reject that Promise with an `[ABORT]` error before starting the new observation. Handle this rejection if necessary:
 >
 > ```javascript
 > const observer = new DOMObserver()
 > observer.wait('#foo').catch((err) => {
->     if (err.message.startsWith('[ABORT]')) return // replaced by a new wait() call
+>     if (err.message.startsWith('[ABORT]')) return // replaced by a new observation
 >     throw err
 > })
-> observer.wait('#bar') // previous promise is rejected with [ABORT]
+> observer.wait('#bar')  // previous promise is rejected with [ABORT]
+> observer.watch('#baz', onEvent)  // also rejects a pending wait() with [ABORT]
 > ```
 
 ## Example
