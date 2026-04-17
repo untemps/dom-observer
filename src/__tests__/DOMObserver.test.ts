@@ -173,6 +173,19 @@ describe('DOMObserver', () => {
 				expect(onEvent).toHaveBeenCalledTimes(3)
 			})
 
+			it('Fires CHANGE for all elements matching a class selector, not just the first', async () => {
+				const a = _createElementWithClass('item')
+				const b = _createElementWithClass('item')
+				instance.watch('.item', onEvent, { events: [DOMObserver.CHANGE] })
+				a.setAttribute('data-x', '1')
+				await _sleep()
+				b.setAttribute('data-x', '2')
+				await _sleep()
+				expect(onEvent).toHaveBeenCalledTimes(2)
+				expect(onEvent).toHaveBeenCalledWith(a, DOMObserver.CHANGE, { attributeName: 'data-x', oldValue: null })
+				expect(onEvent).toHaveBeenCalledWith(b, DOMObserver.CHANGE, { attributeName: 'data-x', oldValue: null })
+			})
+
 			it('Throws when events array is empty', () => {
 				expect(() => instance.watch('#foo', onEvent, { events: [] })).toThrow('[EVENTS]')
 			})
