@@ -223,6 +223,12 @@ class DOMObserver {
 				clearTimeout(this._timeout)
 				wrapped(...args)
 			}
+			this._timeout = setTimeout(() => {
+				this.clear()
+				onError?.(
+					new Error(`${DOMObserverErrors.TIMEOUT}: Element ${target} cannot be found after ${timeout}ms`)
+				)
+			}, timeout)
 		}
 		if (once) {
 			const wrapped = callback
@@ -230,15 +236,6 @@ class DOMObserver {
 				this.clear()
 				wrapped(...args)
 			}
-		}
-
-		if (timeout > 0) {
-			this._timeout = setTimeout(() => {
-				this.clear()
-				onError?.(
-					new Error(`${DOMObserverErrors.TIMEOUT}: Element ${target} cannot be found after ${timeout}ms`)
-				)
-			}, timeout)
 		}
 
 		this._observe(target, callback, { events, attributeFilter })
