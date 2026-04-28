@@ -283,6 +283,8 @@ class DOMObserver {
 	 * Stops the active observation and resets all internal state.
 	 *
 	 * Safe to call at any time — including when no observation is active.
+	 *
+	 * @returns The instance, enabling method chaining.
 	 */
 	clear(): this {
 		if (this._signal && this._abortHandler) {
