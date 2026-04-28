@@ -1,3 +1,10 @@
+# [4.3.0](https://github.com/untemps/dom-observer/compare/v4.2.0...v4.3.0) (2026-04-28)
+
+
+### Features
+
+* add once option to watch() for callback-style one-shot observation ([#64](https://github.com/untemps/dom-observer/issues/64)) ([f799bbb](https://github.com/untemps/dom-observer/commit/f799bbbd3f15cb3c98aa6cb34021128bccb38938))
+
 # [4.2.0](https://github.com/untemps/dom-observer/compare/v4.1.0...v4.2.0) (2026-04-28)
 
 
