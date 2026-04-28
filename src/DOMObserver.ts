@@ -25,6 +25,12 @@ export interface ChangeOptions {
  */
 export type OnEventCallback = (node: Element, event: DOMObserverEvent, options?: ChangeOptions) => void
 
+/**
+ * Predicate called before invoking the event callback. Return `true` to let the event through,
+ * `false` to skip it. Receives the same arguments as `OnEventCallback`.
+ */
+export type FilterCallback = (node: Element, event: DOMObserverEvent, options?: ChangeOptions) => boolean
+
 /** Resolved value of the Promise returned by `wait()`. */
 export interface WaitResult {
 	/** The matching DOM element. */
@@ -47,6 +53,8 @@ export interface WaitOptions {
 	signal?: AbortSignal
 	/** DOM element or CSS selector to use as the observation root. Defaults to `document.documentElement`. */
 	root?: DOMTarget
+	/** Predicate applied to every matched node before resolving. Return `false` to skip the event and keep waiting. */
+	filter?: FilterCallback
 }
 
 /** Options accepted by `watch()`. */
@@ -70,6 +78,11 @@ export interface WatchOptions {
 	debounce?: number
 	/** DOM element or CSS selector to use as the observation root. Defaults to `document.documentElement`. */
 	root?: DOMTarget
+	/**
+	 * Predicate applied to every matched node before invoking the callback. Return `false` to skip the event.
+	 * When used with `debounce`, only events that pass the filter start the debounce timer.
+	 */
+	filter?: FilterCallback
 }
 
 class DOMObserver {
@@ -120,6 +133,7 @@ class DOMObserver {
 			attributeFilter = undefined,
 			signal = undefined,
 			root = undefined,
+			filter = undefined,
 		}: WaitOptions = {}
 	): Promise<WaitResult> {
 		if (!events?.length) {
@@ -172,7 +186,7 @@ class DOMObserver {
 				)
 			}
 
-			this._observe(target, callback, { events, attributeFilter, root })
+			this._observe(target, callback, { events, attributeFilter, root, filter })
 		}).finally(() => {
 			this.clear()
 		})
@@ -215,6 +229,7 @@ class DOMObserver {
 			once = false,
 			debounce = 0,
 			root = undefined,
+			filter = undefined,
 		}: WatchOptions = {}
 	): this {
 		if (!events?.length) {
@@ -264,7 +279,7 @@ class DOMObserver {
 			}
 		}
 
-		this._observe(target, callback, { events, attributeFilter, root })
+		this._observe(target, callback, { events, attributeFilter, root, filter })
 
 		return this
 	}
@@ -272,7 +287,12 @@ class DOMObserver {
 	private _observe(
 		target: DOMTarget,
 		callback: OnEventCallback,
-		{ events, attributeFilter, root }: { events: DOMObserverEvent[]; attributeFilter?: string[]; root?: DOMTarget }
+		{
+			events,
+			attributeFilter,
+			root,
+			filter,
+		}: { events: DOMObserverEvent[]; attributeFilter?: string[]; root?: DOMTarget; filter?: FilterCallback }
 	): void {
 		const hasExist = events.includes(DOMObserver.EXIST)
 		const hasAdd = events.includes(DOMObserver.ADD)
@@ -282,8 +302,13 @@ class DOMObserver {
 		const el = resolveDOMTarget(target)
 		const defaultRoot = resolveDOMTarget(root) ?? document.documentElement
 
+		const fireCallback = (node: Element, event: DOMObserverEvent, opts?: ChangeOptions) => {
+			if (filter && !filter(node, event, opts)) return
+			opts !== undefined ? callback(node, event, opts) : callback(node, event)
+		}
+
 		if (el && hasExist) {
-			callback(el, DOMObserver.EXIST)
+			fireCallback(el, DOMObserver.EXIST)
 		}
 
 		this._observer = new MutationObserver((mutations) => {
@@ -291,7 +316,7 @@ class DOMObserver {
 				if (type === 'childList' && (hasAdd || hasRemove)) {
 					const notify = (node: Node, event: DOMObserverEvent) => {
 						if (node === target || (!isElement(target) && (node as Element).matches?.(target as string))) {
-							callback(node as Element, event)
+							fireCallback(node as Element, event)
 						}
 					}
 					if (hasAdd) for (const node of addedNodes) notify(node, DOMObserver.ADD)
@@ -302,7 +327,7 @@ class DOMObserver {
 						targetNode === target ||
 						(!isElement(target) && (targetNode as Element).matches?.(target as string))
 					) {
-						callback(targetNode as Element, DOMObserver.CHANGE, { attributeName, oldValue })
+						fireCallback(targetNode as Element, DOMObserver.CHANGE, { attributeName, oldValue })
 					}
 				}
 			})
