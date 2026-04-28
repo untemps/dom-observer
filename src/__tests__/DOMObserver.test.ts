@@ -58,6 +58,18 @@ describe('DOMObserver', () => {
 					expect(oldValue).toBe('bar')
 				})
 
+				it('Resolves only when a filtered attribute changes', async () => {
+					setTimeout(() => {
+						_modifyElement('#foo', 'data-ignored', 'x')
+						_modifyElement('#foo', 'data-watched', 'y')
+					}, 50)
+					const { options } = await instance.wait('#foo', {
+						events: [DOMObserver.CHANGE],
+						attributeFilter: ['data-watched'],
+					})
+					expect(options?.attributeName).toBe('data-watched')
+				})
+
 				it('Rejects promise when an element is not found after timeout is elapsed', async () => {
 					await expect(instance.wait('#bar', { events: [DOMObserver.ADD], timeout: 50 })).rejects.toThrow(
 						DOMObserverErrors.TIMEOUT
@@ -184,6 +196,22 @@ describe('DOMObserver', () => {
 				expect(onEvent).toHaveBeenCalledTimes(2)
 				expect(onEvent).toHaveBeenCalledWith(a, DOMObserver.CHANGE, { attributeName: 'data-x', oldValue: null })
 				expect(onEvent).toHaveBeenCalledWith(b, DOMObserver.CHANGE, { attributeName: 'data-x', oldValue: null })
+			})
+
+			it('Only fires for attributes in the filter list', async () => {
+				instance.watch('#foo', onEvent, {
+					events: [DOMObserver.CHANGE],
+					attributeFilter: ['data-watched'],
+				})
+				_modifyElement('#foo', 'data-ignored', 'x')
+				await _sleep()
+				_modifyElement('#foo', 'data-watched', 'y')
+				await _sleep()
+				expect(onEvent).toHaveBeenCalledOnce()
+				expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.CHANGE, {
+					attributeName: 'data-watched',
+					oldValue: null,
+				})
 			})
 
 			it('Throws when events array is empty', () => {
