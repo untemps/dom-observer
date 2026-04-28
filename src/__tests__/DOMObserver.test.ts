@@ -304,6 +304,51 @@ describe('DOMObserver', () => {
 				await _sleep(250)
 				expect(onError).not.toHaveBeenCalled()
 			})
+
+			it('Fires onEvent once after a burst of mutations when debounce is set', async () => {
+				instance.watch('#foo', onEvent, { events: [DOMObserver.CHANGE], debounce: 50 })
+				_modifyElement('#foo', 'class', 'change1')
+				_modifyElement('#foo', 'class', 'change2')
+				_modifyElement('#foo', 'class', 'change3')
+				await _sleep(150)
+				expect(onEvent).toHaveBeenCalledOnce()
+			})
+
+			it('Forwards the last mutation arguments when debounce is set', async () => {
+				instance.watch('#foo', onEvent, { events: [DOMObserver.CHANGE], debounce: 50 })
+				_modifyElement('#foo', 'class', 'change1')
+				_modifyElement('#foo', 'class', 'change2')
+				await _sleep(150)
+				expect(onEvent).toHaveBeenCalledWith(el, DOMObserver.CHANGE, {
+					attributeName: 'class',
+					oldValue: 'change1',
+				})
+			})
+
+			it('Does not fire onEvent when clear() is called during the debounce period', async () => {
+				instance.watch('#foo', onEvent, { events: [DOMObserver.CHANGE], debounce: 100 })
+				_modifyElement('#foo', 'class', 'change1')
+				instance.clear()
+				await _sleep(200)
+				expect(onEvent).not.toHaveBeenCalled()
+			})
+
+			it('Fires onEvent once and stops when debounce and once are both set', async () => {
+				instance.watch('#foo', onEvent, { events: [DOMObserver.CHANGE], debounce: 50, once: true })
+				_modifyElement('#foo', 'class', 'change1')
+				_modifyElement('#foo', 'class', 'change2')
+				await _sleep(150)
+				expect(onEvent).toHaveBeenCalledOnce()
+				expect(instance.isObserving).toBe(false)
+			})
+
+			it('Fires onError on timeout when no mutation occurs even with debounce set', async () => {
+				const onError = vi.fn()
+				instance.watch('#bar', onEvent, { events: [DOMObserver.ADD], timeout: 50, debounce: 200, onError })
+				await _sleep(100)
+				expect(onEvent).not.toHaveBeenCalled()
+				expect(onError).toHaveBeenCalledOnce()
+			})
 		})
 
 		describe('Element creation and mounting are delayed', () => {

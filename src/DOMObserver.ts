@@ -63,6 +63,8 @@ export interface WatchOptions {
 	signal?: AbortSignal
 	/** When `true`, automatically calls `clear()` after the first matching event. */
 	once?: boolean
+	/** Milliseconds to wait after the last mutation before invoking the callback. The callback receives the last mutation's arguments. `0` disables debouncing. */
+	debounce?: number
 }
 
 class DOMObserver {
@@ -82,6 +84,7 @@ class DOMObserver {
 	private _signal: AbortSignal | null = null
 	private _abortHandler: (() => void) | null = null
 	private _timeout: ReturnType<typeof setTimeout> | undefined = undefined
+	private _debounceTimer: ReturnType<typeof setTimeout> | undefined = undefined
 
 	/** `true` while an observation is active, `false` after `clear()` is called or the observation settles. */
 	get isObserving(): boolean {
@@ -179,6 +182,9 @@ class DOMObserver {
 	 * When `once` is set, the observation stops automatically after the first matching mutation,
 	 * equivalent to calling `clear()` manually inside `onEvent`.
 	 *
+	 * When `debounce` is set, `onEvent` is deferred after each mutation and only fires once the
+	 * mutations have stopped for the specified duration. The callback receives the last mutation's arguments.
+	 *
 	 * @param target - CSS selector or Element to observe.
 	 * @param onEvent - Callback invoked on every matching event.
 	 * @param options - Observation options.
@@ -196,6 +202,7 @@ class DOMObserver {
 			onError = undefined,
 			signal = undefined,
 			once = false,
+			debounce = 0,
 		}: WatchOptions = {}
 	): this {
 		if (!events?.length) {
@@ -229,6 +236,13 @@ class DOMObserver {
 					new Error(`${DOMObserverErrors.TIMEOUT}: Element ${target} cannot be found after ${timeout}ms`)
 				)
 			}, timeout)
+		}
+		if (debounce > 0) {
+			const wrapped = callback
+			callback = (...args) => {
+				clearTimeout(this._debounceTimer)
+				this._debounceTimer = setTimeout(() => wrapped(...args), debounce)
+			}
 		}
 		if (once) {
 			const wrapped = callback
@@ -315,6 +329,7 @@ class DOMObserver {
 		this._observer?.disconnect()
 		this._observer = null
 		clearTimeout(this._timeout)
+		clearTimeout(this._debounceTimer)
 		return this
 	}
 }
