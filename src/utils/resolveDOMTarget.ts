@@ -1,5 +1,5 @@
-import { DOMObserverErrors } from '../DOMObserverErrors'
 import type { DOMTarget } from '../DOMObserver'
+import { DOMObserverErrors } from '../DOMObserverErrors'
 import isElement from './isElement'
 
 const resolveDOMTarget = (target: DOMTarget | undefined): Element | null => {

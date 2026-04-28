@@ -198,7 +198,10 @@ describe('DOMObserver', () => {
 					const filter = vi.fn(() => true)
 					setTimeout(() => _modifyElement('#foo', 'class', 'updated'), 50)
 					await instance.wait('#foo', { events: [DOMObserver.CHANGE], filter })
-					expect(filter).toHaveBeenCalledWith(el, DOMObserver.CHANGE, { attributeName: 'class', oldValue: 'bar' })
+					expect(filter).toHaveBeenCalledWith(el, DOMObserver.CHANGE, {
+						attributeName: 'class',
+						oldValue: 'bar',
+					})
 				})
 			})
 
