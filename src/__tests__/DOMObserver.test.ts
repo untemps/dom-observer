@@ -150,6 +150,56 @@ describe('DOMObserver', () => {
 					expect(node.id).toBe('scoped2')
 					root.remove()
 				})
+
+				it('Resolves immediately when filter passes for an existing element', async () => {
+					const { node, event } = await instance.wait('#foo', { filter: () => true })
+					expect(node).toEqual(el)
+					expect(event).toBe(DOMObserver.EXIST)
+				})
+
+				it('Skips nodes rejected by filter and resolves on the first passing one', async () => {
+					setTimeout(() => {
+						document.body.appendChild(document.createElement('button'))
+					}, 50)
+					setTimeout(() => {
+						const btn = document.createElement('button')
+						btn.className = 'primary'
+						document.body.appendChild(btn)
+					}, 100)
+					const { node } = await instance.wait('button', {
+						events: [DOMObserver.ADD],
+						filter: (n) => n.classList.contains('primary'),
+					})
+					expect(node.classList.contains('primary')).toBe(true)
+				})
+
+				it('Rejects with TIMEOUT when filter never passes', async () => {
+					setTimeout(() => {
+						document.body.appendChild(document.createElement('button'))
+					}, 30)
+					await expect(
+						instance.wait('button', { events: [DOMObserver.ADD], filter: () => false, timeout: 80 })
+					).rejects.toThrow(DOMObserverErrors.TIMEOUT)
+				})
+
+				it('Skips EXIST when filter returns false and resolves on next matching mutation', async () => {
+					const btn = document.createElement('button')
+					document.body.appendChild(btn)
+					setTimeout(() => btn.setAttribute('data-ready', 'true'), 50)
+					const { node } = await instance.wait('button', {
+						events: [DOMObserver.EXIST, DOMObserver.CHANGE],
+						filter: (n) => n.hasAttribute('data-ready'),
+					})
+					expect(node.getAttribute('data-ready')).toBe('true')
+					btn.remove()
+				})
+
+				it('Passes ChangeOptions to filter for CHANGE events', async () => {
+					const filter = vi.fn(() => true)
+					setTimeout(() => _modifyElement('#foo', 'class', 'updated'), 50)
+					await instance.wait('#foo', { events: [DOMObserver.CHANGE], filter })
+					expect(filter).toHaveBeenCalledWith(el, DOMObserver.CHANGE, { attributeName: 'class', oldValue: 'bar' })
+				})
 			})
 
 			describe('Element creation and mounting are delayed', () => {
@@ -303,6 +353,33 @@ describe('DOMObserver', () => {
 				expect(onEvent).toHaveBeenCalledOnce()
 				outside.remove()
 				root.remove()
+			})
+
+			it('Calls onEvent when filter passes', async () => {
+				instance.watch('#foo', onEvent, { events: [DOMObserver.CHANGE], filter: () => true })
+				_modifyElement('#foo', 'class', 'change1')
+				await _sleep()
+				expect(onEvent).toHaveBeenCalledOnce()
+			})
+
+			it('Does not call onEvent when filter returns false', async () => {
+				instance.watch('#foo', onEvent, { events: [DOMObserver.CHANGE], filter: () => false })
+				_modifyElement('#foo', 'class', 'change1')
+				await _sleep()
+				expect(onEvent).not.toHaveBeenCalled()
+			})
+
+			it('Does not fire EXIST when filter returns false for an existing element', () => {
+				instance.watch('#foo', onEvent, { filter: () => false })
+				expect(onEvent).not.toHaveBeenCalled()
+			})
+
+			it('Passes ChangeOptions to filter for CHANGE events', async () => {
+				const filter = vi.fn(() => true)
+				instance.watch('#foo', onEvent, { events: [DOMObserver.CHANGE], filter })
+				_modifyElement('#foo', 'class', 'updated')
+				await _sleep()
+				expect(filter).toHaveBeenCalledWith(el, DOMObserver.CHANGE, { attributeName: 'class', oldValue: 'bar' })
 			})
 
 			it('Throws when events array is empty', () => {
