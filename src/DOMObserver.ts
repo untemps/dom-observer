@@ -157,7 +157,13 @@ class DOMObserver {
 		this.clear()
 
 		const isMulti = Array.isArray(target)
-		const targetLabel = isMulti ? (target as DOMTarget[]).join(', ') : target
+		const formatTarget = (t: DOMTarget): string =>
+			isElement(t)
+				? `<${(t as Element).tagName.toLowerCase()}${(t as Element).id ? `#${(t as Element).id}` : ''}>`
+				: String(t)
+		const targetLabel = isMulti
+			? `[${(target as DOMTarget[]).map(formatTarget).join(', ')}]`
+			: formatTarget(target as DOMTarget)
 
 		return new Promise<WaitResult>((resolve, reject) => {
 			let onAbort: (() => void) | null = null
