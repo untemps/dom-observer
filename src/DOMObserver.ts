@@ -280,11 +280,11 @@ class DOMObserver {
 		const hasChange = events.includes(DOMObserver.CHANGE)
 
 		const el = resolveDOMTarget(target)
+		const defaultRoot = resolveDOMTarget(root) ?? document.documentElement
+
 		if (el && hasExist) {
 			callback(el, DOMObserver.EXIST)
 		}
-
-		const defaultRoot = resolveDOMTarget(root) ?? document.documentElement
 
 		this._observer = new MutationObserver((mutations) => {
 			mutations.forEach(({ type, target: targetNode, addedNodes, removedNodes, attributeName, oldValue }) => {

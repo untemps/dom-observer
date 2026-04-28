@@ -90,6 +90,10 @@ describe('DOMObserver', () => {
 					await expect(instance.wait('##invalid')).rejects.toThrow(DOMObserverErrors.TARGET)
 				})
 
+				it('Rejects with [TARGET] error when root selector is invalid', async () => {
+					await expect(instance.wait('#foo', { root: '##invalid' })).rejects.toThrow(DOMObserverErrors.TARGET)
+				})
+
 				it('Rejects immediately when signal is already aborted', async () => {
 					const controller = new AbortController()
 					controller.abort()
