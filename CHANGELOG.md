@@ -1,3 +1,10 @@
+# [4.7.0](https://github.com/untemps/dom-observer/compare/v4.6.0...v4.7.0) (2026-04-28)
+
+
+### Features
+
+* Support multiple targets in wait() ([#68](https://github.com/untemps/dom-observer/issues/68)) ([d229660](https://github.com/untemps/dom-observer/commit/d229660e892911c78601445f87a32c58b0d0da26))
+
 # [4.6.0](https://github.com/untemps/dom-observer/compare/v4.5.0...v4.6.0) (2026-04-28)
 
 
