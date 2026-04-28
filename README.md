@@ -171,10 +171,13 @@ console.log(observer.isObserving) // false
 
 ### Discard observation
 
-Call the `clear` method to discard observation:
+Call the `clear` method to discard observation. It returns `this`, allowing method chaining:
 
 ```javascript
 observer.clear()
+
+// Stop and immediately restart with a different target
+observer.clear().watch('#bar', onEvent)
 ```
 
 > **Note:** Calling `wait()` or `watch()` on an instance that already has a pending `wait()` Promise will automatically reject that Promise with an `[ABORT]` error before starting the new observation. Handle this rejection if necessary:

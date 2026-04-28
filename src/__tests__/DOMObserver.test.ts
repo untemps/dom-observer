@@ -261,4 +261,10 @@ describe('DOMObserver', () => {
 			})
 		})
 	})
+
+	describe('clear', () => {
+		it('Returns the instance for chaining', () => {
+			expect(instance.clear()).toBe(instance)
+		})
+	})
 })

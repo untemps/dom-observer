@@ -268,7 +268,8 @@ class DOMObserver {
 			})
 		})
 
-		const observerTarget = hasChange && !hasAdd && !hasRemove && isElement(target) ? target : document.documentElement
+		const observerTarget =
+			hasChange && !hasAdd && !hasRemove && isElement(target) ? target : document.documentElement
 		this._observer.observe(observerTarget, {
 			subtree: observerTarget === document.documentElement,
 			childList: hasAdd || hasRemove,
@@ -282,8 +283,10 @@ class DOMObserver {
 	 * Stops the active observation and resets all internal state.
 	 *
 	 * Safe to call at any time — including when no observation is active.
+	 *
+	 * @returns The instance, enabling method chaining.
 	 */
-	clear(): void {
+	clear(): this {
 		if (this._signal && this._abortHandler) {
 			this._signal.removeEventListener('abort', this._abortHandler)
 		}
@@ -293,6 +296,7 @@ class DOMObserver {
 		this._observer?.disconnect()
 		this._observer = null
 		clearTimeout(this._timeout)
+		return this
 	}
 }
 
