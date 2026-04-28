@@ -200,7 +200,9 @@ class DOMObserver {
 					() =>
 						cancel(
 							new Error(
-								`${DOMObserverErrors.TIMEOUT}: Element ${targetLabel} cannot be found after ${timeout}ms`
+								isMulti
+										? `${DOMObserverErrors.TIMEOUT}: None of ${targetLabel} could be found after ${timeout}ms`
+										: `${DOMObserverErrors.TIMEOUT}: Element ${targetLabel} cannot be found after ${timeout}ms`
 							)
 						),
 					timeout
