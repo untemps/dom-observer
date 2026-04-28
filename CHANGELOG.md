@@ -1,3 +1,10 @@
+# [4.6.0](https://github.com/untemps/dom-observer/compare/v4.5.0...v4.6.0) (2026-04-28)
+
+
+### Features
+
+* Add filter callback option to restrict which matched nodes trigger the callback ([#67](https://github.com/untemps/dom-observer/issues/67)) ([e1bca5a](https://github.com/untemps/dom-observer/commit/e1bca5a4fe0309fc094c798fe22a8aa1e0d7bc0c))
+
 # [4.5.0](https://github.com/untemps/dom-observer/compare/v4.4.0...v4.5.0) (2026-04-28)
 
 
