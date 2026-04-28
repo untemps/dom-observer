@@ -1,3 +1,10 @@
+# [4.5.0](https://github.com/untemps/dom-observer/compare/v4.4.0...v4.5.0) (2026-04-28)
+
+
+### Features
+
+* add root option to restrict observation scope ([#66](https://github.com/untemps/dom-observer/issues/66)) ([64b67b0](https://github.com/untemps/dom-observer/commit/64b67b001116236f449db893a7b98b391f46ee42))
+
 # [4.4.0](https://github.com/untemps/dom-observer/compare/v4.3.0...v4.4.0) (2026-04-28)
 
 
