@@ -60,6 +60,18 @@ observer.watch('#foo', (node, event) => {
 }, { events: [DOMObserver.ADD], once: true })
 ```
 
+Pass `debounce` to delay the callback until mutations have stopped for a given number of milliseconds — useful when you only care about the final state after a burst of rapid changes:
+
+```javascript
+observer.watch('#progress', (node) => {
+	console.log('final value:', node.getAttribute('data-value'))
+}, {
+	events: [DOMObserver.CHANGE],
+	attributeFilter: ['data-value'],
+	debounce: 100,
+})
+```
+
 Pass a `timeout` to automatically stop the observation if no matching mutation occurs within the allotted time:
 
 ```javascript
@@ -86,6 +98,7 @@ observer.watch('#foo', (node, event) => {
 | - `onError`         | Function          | Callback triggered when `timeout` elapses with no matching mutation                                                                                      |
 | - `signal`          | AbortSignal       | An `AbortSignal` to stop the observation. If already aborted, `watch()` returns immediately without observing.                                           |
 | - `once`            | Boolean           | When `true`, automatically calls `clear()` after the first matching event. Defaults to `false`.                                                          |
+| - `debounce`        | Number            | Milliseconds to wait after the last mutation before invoking the callback. The callback receives the last mutation's arguments. `0` disables debouncing. |
 
 #### `onEvent` callback arguments
 
