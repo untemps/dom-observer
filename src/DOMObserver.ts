@@ -201,8 +201,8 @@ class DOMObserver {
 						cancel(
 							new Error(
 								isMulti
-										? `${DOMObserverErrors.TIMEOUT}: None of ${targetLabel} could be found after ${timeout}ms`
-										: `${DOMObserverErrors.TIMEOUT}: Element ${targetLabel} cannot be found after ${timeout}ms`
+									? `${DOMObserverErrors.TIMEOUT}: None of ${targetLabel} could be found after ${timeout}ms`
+									: `${DOMObserverErrors.TIMEOUT}: Element ${targetLabel} cannot be found after ${timeout}ms`
 							)
 						),
 					timeout
@@ -334,6 +334,19 @@ class DOMObserver {
 			opts !== undefined ? callback(node, event, opts) : callback(node, event)
 		}
 
+		const nodeMatchesTarget = (node: Node, t: DOMTarget): boolean =>
+			node === t || (!isElement(t) && (node as Element).matches?.(t as string))
+
+		const notify = (node: Node, event: DOMObserverEvent) => {
+			for (const { target: t } of resolvedTargets) {
+				if (nodeMatchesTarget(node, t)) {
+					onMatch?.(t)
+					fireCallback(node as Element, event)
+					return
+				}
+			}
+		}
+
 		if (hasExist) {
 			for (const { target: t, el } of resolvedTargets) {
 				if (el) {
@@ -347,21 +360,12 @@ class DOMObserver {
 		this._observer = new MutationObserver((mutations) => {
 			mutations.forEach(({ type, target: targetNode, addedNodes, removedNodes, attributeName, oldValue }) => {
 				if (type === 'childList' && (hasAdd || hasRemove)) {
-					const notify = (node: Node, event: DOMObserverEvent) => {
-						for (const { target: t } of resolvedTargets) {
-							if (node === t || (!isElement(t) && (node as Element).matches?.(t as string))) {
-								onMatch?.(t)
-								fireCallback(node as Element, event)
-								return
-							}
-						}
-					}
 					if (hasAdd) for (const node of addedNodes) notify(node, DOMObserver.ADD)
 					if (hasRemove) for (const node of removedNodes) notify(node, DOMObserver.REMOVE)
 				}
 				if (type === 'attributes' && hasChange) {
 					for (const { target: t } of resolvedTargets) {
-						if (targetNode === t || (!isElement(t) && (targetNode as Element).matches?.(t as string))) {
+						if (nodeMatchesTarget(targetNode, t)) {
 							onMatch?.(t)
 							fireCallback(targetNode as Element, DOMObserver.CHANGE, { attributeName, oldValue })
 							break
