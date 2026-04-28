@@ -216,6 +216,78 @@ describe('DOMObserver', () => {
 				})
 			})
 		})
+
+		describe('Multiple targets', () => {
+			beforeEach(() => {
+				el = _createElement('foo')
+			})
+
+			it('Resolves on EXIST for the first target found in the DOM', async () => {
+				const { node, event, target } = await instance.wait(['#foo', '#bar'])
+				expect(node).toEqual(el)
+				expect(event).toBe(DOMObserver.EXIST)
+				expect(target).toBe('#foo')
+			})
+
+			it('Resolves on EXIST for the second target when the first is absent', async () => {
+				const second = document.createElement('div')
+				second.id = 'second'
+				document.body.appendChild(second)
+				const { node, target } = await instance.wait(['#missing', '#second'])
+				expect(node.id).toBe('second')
+				expect(target).toBe('#second')
+				second.remove()
+			})
+
+			it('Resolves on ADD for whichever target is added first', async () => {
+				setTimeout(() => {
+					const div = document.createElement('div')
+					div.id = 'winner'
+					document.body.appendChild(div)
+				}, 50)
+				const { node, target } = await instance.wait(['#winner', '#loser'], { events: [DOMObserver.ADD] })
+				expect(node.id).toBe('winner')
+				expect(target).toBe('#winner')
+			})
+
+			it('Resolves on ADD for the second target when it fires first', async () => {
+				setTimeout(() => {
+					const div = document.createElement('div')
+					div.id = 'second-wins'
+					document.body.appendChild(div)
+				}, 50)
+				const { node, target } = await instance.wait(['#first-never', '#second-wins'], {
+					events: [DOMObserver.ADD],
+				})
+				expect(node.id).toBe('second-wins')
+				expect(target).toBe('#second-wins')
+			})
+
+			it('Leaves result.target undefined for a single-target call', async () => {
+				const { target } = await instance.wait('#foo')
+				expect(target).toBeUndefined()
+			})
+
+			it('Rejects with [TARGET] when any target selector is invalid', async () => {
+				await expect(instance.wait(['#foo', '##invalid'])).rejects.toThrow(DOMObserverErrors.TARGET)
+			})
+
+			it('Rejects with [TIMEOUT] when no target matches within the time limit', async () => {
+				await expect(
+					instance.wait(['#missing1', '#missing2'], { events: [DOMObserver.ADD], timeout: 50 })
+				).rejects.toThrow(DOMObserverErrors.TIMEOUT)
+			})
+
+			it('Rejects with AbortError when signal is aborted during multi-target observation', async () => {
+				const controller = new AbortController()
+				const promise = instance.wait(['#missing1', '#missing2'], {
+					events: [DOMObserver.ADD],
+					signal: controller.signal,
+				})
+				setTimeout(() => controller.abort(), 50)
+				await expect(promise).rejects.toMatchObject({ name: 'AbortError' })
+			})
+		})
 	})
 
 	describe('watch', () => {

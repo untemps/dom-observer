@@ -201,14 +201,9 @@ class DOMObserver {
 				)
 			}
 
-			this._observe(
-				target,
-				callback,
-				{ events, attributeFilter, root, filter },
-				(t) => {
-					matchedTarget = t
-				}
-			)
+			this._observe(target, callback, { events, attributeFilter, root, filter }, (t) => {
+				matchedTarget = t
+			})
 		}).finally(() => {
 			this.clear()
 		})
@@ -332,10 +327,12 @@ class DOMObserver {
 		}
 
 		if (hasExist) {
-			const existMatch = resolvedTargets.find(({ el }) => el !== null)
-			if (existMatch) {
-				onMatch?.(existMatch.target)
-				fireCallback(existMatch.el!, DOMObserver.EXIST)
+			for (const { target: t, el } of resolvedTargets) {
+				if (el) {
+					onMatch?.(t)
+					fireCallback(el, DOMObserver.EXIST)
+					break
+				}
 			}
 		}
 
