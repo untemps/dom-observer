@@ -207,7 +207,7 @@ class DOMObserver {
 		})
 	}
 
-	clear(): void {
+	clear(): this {
 		if (this._signal && this._abortHandler) {
 			this._signal.removeEventListener('abort', this._abortHandler)
 		}
@@ -217,6 +217,7 @@ class DOMObserver {
 		this._observer?.disconnect()
 		this._observer = null
 		clearTimeout(this._timeout)
+		return this
 	}
 }
 
