@@ -183,14 +183,42 @@ observer.clear().watch('#bar', onEvent)
 > **Note:** Calling `wait()` or `watch()` on an instance that already has a pending `wait()` Promise will automatically reject that Promise with an `[ABORT]` error before starting the new observation. Handle this rejection if necessary:
 >
 > ```javascript
+> import { DOMObserver, DOMObserverErrors } from '@untemps/dom-observer'
+>
 > const observer = new DOMObserver()
 > observer.wait('#foo').catch((err) => {
->     if (err.message.startsWith('[ABORT]')) return // replaced by a new observation
+>     if (err.message.startsWith(DOMObserverErrors.ABORT)) return // replaced by a new observation
 >     throw err
 > })
 > observer.wait('#bar')  // previous promise is rejected with [ABORT]
 > observer.watch('#baz', onEvent)  // also rejects a pending wait() with [ABORT]
 > ```
+
+## Error constants
+
+The library exports a `DOMObserverErrors` object and a `DOMObserverErrorCode` type for reliable error handling without fragile string matching:
+
+```typescript
+import { DOMObserver, DOMObserverErrors } from '@untemps/dom-observer'
+
+try {
+    await observer.wait('#foo', { timeout: 500 })
+} catch (e) {
+    const message = (e as Error).message
+    if (message.startsWith(DOMObserverErrors.TIMEOUT)) {
+        // handle timeout
+    } else if (message.startsWith(DOMObserverErrors.ABORT)) {
+        // replaced by another observation
+    }
+}
+```
+
+| Constant | Value | Thrown by |
+|---|---|---|
+| `DOMObserverErrors.TIMEOUT` | `'[TIMEOUT]'` | `wait()`, `watch()` when `timeout` elapses |
+| `DOMObserverErrors.ABORT` | `'[ABORT]'` | `wait()` when replaced by a new call |
+| `DOMObserverErrors.EVENTS` | `'[EVENTS]'` | `wait()`, `watch()` when `events` array is empty |
+| `DOMObserverErrors.TARGET` | `'[TARGET]'` | `wait()`, `watch()` when `target` is an invalid CSS selector |
 
 ## Example
 

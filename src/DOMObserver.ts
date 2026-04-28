@@ -1,3 +1,4 @@
+import { DOMObserverErrors } from './DOMObserverErrors'
 import isElement from './utils/isElement'
 
 /** A CSS selector string or a direct DOM Element reference used to identify the observed target. */
@@ -106,14 +107,14 @@ class DOMObserver {
 		{ events = DOMObserver.EVENTS, timeout = 0, attributeFilter = undefined, signal = undefined }: WaitOptions = {}
 	): Promise<WaitResult> {
 		if (!events?.length) {
-			return Promise.reject(new Error('[EVENTS]: events array cannot be empty'))
+			return Promise.reject(new Error(`${DOMObserverErrors.EVENTS}: events array cannot be empty`))
 		}
 
 		if (signal?.aborted) {
 			return Promise.reject(signal.reason ?? new DOMException('Aborted', 'AbortError'))
 		}
 
-		this._pendingReject?.(new Error('[ABORT]: Observation replaced by a new wait() call'))
+		this._pendingReject?.(new Error(`${DOMObserverErrors.ABORT}: Observation replaced by a new wait() call`))
 		this._pendingReject = null
 		this.clear()
 
@@ -145,7 +146,12 @@ class DOMObserver {
 
 			if (timeout > 0) {
 				this._timeout = setTimeout(
-					() => cancel(new Error(`[TIMEOUT]: Element ${target} cannot be found after ${timeout}ms`)),
+					() =>
+						cancel(
+							new Error(
+								`${DOMObserverErrors.TIMEOUT}: Element ${target} cannot be found after ${timeout}ms`
+							)
+						),
 					timeout
 				)
 			}
@@ -187,14 +193,14 @@ class DOMObserver {
 		}: WatchOptions = {}
 	): this {
 		if (!events?.length) {
-			throw new Error('[EVENTS]: events array cannot be empty')
+			throw new Error(`${DOMObserverErrors.EVENTS}: events array cannot be empty`)
 		}
 
 		if (signal?.aborted) {
 			return this
 		}
 
-		this._pendingReject?.(new Error('[ABORT]: Observation replaced by a new watch() call'))
+		this._pendingReject?.(new Error(`${DOMObserverErrors.ABORT}: Observation replaced by a new watch() call`))
 		this._pendingReject = null
 		this.clear()
 
@@ -215,7 +221,9 @@ class DOMObserver {
 		if (timeout > 0) {
 			this._timeout = setTimeout(() => {
 				this.clear()
-				onError?.(new Error(`[TIMEOUT]: Element ${target} cannot be found after ${timeout}ms`))
+				onError?.(
+					new Error(`${DOMObserverErrors.TIMEOUT}: Element ${target} cannot be found after ${timeout}ms`)
+				)
 			}, timeout)
 		}
 
@@ -239,7 +247,7 @@ class DOMObserver {
 			try {
 				el = document.querySelector(target as string)
 			} catch {
-				throw new Error(`[TARGET]: "${target}" is not a valid CSS selector`)
+				throw new Error(`${DOMObserverErrors.TARGET}: "${target}" is not a valid CSS selector`)
 			}
 		}
 		if (el && hasExist) {
