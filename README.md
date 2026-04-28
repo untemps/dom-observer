@@ -194,24 +194,21 @@ observer.clear().watch('#bar', onEvent)
 > observer.watch('#baz', onEvent)  // also rejects a pending wait() with [ABORT]
 > ```
 
-### Error constants
+## Error constants
 
 The library exports a `DOMObserverErrors` object and a `DOMObserverErrorCode` type for reliable error handling without fragile string matching:
 
 ```typescript
-import { DOMObserver, DOMObserverErrors, type DOMObserverErrorCode } from '@untemps/dom-observer'
+import { DOMObserver, DOMObserverErrors } from '@untemps/dom-observer'
 
 try {
     await observer.wait('#foo', { timeout: 500 })
 } catch (e) {
-    const code = (e as Error).message.split(':')[0] as DOMObserverErrorCode
-    switch (code) {
-        case DOMObserverErrors.TIMEOUT:
-            // handle timeout
-            break
-        case DOMObserverErrors.ABORT:
-            // replaced by another observation
-            break
+    const message = (e as Error).message
+    if (message.startsWith(DOMObserverErrors.TIMEOUT)) {
+        // handle timeout
+    } else if (message.startsWith(DOMObserverErrors.ABORT)) {
+        // replaced by another observation
     }
 }
 ```

@@ -268,3 +268,12 @@ describe('DOMObserver', () => {
 		})
 	})
 })
+
+describe('DOMObserverErrors', () => {
+	it('Exports expected error code values', () => {
+		expect(DOMObserverErrors.TIMEOUT).toBe('[TIMEOUT]')
+		expect(DOMObserverErrors.ABORT).toBe('[ABORT]')
+		expect(DOMObserverErrors.EVENTS).toBe('[EVENTS]')
+		expect(DOMObserverErrors.TARGET).toBe('[TARGET]')
+	})
+})
