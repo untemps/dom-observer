@@ -1,5 +1,5 @@
-import isElement from './utils/isElement'
 import { DOMObserverErrors } from './DOMObserverErrors'
+import isElement from './utils/isElement'
 
 /** A CSS selector string or a direct DOM Element reference used to identify the observed target. */
 export type DOMTarget = Element | string
@@ -146,7 +146,12 @@ class DOMObserver {
 
 			if (timeout > 0) {
 				this._timeout = setTimeout(
-					() => cancel(new Error(`${DOMObserverErrors.TIMEOUT}: Element ${target} cannot be found after ${timeout}ms`)),
+					() =>
+						cancel(
+							new Error(
+								`${DOMObserverErrors.TIMEOUT}: Element ${target} cannot be found after ${timeout}ms`
+							)
+						),
 					timeout
 				)
 			}
@@ -216,7 +221,9 @@ class DOMObserver {
 		if (timeout > 0) {
 			this._timeout = setTimeout(() => {
 				this.clear()
-				onError?.(new Error(`${DOMObserverErrors.TIMEOUT}: Element ${target} cannot be found after ${timeout}ms`))
+				onError?.(
+					new Error(`${DOMObserverErrors.TIMEOUT}: Element ${target} cannot be found after ${timeout}ms`)
+				)
 			}, timeout)
 		}
 

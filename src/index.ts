@@ -8,5 +8,5 @@ export type {
 	WatchOptions,
 } from './DOMObserver'
 export { default as DOMObserver } from './DOMObserver'
-export { DOMObserverErrors } from './DOMObserverErrors'
 export type { DOMObserverErrorCode } from './DOMObserverErrors'
+export { DOMObserverErrors } from './DOMObserverErrors'
