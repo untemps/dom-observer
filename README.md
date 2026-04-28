@@ -99,6 +99,7 @@ observer.watch('#foo', (node, event) => {
 | - `signal`          | AbortSignal       | An `AbortSignal` to stop the observation. If already aborted, `watch()` returns immediately without observing.                                           |
 | - `once`            | Boolean           | When `true`, automatically calls `clear()` after the first matching event. Defaults to `false`.                                                          |
 | - `debounce`        | Number            | Milliseconds to wait after the last mutation before invoking the callback. The callback receives the last mutation's arguments. `0` disables debouncing. |
+| - `root`            | Element or String | DOM element or CSS selector to use as the observation root. Only mutations within this subtree are observed. Defaults to `document.documentElement`.     |
 
 #### `onEvent` callback arguments
 
@@ -149,6 +150,7 @@ Once the first matching mutation occurs, the Promise resolves and the observatio
 | - `timeout`         | Number            | Duration (in ms) before rejecting the Promise with a `[TIMEOUT]` error. `0` disables the timeout.                                                       |
 | - `attributeFilter` | Array             | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                       |
 | - `signal`          | AbortSignal       | An `AbortSignal` to cancel the observation. If already aborted, the Promise rejects immediately with an `AbortError`.                                    |
+| - `root`            | Element or String | DOM element or CSS selector to use as the observation root. Only mutations within this subtree are observed. Defaults to `document.documentElement`.     |
 
 #### Resolved value
 
