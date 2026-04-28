@@ -1,5 +1,6 @@
 import { DOMObserverErrors } from './DOMObserverErrors'
 import isElement from './utils/isElement'
+import resolveDOMTarget from './utils/resolveDOMTarget'
 
 /** A CSS selector string or a direct DOM Element reference used to identify the observed target. */
 export type DOMTarget = Element | string
@@ -278,27 +279,12 @@ class DOMObserver {
 		const hasRemove = events.includes(DOMObserver.REMOVE)
 		const hasChange = events.includes(DOMObserver.CHANGE)
 
-		let el: Element | null = isElement(target) ? target : null
-		if (!el) {
-			try {
-				el = document.querySelector(target as string)
-			} catch {
-				throw new Error(`${DOMObserverErrors.TARGET}: "${target}" is not a valid CSS selector`)
-			}
-		}
+		const el = resolveDOMTarget(target)
 		if (el && hasExist) {
 			callback(el, DOMObserver.EXIST)
 		}
 
-		let rootEl: Element | null = isElement(root) ? (root as Element) : null
-		if (!rootEl && root) {
-			try {
-				rootEl = document.querySelector(root as string)
-			} catch {
-				throw new Error(`${DOMObserverErrors.TARGET}: "${root}" is not a valid CSS selector`)
-			}
-		}
-		const defaultRoot = rootEl ?? document.documentElement
+		const defaultRoot = resolveDOMTarget(root) ?? document.documentElement
 
 		this._observer = new MutationObserver((mutations) => {
 			mutations.forEach(({ type, target: targetNode, addedNodes, removedNodes, attributeName, oldValue }) => {
@@ -323,7 +309,7 @@ class DOMObserver {
 		})
 
 		const isDirectObservation = hasChange && !hasAdd && !hasRemove && isElement(target)
-		const observerTarget = isDirectObservation ? (target as Element) : defaultRoot
+		const observerTarget = isDirectObservation ? target : defaultRoot
 		this._observer.observe(observerTarget, {
 			subtree: !isDirectObservation,
 			childList: hasAdd || hasRemove,
