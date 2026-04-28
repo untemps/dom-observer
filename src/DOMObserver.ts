@@ -63,7 +63,7 @@ export interface WatchOptions {
 	signal?: AbortSignal
 	/** When `true`, automatically calls `clear()` after the first matching event. */
 	once?: boolean
-	/** Milliseconds to wait after the last mutation before invoking the callback. `0` disables debouncing. */
+	/** Milliseconds to wait after the last mutation before invoking the callback. The callback receives the last mutation's arguments. `0` disables debouncing. */
 	debounce?: number
 }
 

@@ -333,6 +333,15 @@ describe('DOMObserver', () => {
 				expect(onEvent).not.toHaveBeenCalled()
 			})
 
+			it('Fires onEvent once and stops when debounce and once are both set', async () => {
+				instance.watch('#foo', onEvent, { events: [DOMObserver.CHANGE], debounce: 50, once: true })
+				_modifyElement('#foo', 'class', 'change1')
+				_modifyElement('#foo', 'class', 'change2')
+				await _sleep(150)
+				expect(onEvent).toHaveBeenCalledOnce()
+				expect(instance.isObserving).toBe(false)
+			})
+
 			it('Fires onError on timeout when no mutation occurs even with debounce set', async () => {
 				const onError = vi.fn()
 				instance.watch('#bar', onEvent, { events: [DOMObserver.ADD], timeout: 50, debounce: 200, onError })
