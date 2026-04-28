@@ -139,13 +139,22 @@ switch (event) {
 }
 ```
 
+Pass an **array of targets** to resolve as soon as any one of them fires a matching event. The resolved value includes a `target` field identifying which entry won:
+
+```javascript
+const { node, target } = await observer.wait(['#success', '#error'], {
+	events: [DOMObserver.ADD],
+})
+console.log(`Matched: ${target}`)
+```
+
 Once the first matching mutation occurs, the Promise resolves and the observation stops automatically. If a `timeout` is set and elapses before any matching mutation, the Promise rejects with a `[TIMEOUT]` error.
 
 #### `wait` method arguments
 
-| Props               | Type              | Description                                                                                                                                              |
-| ------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `target`            | Element or String | DOM element or selector of the DOM element to observe. See [querySelector spec](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector) |
+| Props               | Type                       | Description                                                                                                                                              |
+| ------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `target`            | Element, String, or Array  | DOM element, selector, or array of either. When an array is passed, resolves on the first match across all entries.                                      |
 | `options`           | Object            | Options object:                                                                                                                                          |
 | - `events`          | Array             | List of [events](#events) to observe (All events are observed by default)                                                                                |
 | - `timeout`         | Number            | Duration (in ms) before rejecting the Promise with a `[TIMEOUT]` error. `0` disables the timeout.                                                       |
@@ -156,13 +165,14 @@ Once the first matching mutation occurs, the Promise resolves and the observatio
 
 #### Resolved value
 
-| Props             | Type           | Description                                                                 |
-| ----------------- | -------------- | --------------------------------------------------------------------------- |
-| `node`            | Element        | The matching DOM element                                                    |
-| `event`           | String         | The event type that caused the Promise to settle                            |
-| `options`         | Object         | Present only for `CHANGE` events:                                           |
-| - `attributeName` | String         | Name of the attribute that changed                                          |
-| - `oldValue`      | String or null | Value of the attribute before the mutation                                  |
+| Props             | Type                  | Description                                                                                          |
+| ----------------- | --------------------- | ---------------------------------------------------------------------------------------------------- |
+| `node`            | Element               | The matching DOM element                                                                             |
+| `event`           | String                | The event type that caused the Promise to settle                                                     |
+| `target`          | Element, String, or undefined | The entry from the targets array that matched. `undefined` when a single target was passed. |
+| `options`         | Object                | Present only for `CHANGE` events:                                                                    |
+| - `attributeName` | String                | Name of the attribute that changed                                                                   |
+| - `oldValue`      | String or null        | Value of the attribute before the mutation                                                           |
 
 #### Events
 

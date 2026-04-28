@@ -39,6 +39,8 @@ export interface WaitResult {
 	event: DOMObserverEvent
 	/** Additional mutation metadata, present only for `CHANGE` events. */
 	options?: ChangeOptions
+	/** The target entry that triggered the match. Only populated when `wait()` was called with an array of targets. */
+	target?: DOMTarget
 }
 
 /** Options accepted by `wait()`. */
@@ -119,14 +121,20 @@ class DOMObserver {
 	 * Calling `wait()` while a previous call is still pending rejects the previous Promise with `[ABORT]`
 	 * and starts a fresh observation.
 	 *
-	 * @param target - CSS selector or Element to observe.
+	 * When an array of targets is passed, the Promise resolves as soon as any one of them fires a
+	 * matching event. The resolved `WaitResult.target` identifies which entry won. For EXIST checks,
+	 * the first target found in the DOM wins.
+	 *
+	 * @param target - CSS selector, Element, or array of either to observe.
 	 * @param options - Observation options.
 	 * @returns A Promise that resolves with the matching node, event type, and optional change metadata.
 	 * @throws `[EVENTS]` when the `events` array is empty.
-	 * @throws `[TARGET]` when `target` is a string that is not a valid CSS selector.
+	 * @throws `[TARGET]` when any target string is not a valid CSS selector.
 	 */
+	wait(target: DOMTarget, options?: WaitOptions): Promise<WaitResult>
+	wait(targets: DOMTarget[], options?: WaitOptions): Promise<WaitResult>
 	wait(
-		target: DOMTarget,
+		target: DOMTarget | DOMTarget[],
 		{
 			events = DOMObserver.EVENTS,
 			timeout = 0,
@@ -148,8 +156,11 @@ class DOMObserver {
 		this._pendingReject = null
 		this.clear()
 
+		const isMulti = Array.isArray(target)
+
 		return new Promise<WaitResult>((resolve, reject) => {
 			let onAbort: (() => void) | null = null
+			let matchedTarget: DOMTarget | undefined
 
 			const cleanup = () => {
 				if (onAbort) signal?.removeEventListener('abort', onAbort)
@@ -166,8 +177,13 @@ class DOMObserver {
 
 			this._pendingReject = cancel
 
-			const callback: OnEventCallback = (node, event, options) =>
-				settle(options ? { node, event, options } : { node, event })
+			// onMatch always fires synchronously before fireCallback in _observe, so matchedTarget
+			// is guaranteed to be set before callback runs.
+			const callback: OnEventCallback = (node, event, options) => {
+				const result: WaitResult = options ? { node, event, options } : { node, event }
+				if (isMulti) result.target = matchedTarget
+				settle(result)
+			}
 
 			if (signal) {
 				onAbort = () => cancel(signal.reason ?? new DOMException('Aborted', 'AbortError'))
@@ -175,18 +191,27 @@ class DOMObserver {
 			}
 
 			if (timeout > 0) {
+				const formatTarget = (t: DOMTarget): string =>
+					isElement(t) ? `<${t.tagName.toLowerCase()}${t.id ? `#${t.id}` : ''}>` : String(t)
+				const targetLabel = isMulti
+					? `[${(target as DOMTarget[]).map(formatTarget).join(', ')}]`
+					: formatTarget(target as DOMTarget)
 				this._timeout = setTimeout(
 					() =>
 						cancel(
 							new Error(
-								`${DOMObserverErrors.TIMEOUT}: Element ${target} cannot be found after ${timeout}ms`
+								isMulti
+									? `${DOMObserverErrors.TIMEOUT}: None of ${targetLabel} could be found after ${timeout}ms`
+									: `${DOMObserverErrors.TIMEOUT}: Element ${targetLabel} cannot be found after ${timeout}ms`
 							)
 						),
 					timeout
 				)
 			}
 
-			this._observe(target, callback, { events, attributeFilter, root, filter })
+			this._observe(target, callback, { events, attributeFilter, root, filter }, (t) => {
+				matchedTarget = t
+			})
 		}).finally(() => {
 			this.clear()
 		})
@@ -285,21 +310,23 @@ class DOMObserver {
 	}
 
 	private _observe(
-		target: DOMTarget,
+		target: DOMTarget | DOMTarget[],
 		callback: OnEventCallback,
 		{
 			events,
 			attributeFilter,
 			root,
 			filter,
-		}: { events: DOMObserverEvent[]; attributeFilter?: string[]; root?: DOMTarget; filter?: FilterCallback }
+		}: { events: DOMObserverEvent[]; attributeFilter?: string[]; root?: DOMTarget; filter?: FilterCallback },
+		onMatch?: (matchedTarget: DOMTarget) => void
 	): void {
 		const hasExist = events.includes(DOMObserver.EXIST)
 		const hasAdd = events.includes(DOMObserver.ADD)
 		const hasRemove = events.includes(DOMObserver.REMOVE)
 		const hasChange = events.includes(DOMObserver.CHANGE)
 
-		const el = resolveDOMTarget(target)
+		const targets = Array.isArray(target) ? target : [target]
+		const resolvedTargets = targets.map((t) => ({ target: t, el: resolveDOMTarget(t) }))
 		const defaultRoot = resolveDOMTarget(root) ?? document.documentElement
 
 		const fireCallback = (node: Element, event: DOMObserverEvent, opts?: ChangeOptions) => {
@@ -307,34 +334,50 @@ class DOMObserver {
 			opts !== undefined ? callback(node, event, opts) : callback(node, event)
 		}
 
-		if (el && hasExist) {
-			fireCallback(el, DOMObserver.EXIST)
+		const nodeMatchesTarget = (node: Node, t: DOMTarget): boolean =>
+			node === t || (!isElement(t) && (node as Element).matches?.(t as string))
+
+		const notify = (node: Node, event: DOMObserverEvent) => {
+			for (const { target: t } of resolvedTargets) {
+				if (nodeMatchesTarget(node, t)) {
+					onMatch?.(t)
+					fireCallback(node as Element, event)
+					return
+				}
+			}
+		}
+
+		if (hasExist) {
+			for (const { target: t, el } of resolvedTargets) {
+				if (el) {
+					onMatch?.(t)
+					fireCallback(el, DOMObserver.EXIST)
+					break
+				}
+			}
 		}
 
 		this._observer = new MutationObserver((mutations) => {
 			mutations.forEach(({ type, target: targetNode, addedNodes, removedNodes, attributeName, oldValue }) => {
 				if (type === 'childList' && (hasAdd || hasRemove)) {
-					const notify = (node: Node, event: DOMObserverEvent) => {
-						if (node === target || (!isElement(target) && (node as Element).matches?.(target as string))) {
-							fireCallback(node as Element, event)
-						}
-					}
 					if (hasAdd) for (const node of addedNodes) notify(node, DOMObserver.ADD)
 					if (hasRemove) for (const node of removedNodes) notify(node, DOMObserver.REMOVE)
 				}
 				if (type === 'attributes' && hasChange) {
-					if (
-						targetNode === target ||
-						(!isElement(target) && (targetNode as Element).matches?.(target as string))
-					) {
-						fireCallback(targetNode as Element, DOMObserver.CHANGE, { attributeName, oldValue })
+					for (const { target: t } of resolvedTargets) {
+						if (nodeMatchesTarget(targetNode, t)) {
+							onMatch?.(t)
+							fireCallback(targetNode as Element, DOMObserver.CHANGE, { attributeName, oldValue })
+							break
+						}
 					}
 				}
 			})
 		})
 
-		const isDirectObservation = hasChange && !hasAdd && !hasRemove && isElement(target) && !root
-		const observerTarget = isDirectObservation ? target : defaultRoot
+		const isDirectObservation =
+			targets.length === 1 && hasChange && !hasAdd && !hasRemove && isElement(targets[0]) && !root
+		const observerTarget = isDirectObservation ? (targets[0] as Element) : defaultRoot
 		this._observer.observe(observerTarget, {
 			subtree: !isDirectObservation,
 			childList: hasAdd || hasRemove,
