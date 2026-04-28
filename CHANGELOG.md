@@ -1,3 +1,10 @@
+# [4.1.0](https://github.com/untemps/dom-observer/compare/v4.0.3...v4.1.0) (2026-04-28)
+
+
+### Features
+
+* make clear() return this to enable method chaining ([#61](https://github.com/untemps/dom-observer/issues/61)) ([7c7a7a1](https://github.com/untemps/dom-observer/commit/7c7a7a13ce99611599b0f709f89a374b414d5243))
+
 ## [4.0.3](https://github.com/untemps/dom-observer/compare/v4.0.2...v4.0.3) (2026-04-17)
 
 
