@@ -1,3 +1,10 @@
+# [4.4.0](https://github.com/untemps/dom-observer/compare/v4.3.0...v4.4.0) (2026-04-28)
+
+
+### Features
+
+* add debounce option to watch() for high-frequency mutations ([#65](https://github.com/untemps/dom-observer/issues/65)) ([3672030](https://github.com/untemps/dom-observer/commit/36720308cbcb1c46482b6acbbbb5fd2176a7d583)), closes [hi#frequency](https://github.com/hi/issues/frequency)
+
 # [4.3.0](https://github.com/untemps/dom-observer/compare/v4.2.0...v4.3.0) (2026-04-28)
 
 
