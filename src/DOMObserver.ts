@@ -182,6 +182,9 @@ class DOMObserver {
 	 * When `once` is set, the observation stops automatically after the first matching mutation,
 	 * equivalent to calling `clear()` manually inside `onEvent`.
 	 *
+	 * When `debounce` is set, `onEvent` is deferred after each mutation and only fires once the
+	 * mutations have stopped for the specified duration. The callback receives the last mutation's arguments.
+	 *
 	 * @param target - CSS selector or Element to observe.
 	 * @param onEvent - Callback invoked on every matching event.
 	 * @param options - Observation options.
