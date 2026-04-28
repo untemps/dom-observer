@@ -94,7 +94,7 @@ observer.watch('#foo', (node, event) => {
 | `options`           | Object            | Options object:                                                                                                                                          |
 | - `events`          | Array             | List of [events](#events) to observe (All events are observed by default)                                                                                |
 | - `attributeFilter` | Array             | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                       |
-| - `timeout`         | Number            | Duration (in ms) after which observation stops if no matching mutation occurred. Triggers `onError` when elapsed.                                        |
+| - `timeout`         | Number            | Duration (in ms) after which observation stops if no matching mutation occurred. Triggers `onError` when elapsed. Must be `0` or a positive finite number — throws `[TIMEOUT]` otherwise. |
 | - `onError`         | Function          | Callback triggered when `timeout` elapses with no matching mutation                                                                                      |
 | - `signal`          | AbortSignal       | An `AbortSignal` to stop the observation. If already aborted, `watch()` returns immediately without observing.                                           |
 | - `once`            | Boolean           | When `true`, automatically calls `clear()` after the first matching event. Defaults to `false`.                                                          |
@@ -157,7 +157,7 @@ Once the first matching mutation occurs, the Promise resolves and the observatio
 | `target`            | Element, String, or Array  | DOM element, selector, or array of either. When an array is passed, resolves on the first match across all entries.                                      |
 | `options`           | Object            | Options object:                                                                                                                                          |
 | - `events`          | Array             | List of [events](#events) to observe (All events are observed by default)                                                                                |
-| - `timeout`         | Number            | Duration (in ms) before rejecting the Promise with a `[TIMEOUT]` error. `0` disables the timeout.                                                       |
+| - `timeout`         | Number            | Duration (in ms) before rejecting the Promise with a `[TIMEOUT]` error. `0` disables the timeout. Must be `0` or a positive finite number — rejects with `[TIMEOUT]` otherwise.          |
 | - `attributeFilter` | Array             | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                       |
 | - `signal`          | AbortSignal       | An `AbortSignal` to cancel the observation. If already aborted, the Promise rejects immediately with an `AbortError`.                                    |
 | - `root`            | Element or String | DOM element or CSS selector to use as the observation root. Only mutations within this subtree are observed. Defaults to `document.documentElement`.     |
@@ -251,7 +251,7 @@ try {
 
 | Constant | Value | Thrown by |
 |---|---|---|
-| `DOMObserverErrors.TIMEOUT` | `'[TIMEOUT]'` | `wait()`, `watch()` when `timeout` elapses |
+| `DOMObserverErrors.TIMEOUT` | `'[TIMEOUT]'` | `wait()`, `watch()` when `timeout` elapses; also when `timeout` is an invalid value (`-1`, `NaN`, `Infinity`) |
 | `DOMObserverErrors.ABORT` | `'[ABORT]'` | `wait()` when replaced by a new call |
 | `DOMObserverErrors.EVENTS` | `'[EVENTS]'` | `wait()`, `watch()` when `events` array is empty |
 | `DOMObserverErrors.TARGET` | `'[TARGET]'` | `wait()`, `watch()` when `target` is an invalid CSS selector |
