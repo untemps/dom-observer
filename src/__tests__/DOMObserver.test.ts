@@ -119,6 +119,33 @@ describe('DOMObserver', () => {
 					await _sleep(150)
 					expect(instance.isObserving).toBe(true)
 				})
+
+				it('Resolves when target is added within the root element', async () => {
+					const root = document.createElement('div')
+					document.body.appendChild(root)
+					setTimeout(() => {
+						const child = document.createElement('div')
+						child.id = 'scoped'
+						root.appendChild(child)
+					}, 50)
+					const { node } = await instance.wait('#scoped', { events: [DOMObserver.ADD], root })
+					expect(node.id).toBe('scoped')
+					root.remove()
+				})
+
+				it('Resolves when target is added within the root CSS selector', async () => {
+					const root = document.createElement('div')
+					root.id = 'root-scope'
+					document.body.appendChild(root)
+					setTimeout(() => {
+						const child = document.createElement('div')
+						child.id = 'scoped2'
+						root.appendChild(child)
+					}, 50)
+					const { node } = await instance.wait('#scoped2', { events: [DOMObserver.ADD], root: '#root-scope' })
+					expect(node.id).toBe('scoped2')
+					root.remove()
+				})
 			})
 
 			describe('Element creation and mounting are delayed', () => {
@@ -212,6 +239,48 @@ describe('DOMObserver', () => {
 					attributeName: 'data-watched',
 					oldValue: null,
 				})
+			})
+
+			it('Only fires for mutations within the root element', async () => {
+				const root = document.createElement('div')
+				document.body.appendChild(root)
+				const inside = document.createElement('div')
+				inside.id = 'inside'
+				instance.watch('#inside', onEvent, { events: [DOMObserver.ADD], root })
+				root.appendChild(inside)
+				await _sleep()
+				expect(onEvent).toHaveBeenCalledOnce()
+				root.remove()
+			})
+
+			it('Does not fire for mutations outside the root element', async () => {
+				const root = document.createElement('div')
+				document.body.appendChild(root)
+				const outside = document.createElement('div')
+				outside.id = 'outside'
+				instance.watch('#outside', onEvent, { events: [DOMObserver.ADD], root })
+				document.body.appendChild(outside)
+				await _sleep()
+				expect(onEvent).not.toHaveBeenCalled()
+				outside.remove()
+				root.remove()
+			})
+
+			it('Accepts a CSS selector as root', async () => {
+				const root = document.createElement('div')
+				root.id = 'watch-root'
+				document.body.appendChild(root)
+				const inside = document.createElement('div')
+				inside.id = 'inside2'
+				instance.watch('#inside2', onEvent, { events: [DOMObserver.ADD], root: '#watch-root' })
+				root.appendChild(inside)
+				await _sleep()
+				expect(onEvent).toHaveBeenCalledOnce()
+				root.remove()
+			})
+
+			it('Throws with [TARGET] error when root selector is invalid', () => {
+				expect(() => instance.watch('#foo', onEvent, { root: '##invalid' })).toThrow(DOMObserverErrors.TARGET)
 			})
 
 			it('Throws when events array is empty', () => {
