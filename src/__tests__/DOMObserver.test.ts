@@ -287,6 +287,24 @@ describe('DOMObserver', () => {
 				expect(() => instance.watch('#foo', onEvent, { root: '##invalid' })).toThrow(DOMObserverErrors.TARGET)
 			})
 
+			it('Respects root when observing CHANGE on an Element reference', async () => {
+				const root = document.createElement('div')
+				document.body.appendChild(root)
+				const el = document.createElement('div')
+				root.appendChild(el)
+				const outside = document.createElement('div')
+				document.body.appendChild(outside)
+				instance.watch(el, onEvent, { events: [DOMObserver.CHANGE], root })
+				outside.setAttribute('data-x', '1')
+				await _sleep()
+				expect(onEvent).not.toHaveBeenCalled()
+				el.setAttribute('data-x', '1')
+				await _sleep()
+				expect(onEvent).toHaveBeenCalledOnce()
+				outside.remove()
+				root.remove()
+			})
+
 			it('Throws when events array is empty', () => {
 				expect(() => instance.watch('#foo', onEvent, { events: [] })).toThrow(DOMObserverErrors.EVENTS)
 			})

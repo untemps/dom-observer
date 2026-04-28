@@ -308,7 +308,7 @@ class DOMObserver {
 			})
 		})
 
-		const isDirectObservation = hasChange && !hasAdd && !hasRemove && isElement(target)
+		const isDirectObservation = hasChange && !hasAdd && !hasRemove && isElement(target) && !root
 		const observerTarget = isDirectObservation ? target : defaultRoot
 		this._observer.observe(observerTarget, {
 			subtree: !isDirectObservation,
