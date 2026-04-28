@@ -1,3 +1,10 @@
+# [4.2.0](https://github.com/untemps/dom-observer/compare/v4.1.0...v4.2.0) (2026-04-28)
+
+
+### Features
+
+* export error message constants ([#62](https://github.com/untemps/dom-observer/issues/62)) ([4c7742f](https://github.com/untemps/dom-observer/commit/4c7742fb2308dce45ce1b1e6356ddb58f18fd1d2))
+
 # [4.1.0](https://github.com/untemps/dom-observer/compare/v4.0.3...v4.1.0) (2026-04-28)
 
 
