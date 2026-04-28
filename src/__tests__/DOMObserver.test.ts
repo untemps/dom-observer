@@ -203,6 +203,11 @@ describe('DOMObserver', () => {
 						oldValue: 'bar',
 					})
 				})
+
+				it('Leaves result.target undefined for a single-target call', async () => {
+					const { target } = await instance.wait('#foo')
+					expect(target).toBeUndefined()
+				})
 			})
 
 			describe('Element creation and mounting are delayed', () => {
@@ -263,11 +268,6 @@ describe('DOMObserver', () => {
 				expect(target).toBe('#second-wins')
 			})
 
-			it('Leaves result.target undefined for a single-target call', async () => {
-				const { target } = await instance.wait('#foo')
-				expect(target).toBeUndefined()
-			})
-
 			it('Rejects with [TARGET] when any target selector is invalid', async () => {
 				await expect(instance.wait(['#foo', '##invalid'])).rejects.toThrow(DOMObserverErrors.TARGET)
 			})
@@ -286,6 +286,27 @@ describe('DOMObserver', () => {
 				})
 				setTimeout(() => controller.abort(), 50)
 				await expect(promise).rejects.toMatchObject({ name: 'AbortError' })
+			})
+
+			it('Resolves on REMOVE for the matching target', async () => {
+				const second = document.createElement('div')
+				second.id = 'removable'
+				document.body.appendChild(second)
+				setTimeout(() => second.remove(), 50)
+				const { node, target } = await instance.wait(['#foo', '#removable'], { events: [DOMObserver.REMOVE] })
+				expect(node.id).toBe('removable')
+				expect(target).toBe('#removable')
+			})
+
+			it('Resolves on CHANGE for the matching target', async () => {
+				const second = document.createElement('div')
+				second.id = 'changeable'
+				document.body.appendChild(second)
+				setTimeout(() => second.setAttribute('data-x', '1'), 50)
+				const { node, target } = await instance.wait(['#foo', '#changeable'], { events: [DOMObserver.CHANGE] })
+				expect(node.id).toBe('changeable')
+				expect(target).toBe('#changeable')
+				second.remove()
 			})
 
 			it('Respects filter across multi-target ADD events', async () => {
