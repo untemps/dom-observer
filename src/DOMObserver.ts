@@ -61,6 +61,8 @@ export interface WatchOptions {
 	onError?: (error: Error) => void
 	/** When provided, aborting the signal stops observation immediately. */
 	signal?: AbortSignal
+	/** When `true`, automatically calls `clear()` after the first matching event. */
+	once?: boolean
 }
 
 class DOMObserver {
@@ -174,6 +176,9 @@ class DOMObserver {
 	 * When `timeout` is set, the observation stops automatically after the first matching mutation —
 	 * subsequent mutations will not fire `onEvent`.
 	 *
+	 * When `once` is set, the observation stops automatically after the first matching mutation,
+	 * equivalent to calling `clear()` manually inside `onEvent`.
+	 *
 	 * @param target - CSS selector or Element to observe.
 	 * @param onEvent - Callback invoked on every matching event.
 	 * @param options - Observation options.
@@ -190,6 +195,7 @@ class DOMObserver {
 			timeout = 0,
 			onError = undefined,
 			signal = undefined,
+			once = false,
 		}: WatchOptions = {}
 	): this {
 		if (!events?.length) {
@@ -210,21 +216,26 @@ class DOMObserver {
 			signal.addEventListener('abort', this._abortHandler, { once: true })
 		}
 
-		const callback: OnEventCallback =
-			timeout > 0
-				? (...args) => {
-						clearTimeout(this._timeout)
-						onEvent(...args)
-					}
-				: onEvent
-
+		let callback: OnEventCallback = onEvent
 		if (timeout > 0) {
+			const wrapped = callback
+			callback = (...args) => {
+				clearTimeout(this._timeout)
+				wrapped(...args)
+			}
 			this._timeout = setTimeout(() => {
 				this.clear()
 				onError?.(
 					new Error(`${DOMObserverErrors.TIMEOUT}: Element ${target} cannot be found after ${timeout}ms`)
 				)
 			}, timeout)
+		}
+		if (once) {
+			const wrapped = callback
+			callback = (...args) => {
+				this.clear()
+				wrapped(...args)
+			}
 		}
 
 		this._observe(target, callback, { events, attributeFilter })

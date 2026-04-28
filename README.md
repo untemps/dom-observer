@@ -52,6 +52,14 @@ listObserver.watch('.list-item', (node, event) => {
 
 Unlike `wait`, `watch` does not return a Promise. It returns `this`, allowing method chaining. Call `clear()` to stop the observation.
 
+Pass `once: true` to stop the observation automatically after the first matching event, without needing to call `clear()` manually:
+
+```javascript
+observer.watch('#foo', (node, event) => {
+	doSomething(node)  // called exactly once
+}, { events: [DOMObserver.ADD], once: true })
+```
+
 Pass a `timeout` to automatically stop the observation if no matching mutation occurs within the allotted time:
 
 ```javascript
@@ -77,6 +85,7 @@ observer.watch('#foo', (node, event) => {
 | - `timeout`         | Number            | Duration (in ms) after which observation stops if no matching mutation occurred. Triggers `onError` when elapsed.                                        |
 | - `onError`         | Function          | Callback triggered when `timeout` elapses with no matching mutation                                                                                      |
 | - `signal`          | AbortSignal       | An `AbortSignal` to stop the observation. If already aborted, `watch()` returns immediately without observing.                                           |
+| - `once`            | Boolean           | When `true`, automatically calls `clear()` after the first matching event. Defaults to `false`.                                                          |
 
 #### `onEvent` callback arguments
 

@@ -278,6 +278,32 @@ describe('DOMObserver', () => {
 				await _sleep(100)
 				expect(instance.isObserving).toBe(false)
 			})
+
+			it('Fires onEvent only once when once is true', async () => {
+				instance.watch('#foo', onEvent, { events: [DOMObserver.CHANGE], once: true })
+				_modifyElement('#foo', 'class', 'change1')
+				await _sleep()
+				_modifyElement('#foo', 'class', 'change2')
+				await _sleep()
+				expect(onEvent).toHaveBeenCalledOnce()
+			})
+
+			it('Sets isObserving to false after the first event when once is true', async () => {
+				instance.watch('#foo', onEvent, { events: [DOMObserver.CHANGE], once: true })
+				_modifyElement('#foo', 'class', 'change1')
+				await _sleep()
+				expect(instance.isObserving).toBe(false)
+			})
+
+			it('Cancels timeout after the first event when once and timeout are both set', async () => {
+				const onError = vi.fn()
+				instance.watch('#foo', onEvent, { events: [DOMObserver.CHANGE], once: true, timeout: 200, onError })
+				_modifyElement('#foo', 'class', 'change1')
+				await _sleep()
+				expect(onEvent).toHaveBeenCalledOnce()
+				await _sleep(250)
+				expect(onError).not.toHaveBeenCalled()
+			})
 		})
 
 		describe('Element creation and mounting are delayed', () => {
