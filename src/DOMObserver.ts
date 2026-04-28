@@ -184,6 +184,8 @@ class DOMObserver {
 
 			this._pendingReject = cancel
 
+			// onMatch always fires synchronously before fireCallback in _observe, so matchedTarget
+			// is guaranteed to be set before callback runs.
 			const callback: OnEventCallback = (node, event, options) => {
 				const result: WaitResult = options ? { node, event, options } : { node, event }
 				if (isMulti) result.target = matchedTarget

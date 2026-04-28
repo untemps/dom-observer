@@ -287,6 +287,30 @@ describe('DOMObserver', () => {
 				setTimeout(() => controller.abort(), 50)
 				await expect(promise).rejects.toMatchObject({ name: 'AbortError' })
 			})
+
+			it('Respects filter across multi-target ADD events', async () => {
+				let callCount = 0
+				setTimeout(() => {
+					const div = document.createElement('div')
+					div.id = 'filtered-a'
+					document.body.appendChild(div)
+				}, 20)
+				setTimeout(() => {
+					const div = document.createElement('div')
+					div.id = 'filtered-b'
+					document.body.appendChild(div)
+				}, 50)
+				const { node, target } = await instance.wait(['#filtered-a', '#filtered-b'], {
+					events: [DOMObserver.ADD],
+					filter: (node) => {
+						callCount++
+						return node.id === 'filtered-b'
+					},
+				})
+				expect(node.id).toBe('filtered-b')
+				expect(target).toBe('#filtered-b')
+				expect(callCount).toBeGreaterThanOrEqual(2)
+			})
 		})
 	})
 
