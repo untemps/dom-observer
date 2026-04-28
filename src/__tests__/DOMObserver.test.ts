@@ -86,6 +86,13 @@ describe('DOMObserver', () => {
 					await expect(() => instance.wait('#foo', { events: [] })).rejects.toThrow()
 				})
 
+				it.each([[-1], [NaN], [Infinity], [-Infinity]])(
+					'Rejects with [TIMEOUT] when timeout is %s',
+					async (value) => {
+						await expect(instance.wait('#foo', { timeout: value })).rejects.toThrow(DOMObserverErrors.TIMEOUT)
+					}
+				)
+
 				it('Rejects with [TARGET] error when selector is invalid', async () => {
 					await expect(instance.wait('##invalid')).rejects.toThrow(DOMObserverErrors.TARGET)
 				})
@@ -537,6 +544,13 @@ describe('DOMObserver', () => {
 			it('Throws when events array is empty', () => {
 				expect(() => instance.watch('#foo', onEvent, { events: [] })).toThrow(DOMObserverErrors.EVENTS)
 			})
+
+			it.each([[-1], [NaN], [Infinity], [-Infinity]])(
+				'Throws with [TIMEOUT] when timeout is %s',
+				(value) => {
+					expect(() => instance.watch('#foo', onEvent, { timeout: value })).toThrow(DOMObserverErrors.TIMEOUT)
+				}
+			)
 
 			it('Throws with [TARGET] error when selector is invalid', () => {
 				expect(() => instance.watch('##invalid', onEvent)).toThrow(DOMObserverErrors.TARGET)
