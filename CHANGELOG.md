@@ -1,3 +1,10 @@
+# [4.8.0](https://github.com/untemps/dom-observer/compare/v4.7.0...v4.8.0) (2026-04-28)
+
+
+### Features
+
+* Validate timeout option value in wait() and watch() ([#69](https://github.com/untemps/dom-observer/issues/69)) ([3ba8032](https://github.com/untemps/dom-observer/commit/3ba80321bc9cd781355215ff3b63203f2ee55409))
+
 # [4.7.0](https://github.com/untemps/dom-observer/compare/v4.6.0...v4.7.0) (2026-04-28)
 
 
