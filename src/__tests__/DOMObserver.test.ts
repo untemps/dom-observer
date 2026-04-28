@@ -1,4 +1,4 @@
-import { DOMObserver, type OnEventCallback } from '../index'
+import { DOMObserver, DOMObserverErrors, type OnEventCallback } from '../index'
 
 describe('DOMObserver', () => {
 	let instance: DOMObserver
@@ -60,14 +60,14 @@ describe('DOMObserver', () => {
 
 				it('Rejects promise when an element is not found after timeout is elapsed', async () => {
 					await expect(instance.wait('#bar', { events: [DOMObserver.ADD], timeout: 50 })).rejects.toThrow(
-						'[TIMEOUT]'
+						DOMObserverErrors.TIMEOUT
 					)
 				})
 
 				it('Rejects the pending promise when wait() is called again', async () => {
 					const first = instance.wait('#bar', { events: [DOMObserver.ADD] })
 					instance.wait('#baz', { events: [DOMObserver.ADD] })
-					await expect(first).rejects.toThrow('[ABORT]')
+					await expect(first).rejects.toThrow(DOMObserverErrors.ABORT)
 				})
 
 				it('Throws when events array is empty', async () => {
@@ -75,7 +75,7 @@ describe('DOMObserver', () => {
 				})
 
 				it('Rejects with [TARGET] error when selector is invalid', async () => {
-					await expect(instance.wait('##invalid')).rejects.toThrow('[TARGET]')
+					await expect(instance.wait('##invalid')).rejects.toThrow(DOMObserverErrors.TARGET)
 				})
 
 				it('Rejects immediately when signal is already aborted', async () => {
@@ -187,17 +187,17 @@ describe('DOMObserver', () => {
 			})
 
 			it('Throws when events array is empty', () => {
-				expect(() => instance.watch('#foo', onEvent, { events: [] })).toThrow('[EVENTS]')
+				expect(() => instance.watch('#foo', onEvent, { events: [] })).toThrow(DOMObserverErrors.EVENTS)
 			})
 
 			it('Throws with [TARGET] error when selector is invalid', () => {
-				expect(() => instance.watch('##invalid', onEvent)).toThrow('[TARGET]')
+				expect(() => instance.watch('##invalid', onEvent)).toThrow(DOMObserverErrors.TARGET)
 			})
 
 			it('Rejects the pending wait() promise when watch() is called', async () => {
 				const pending = instance.wait('#bar', { events: [DOMObserver.ADD] })
 				instance.watch('#foo', onEvent)
-				await expect(pending).rejects.toThrow('[ABORT]')
+				await expect(pending).rejects.toThrow(DOMObserverErrors.ABORT)
 			})
 
 			it('Returns the instance for chaining', () => {
@@ -231,7 +231,7 @@ describe('DOMObserver', () => {
 				await _sleep(100)
 				expect(onEvent).not.toHaveBeenCalled()
 				expect(onError).toHaveBeenCalledOnce()
-				expect((onError.mock.calls[0][0] as Error).message).toMatch('[TIMEOUT]')
+				expect((onError.mock.calls[0][0] as Error).message).toMatch(DOMObserverErrors.TIMEOUT)
 			})
 
 			it('Does not call onError when a mutation occurs before timeout', async () => {
