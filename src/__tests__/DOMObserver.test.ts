@@ -385,6 +385,38 @@ describe('DOMObserver', () => {
 				expect(filter).toHaveBeenCalledWith(el, DOMObserver.CHANGE, { attributeName: 'class', oldValue: 'bar' })
 			})
 
+			it('Does not fire for ADD events rejected by filter', async () => {
+				const inside = document.createElement('div')
+				inside.id = 'allowed'
+				instance.watch('div', onEvent, {
+					events: [DOMObserver.ADD],
+					filter: (n) => n.id === 'allowed',
+				})
+				document.body.appendChild(document.createElement('div'))
+				await _sleep()
+				expect(onEvent).not.toHaveBeenCalled()
+				document.body.appendChild(inside)
+				await _sleep()
+				expect(onEvent).toHaveBeenCalledOnce()
+				inside.remove()
+			})
+
+			it('Does not fire once when filter blocks all events', async () => {
+				instance.watch('#foo', onEvent, { events: [DOMObserver.CHANGE], once: true, filter: () => false })
+				_modifyElement('#foo', 'class', 'change1')
+				await _sleep()
+				expect(onEvent).not.toHaveBeenCalled()
+				expect(instance.isObserving).toBe(true)
+			})
+
+			it('Fires once and stops when filter passes', async () => {
+				instance.watch('#foo', onEvent, { events: [DOMObserver.CHANGE], once: true, filter: () => true })
+				_modifyElement('#foo', 'class', 'change1')
+				await _sleep()
+				expect(onEvent).toHaveBeenCalledOnce()
+				expect(instance.isObserving).toBe(false)
+			})
+
 			it('Throws when events array is empty', () => {
 				expect(() => instance.watch('#foo', onEvent, { events: [] })).toThrow(DOMObserverErrors.EVENTS)
 			})

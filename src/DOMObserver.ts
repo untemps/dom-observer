@@ -78,7 +78,10 @@ export interface WatchOptions {
 	debounce?: number
 	/** DOM element or CSS selector to use as the observation root. Defaults to `document.documentElement`. */
 	root?: DOMTarget
-	/** Predicate applied to every matched node before invoking the callback. Return `false` to skip the event. */
+	/**
+	 * Predicate applied to every matched node before invoking the callback. Return `false` to skip the event.
+	 * When used with `debounce`, only events that pass the filter start the debounce timer.
+	 */
 	filter?: FilterCallback
 }
 
