@@ -2,6 +2,7 @@ export type {
 	ChangeOptions,
 	DOMObserverEvent,
 	DOMTarget,
+	FilterCallback,
 	OnEventCallback,
 	WaitOptions,
 	WaitResult,
