@@ -129,6 +129,7 @@ class DOMObserver {
 	 * @param options - Observation options.
 	 * @returns A Promise that resolves with the matching node, event type, and optional change metadata.
 	 * @throws `[EVENTS]` when the `events` array is empty.
+	 * @throws `[TIMEOUT]` when `timeout` is negative, `NaN`, or `Infinity`.
 	 * @throws `[TARGET]` when any target string is not a valid CSS selector.
 	 */
 	wait(target: DOMTarget, options?: WaitOptions): Promise<WaitResult>
@@ -146,6 +147,10 @@ class DOMObserver {
 	): Promise<WaitResult> {
 		if (!events?.length) {
 			return Promise.reject(new Error(`${DOMObserverErrors.EVENTS}: events array cannot be empty`))
+		}
+
+		if (timeout !== 0 && (!Number.isFinite(timeout) || timeout < 0)) {
+			return Promise.reject(new Error(`${DOMObserverErrors.TIMEOUT}: timeout must be a positive finite number`))
 		}
 
 		if (signal?.aborted) {
@@ -240,6 +245,7 @@ class DOMObserver {
 	 * @param options - Observation options.
 	 * @returns The `DOMObserver` instance, allowing method chaining.
 	 * @throws `[EVENTS]` when the `events` array is empty.
+	 * @throws `[TIMEOUT]` when `timeout` is negative, `NaN`, or `Infinity`.
 	 * @throws `[TARGET]` when `target` is a string that is not a valid CSS selector.
 	 */
 	watch(
@@ -259,6 +265,10 @@ class DOMObserver {
 	): this {
 		if (!events?.length) {
 			throw new Error(`${DOMObserverErrors.EVENTS}: events array cannot be empty`)
+		}
+
+		if (timeout !== 0 && (!Number.isFinite(timeout) || timeout < 0)) {
+			throw new Error(`${DOMObserverErrors.TIMEOUT}: timeout must be a positive finite number`)
 		}
 
 		if (signal?.aborted) {
