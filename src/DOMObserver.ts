@@ -1,5 +1,6 @@
 import { DOMObserverErrors } from './DOMObserverErrors'
 import isElement from './utils/isElement'
+import resolveDOMTarget from './utils/resolveDOMTarget'
 
 /** A CSS selector string or a direct DOM Element reference used to identify the observed target. */
 export type DOMTarget = Element | string
@@ -44,6 +45,8 @@ export interface WaitOptions {
 	attributeFilter?: string[]
 	/** When provided, aborting the signal rejects the Promise with an `AbortError`. */
 	signal?: AbortSignal
+	/** DOM element or CSS selector to use as the observation root. Defaults to `document.documentElement`. */
+	root?: DOMTarget
 }
 
 /** Options accepted by `watch()`. */
@@ -65,6 +68,8 @@ export interface WatchOptions {
 	once?: boolean
 	/** Milliseconds to wait after the last mutation before invoking the callback. The callback receives the last mutation's arguments. `0` disables debouncing. */
 	debounce?: number
+	/** DOM element or CSS selector to use as the observation root. Defaults to `document.documentElement`. */
+	root?: DOMTarget
 }
 
 class DOMObserver {
@@ -109,7 +114,13 @@ class DOMObserver {
 	 */
 	wait(
 		target: DOMTarget,
-		{ events = DOMObserver.EVENTS, timeout = 0, attributeFilter = undefined, signal = undefined }: WaitOptions = {}
+		{
+			events = DOMObserver.EVENTS,
+			timeout = 0,
+			attributeFilter = undefined,
+			signal = undefined,
+			root = undefined,
+		}: WaitOptions = {}
 	): Promise<WaitResult> {
 		if (!events?.length) {
 			return Promise.reject(new Error(`${DOMObserverErrors.EVENTS}: events array cannot be empty`))
@@ -161,7 +172,7 @@ class DOMObserver {
 				)
 			}
 
-			this._observe(target, callback, { events, attributeFilter })
+			this._observe(target, callback, { events, attributeFilter, root })
 		}).finally(() => {
 			this.clear()
 		})
@@ -203,6 +214,7 @@ class DOMObserver {
 			signal = undefined,
 			once = false,
 			debounce = 0,
+			root = undefined,
 		}: WatchOptions = {}
 	): this {
 		if (!events?.length) {
@@ -252,7 +264,7 @@ class DOMObserver {
 			}
 		}
 
-		this._observe(target, callback, { events, attributeFilter })
+		this._observe(target, callback, { events, attributeFilter, root })
 
 		return this
 	}
@@ -260,21 +272,16 @@ class DOMObserver {
 	private _observe(
 		target: DOMTarget,
 		callback: OnEventCallback,
-		{ events, attributeFilter }: { events: DOMObserverEvent[]; attributeFilter?: string[] }
+		{ events, attributeFilter, root }: { events: DOMObserverEvent[]; attributeFilter?: string[]; root?: DOMTarget }
 	): void {
 		const hasExist = events.includes(DOMObserver.EXIST)
 		const hasAdd = events.includes(DOMObserver.ADD)
 		const hasRemove = events.includes(DOMObserver.REMOVE)
 		const hasChange = events.includes(DOMObserver.CHANGE)
 
-		let el: Element | null = isElement(target) ? target : null
-		if (!el) {
-			try {
-				el = document.querySelector(target as string)
-			} catch {
-				throw new Error(`${DOMObserverErrors.TARGET}: "${target}" is not a valid CSS selector`)
-			}
-		}
+		const el = resolveDOMTarget(target)
+		const defaultRoot = resolveDOMTarget(root) ?? document.documentElement
+
 		if (el && hasExist) {
 			callback(el, DOMObserver.EXIST)
 		}
@@ -301,10 +308,10 @@ class DOMObserver {
 			})
 		})
 
-		const observerTarget =
-			hasChange && !hasAdd && !hasRemove && isElement(target) ? target : document.documentElement
+		const isDirectObservation = hasChange && !hasAdd && !hasRemove && isElement(target) && !root
+		const observerTarget = isDirectObservation ? target : defaultRoot
 		this._observer.observe(observerTarget, {
-			subtree: observerTarget === document.documentElement,
+			subtree: !isDirectObservation,
 			childList: hasAdd || hasRemove,
 			attributes: hasChange,
 			attributeOldValue: hasChange,
