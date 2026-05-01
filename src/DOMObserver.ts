@@ -40,13 +40,7 @@ export type OnEventCallback = (payload: EventPayload) => void
 export type FilterCallback = (payload: EventPayload) => boolean
 
 /** Resolved value of the Promise returned by `wait()`. */
-export interface WaitResult {
-	/** The matching DOM element. */
-	node: Element
-	/** The event type that caused the Promise to settle. */
-	event: DOMObserverEvent
-	/** Additional mutation metadata, present only for `CHANGE` events. */
-	options?: ChangeOptions
+export interface WaitResult extends EventPayload {
 	/** The target entry that triggered the match. Only populated when `wait()` was called with an array of targets. */
 	target?: DOMTarget
 }
@@ -195,7 +189,7 @@ class DOMObserver {
 			// onMatch always fires synchronously before fireCallback in _observe, so matchedTarget
 			// is guaranteed to be set before callback runs.
 			const callback: OnEventCallback = ({ node, event, options }) => {
-				const result: WaitResult = options ? { node, event, options } : { node, event }
+				const result: WaitResult = { node, event, options }
 				if (isMulti) result.target = matchedTarget
 				settle(result)
 			}
@@ -333,7 +327,7 @@ class DOMObserver {
 		const defaultRoot = resolveDOMTarget(root) ?? document.documentElement
 
 		const fireCallback = (node: Element, event: DOMObserverEvent, opts?: ChangeOptions) => {
-			const payload: EventPayload = opts !== undefined ? { node, event, options: opts } : { node, event }
+			const payload: EventPayload = { node, event, options: opts }
 			if (filter && !filter(payload)) return
 			callback(payload)
 		}
