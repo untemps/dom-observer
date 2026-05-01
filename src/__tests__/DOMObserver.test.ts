@@ -5,6 +5,9 @@ import {
 	InvalidTargetError,
 	InvalidTimeoutError,
 	ObservationAbortedError,
+	type ChangeOptions,
+	type ChangePayload,
+	type EventPayload,
 	type OnEventCallback,
 	TimeoutError,
 } from '../index'
@@ -758,6 +761,65 @@ describe('DOMObserver', () => {
 		it('Returns the instance for chaining', () => {
 			expect(instance.clear()).toBe(instance)
 		})
+	})
+})
+
+describe('EventPayload type narrowing', () => {
+	let instance: DOMObserver
+
+	beforeEach(() => {
+		instance = new DOMObserver()
+	})
+
+	afterEach(() => {
+		instance.clear()
+		document.body.innerHTML = ''
+	})
+
+	it('options is ChangeOptions (not undefined) for CHANGE events', async () => {
+		_createElement('foo')
+		setTimeout(() => _modifyElement('#foo', 'data-x', 'new'), 50)
+
+		await new Promise<void>((resolve) => {
+			instance.watch(
+				'#foo',
+				({ event, options }) => {
+					if (event === DOMObserver.CHANGE) {
+						expectTypeOf(options).toEqualTypeOf<ChangeOptions>()
+						expect(options.attributeName).toBe('data-x')
+						resolve()
+					}
+				},
+				{ events: [DOMObserver.CHANGE] }
+			)
+		})
+	})
+
+	it('options is absent for non-CHANGE events', async () => {
+		let capturedPayload: EventPayload | null = null
+
+		instance.watch('#foo', (payload) => {
+			capturedPayload = payload
+		}, { events: [DOMObserver.ADD] })
+
+		_createElement('foo')
+		await _sleep()
+
+		expect(capturedPayload).not.toBeNull()
+		expect((capturedPayload as unknown as EventPayload).event).toBe(DOMObserver.ADD)
+		expect((capturedPayload as unknown as EventPayload).options).toBeUndefined()
+	})
+
+	it('wait() resolves ChangePayload with options typed as ChangeOptions after CHANGE guard', async () => {
+		_createElement('foo')
+		setTimeout(() => _modifyElement('#foo', 'class', 'updated'), 50)
+
+		const result = await instance.wait('#foo', { events: [DOMObserver.CHANGE] })
+
+		if (result.event === DOMObserver.CHANGE) {
+			expectTypeOf(result).toEqualTypeOf<ChangePayload & { target?: string | Element }>()
+			expect(result.options.attributeName).toBe('class')
+		}
 	})
 })
 
