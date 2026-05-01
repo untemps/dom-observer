@@ -2,6 +2,7 @@ import {
 	DOMObserver,
 	InvalidEventsError,
 	InvalidOptionsError,
+	InvalidTimeoutError,
 	InvalidTargetError,
 	ObservationAbortedError,
 	type OnEventCallback,
@@ -99,8 +100,8 @@ describe('DOMObserver', () => {
 					[NaN],
 					[Infinity],
 					[-Infinity],
-				])('Rejects with InvalidOptionsError when timeout is %s', async (value) => {
-					await expect(instance.wait('#foo', { timeout: value })).rejects.toThrow(InvalidOptionsError)
+				])('Rejects with InvalidTimeoutError when timeout is %s', async (value) => {
+					await expect(instance.wait('#foo', { timeout: value })).rejects.toThrow(InvalidTimeoutError)
 				})
 
 				it('Rejects with InvalidTargetError when selector is invalid', async () => {
@@ -574,8 +575,8 @@ describe('DOMObserver', () => {
 				[NaN],
 				[Infinity],
 				[-Infinity],
-			])('Throws InvalidOptionsError when timeout is %s', (value) => {
-				expect(() => instance.watch('#foo', onEvent, { timeout: value })).toThrow(InvalidOptionsError)
+			])('Throws InvalidTimeoutError when timeout is %s', (value) => {
+				expect(() => instance.watch('#foo', onEvent, { timeout: value })).toThrow(InvalidTimeoutError)
 			})
 
 			it('Throws InvalidTargetError when selector is invalid', () => {
@@ -776,10 +777,22 @@ describe('Error classes', () => {
 		expect(err.selector).toBe('##bad')
 	})
 
-	it('InvalidOptionsError has correct name and baked-in message', () => {
-		const err = new InvalidOptionsError()
+	it('InvalidOptionsError is a generic base with custom message', () => {
+		const err = new InvalidOptionsError('Some option is invalid')
 		expect(err).toBeInstanceOf(InvalidOptionsError)
 		expect(err.name).toBe('InvalidOptionsError')
+		expect(err.message).toBe('Some option is invalid')
+	})
+
+	it('InvalidTimeoutError has correct name and baked-in message', () => {
+		const err = new InvalidTimeoutError()
+		expect(err).toBeInstanceOf(InvalidTimeoutError)
+		expect(err.name).toBe('InvalidTimeoutError')
 		expect(err.message).toBe('Timeout must be 0 or a positive finite number')
+	})
+
+	it('InvalidTimeoutError is an instance of InvalidOptionsError', () => {
+		const err = new InvalidTimeoutError()
+		expect(err).toBeInstanceOf(InvalidOptionsError)
 	})
 })

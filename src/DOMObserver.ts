@@ -1,4 +1,4 @@
-import { InvalidEventsError, InvalidOptionsError, ObservationAbortedError, TimeoutError } from './DOMObserverErrors'
+import { InvalidEventsError, InvalidTimeoutError, ObservationAbortedError, TimeoutError } from './DOMObserverErrors'
 import type { DOMTarget } from './types'
 import isElement from './utils/isElement'
 import resolveDOMTarget from './utils/resolveDOMTarget'
@@ -47,7 +47,7 @@ export interface WaitResult {
 export interface WaitOptions {
 	/** Event types to listen for. Defaults to all four event types. */
 	events?: DOMObserverEvent[]
-	/** Maximum time in milliseconds to wait before rejecting with a `TimeoutError`. `0` disables the timeout. Must be `0` or a positive finite number — rejects with `InvalidOptionsError` otherwise. */
+	/** Maximum time in milliseconds to wait before rejecting with a `TimeoutError`. `0` disables the timeout. Must be `0` or a positive finite number — rejects with `InvalidTimeoutError` otherwise. */
 	timeout?: number
 	/** Restrict attribute observation to these attribute names. Passed directly to `MutationObserver.observe()`. */
 	attributeFilter?: string[]
@@ -68,7 +68,7 @@ export interface WatchOptions {
 	/**
 	 * Maximum time in milliseconds to wait for the first matching mutation before stopping observation.
 	 * The timeout is cancelled as soon as any mutation fires. `0` disables the timeout. Must be `0` or
-	 * a positive finite number — throws `InvalidOptionsError` otherwise.
+	 * a positive finite number — throws `InvalidTimeoutError` otherwise.
 	 */
 	timeout?: number
 	/** Called with a `TimeoutError` when the timeout elapses with no matching mutation. */
@@ -130,7 +130,7 @@ class DOMObserver {
 	 * @param options - Observation options.
 	 * @returns A Promise that resolves with the matching node, event type, and optional change metadata.
 	 * @throws `InvalidEventsError` when the `events` array is empty.
-	 * @throws `InvalidOptionsError` when `timeout` is negative, `NaN`, or `Infinity`.
+	 * @throws `InvalidTimeoutError` when `timeout` is negative, `NaN`, or `Infinity`.
 	 * @throws `InvalidTargetError` when any target string is not a valid CSS selector.
 	 */
 	wait(target: DOMTarget, options?: WaitOptions): Promise<WaitResult>
@@ -151,7 +151,7 @@ class DOMObserver {
 		}
 
 		if (timeout !== 0 && (!Number.isFinite(timeout) || timeout < 0)) {
-			return Promise.reject(new InvalidOptionsError())
+			return Promise.reject(new InvalidTimeoutError())
 		}
 
 		if (signal?.aborted) {
@@ -232,7 +232,7 @@ class DOMObserver {
 	 * @param options - Observation options.
 	 * @returns The `DOMObserver` instance, allowing method chaining.
 	 * @throws `InvalidEventsError` when the `events` array is empty.
-	 * @throws `InvalidOptionsError` when `timeout` is negative, `NaN`, or `Infinity`.
+	 * @throws `InvalidTimeoutError` when `timeout` is negative, `NaN`, or `Infinity`.
 	 * @throws `InvalidTargetError` when `target` is a string that is not a valid CSS selector.
 	 */
 	watch(
@@ -255,7 +255,7 @@ class DOMObserver {
 		}
 
 		if (timeout !== 0 && (!Number.isFinite(timeout) || timeout < 0)) {
-			throw new InvalidOptionsError()
+			throw new InvalidTimeoutError()
 		}
 
 		if (signal?.aborted) {

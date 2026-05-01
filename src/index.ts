@@ -9,4 +9,11 @@ export type {
 	WatchOptions,
 } from './DOMObserver'
 export { default as DOMObserver } from './DOMObserver'
-export { InvalidEventsError, InvalidOptionsError, InvalidTargetError, ObservationAbortedError, TimeoutError } from './DOMObserverErrors'
+export {
+	InvalidEventsError,
+	InvalidOptionsError,
+	InvalidTargetError,
+	InvalidTimeoutError,
+	ObservationAbortedError,
+	TimeoutError,
+} from './DOMObserverErrors'

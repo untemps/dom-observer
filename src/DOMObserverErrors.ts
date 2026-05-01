@@ -41,8 +41,15 @@ export class InvalidTargetError extends Error {
 }
 
 export class InvalidOptionsError extends Error {
+	constructor(message: string) {
+		super(message)
+		this.name = 'InvalidOptionsError'
+	}
+}
+
+export class InvalidTimeoutError extends InvalidOptionsError {
 	constructor() {
 		super('Timeout must be 0 or a positive finite number')
-		this.name = 'InvalidOptionsError'
+		this.name = 'InvalidTimeoutError'
 	}
 }

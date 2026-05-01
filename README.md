@@ -94,7 +94,7 @@ observer.watch('#foo', (node, event) => {
 | `options`           | Object            | Options object:                                                                                                                                          |
 | - `events`          | Array             | List of [events](#events) to observe (All events are observed by default)                                                                                |
 | - `attributeFilter` | Array             | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                       |
-| - `timeout`         | Number            | Duration (in ms) after which observation stops if no matching mutation occurred. Triggers `onError` with a `TimeoutError` when elapsed. Must be `0` or a positive finite number — throws `InvalidOptionsError` otherwise. |
+| - `timeout`         | Number            | Duration (in ms) after which observation stops if no matching mutation occurred. Triggers `onError` with a `TimeoutError` when elapsed. Must be `0` or a positive finite number — throws `InvalidTimeoutError` otherwise. |
 | - `onError`         | Function          | Callback triggered when `timeout` elapses with no matching mutation                                                                                      |
 | - `signal`          | AbortSignal       | An `AbortSignal` to stop the observation. If already aborted, `watch()` returns immediately without observing.                                           |
 | - `once`            | Boolean           | When `true`, automatically calls `clear()` after the first matching event. Defaults to `false`.                                                          |
@@ -262,7 +262,8 @@ try {
 | `ObservationAbortedError` | — | `wait()` when replaced by a new call |
 | `InvalidEventsError` | — | `wait()`, `watch()` when `events` array is empty |
 | `InvalidTargetError` | `selector: string` | `wait()`, `watch()` when `target` is an invalid CSS selector |
-| `InvalidOptionsError` | — | `wait()`, `watch()` when an option value is invalid (e.g. negative `timeout`) |
+| `InvalidOptionsError` | — | Base class for all invalid-option errors; catch-all via `instanceof` |
+| `InvalidTimeoutError` | — | `wait()`, `watch()` when `timeout` is an invalid value (negative, `NaN`, `Infinity`); extends `InvalidOptionsError` |
 
 ## Example
 
