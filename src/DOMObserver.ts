@@ -1,4 +1,4 @@
-import { InvalidEventsError, InvalidOptionsError, InvalidTargetError, ObservationAbortedError, TimeoutError } from './DOMObserverErrors'
+import { InvalidEventsError, InvalidOptionsError, ObservationAbortedError, TimeoutError } from './DOMObserverErrors'
 import isElement from './utils/isElement'
 import resolveDOMTarget from './utils/resolveDOMTarget'
 
@@ -198,10 +198,7 @@ class DOMObserver {
 			}
 
 			if (timeout > 0) {
-				this._timeout = setTimeout(
-					() => cancel(new TimeoutError(target, timeout)),
-					timeout
-				)
+				this._timeout = setTimeout(() => cancel(new TimeoutError(target, timeout)), timeout)
 			}
 
 			this._observe(target, callback, { events, attributeFilter, root, filter }, (t) => {
