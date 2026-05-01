@@ -189,7 +189,7 @@ class DOMObserver {
 			// onMatch always fires synchronously before fireCallback in _observe, so matchedTarget
 			// is guaranteed to be set before callback runs.
 			const callback: OnEventCallback = ({ node, event, options }) => {
-				const result: WaitResult = { node, event, options }
+				const result: WaitResult = options !== undefined ? { node, event, options } : { node, event }
 				if (isMulti) result.target = matchedTarget
 				settle(result)
 			}
@@ -327,7 +327,7 @@ class DOMObserver {
 		const defaultRoot = resolveDOMTarget(root) ?? document.documentElement
 
 		const fireCallback = (node: Element, event: DOMObserverEvent, opts?: ChangeOptions) => {
-			const payload: EventPayload = { node, event, options: opts }
+			const payload: EventPayload = opts !== undefined ? { node, event, options: opts } : { node, event }
 			if (filter && !filter(payload)) return
 			callback(payload)
 		}
