@@ -36,8 +36,8 @@ describe('DOMObserver', () => {
 				})
 
 				it('Observes an element to be added', async () => {
-					const { node: found, event } = await instance.wait('#foo')
-					expect(found).toEqual(node)
+					const { node: foundNode, event } = await instance.wait('#foo')
+					expect(foundNode).toEqual(node)
 					expect(event).toBe(DOMObserver.EXIST)
 				})
 
@@ -45,8 +45,8 @@ describe('DOMObserver', () => {
 					setTimeout(() => {
 						_removeElement('#foo')
 					}, 100)
-					const { node: found, event } = await instance.wait('#foo', { events: [DOMObserver.REMOVE] })
-					expect(found).toEqual(node)
+					const { node: foundNode, event } = await instance.wait('#foo', { events: [DOMObserver.REMOVE] })
+					expect(foundNode).toEqual(node)
 					expect(event).toBe(DOMObserver.REMOVE)
 				})
 
@@ -55,13 +55,13 @@ describe('DOMObserver', () => {
 						_modifyElement('#foo', 'class', 'gag')
 					}, 100)
 					const {
-						node: found,
+						node: foundNode,
 						event,
 						options: { attributeName, oldValue } = {},
 					} = await instance.wait('#foo', {
 						events: [DOMObserver.CHANGE],
 					})
-					expect(found).toEqual(node)
+					expect(foundNode).toEqual(node)
 					expect(event).toBe(DOMObserver.CHANGE)
 					expect(attributeName).toBe('class')
 					expect(oldValue).toBe('bar')
@@ -184,8 +184,8 @@ describe('DOMObserver', () => {
 				})
 
 				it('Resolves immediately when filter passes for an existing element', async () => {
-					const { node: found, event } = await instance.wait('#foo', { filter: () => true })
-					expect(found).toEqual(node)
+					const { node: foundNode, event } = await instance.wait('#foo', { filter: () => true })
+					expect(foundNode).toEqual(node)
 					expect(event).toBe(DOMObserver.EXIST)
 				})
 
@@ -251,8 +251,8 @@ describe('DOMObserver', () => {
 					setTimeout(() => {
 						node = _createElement('foo')
 					}, 100)
-					const { node: found, event } = await instance.wait('#foo')
-					expect(found).toEqual(node)
+					const { node: foundNode, event } = await instance.wait('#foo')
+					expect(foundNode).toEqual(node)
 					expect(event).toBe(DOMObserver.ADD)
 				})
 			})
@@ -264,8 +264,8 @@ describe('DOMObserver', () => {
 			})
 
 			it('Resolves on EXIST for the first target found in the DOM', async () => {
-				const { node: found, event, target } = await instance.wait(['#foo', '#bar'])
-				expect(found).toEqual(node)
+				const { node: foundNode, event, target } = await instance.wait(['#foo', '#bar'])
+				expect(foundNode).toEqual(node)
 				expect(event).toBe(DOMObserver.EXIST)
 				expect(target).toBe('#foo')
 			})
@@ -516,15 +516,15 @@ describe('DOMObserver', () => {
 			it('Respects root when observing CHANGE on an Element reference', async () => {
 				const root = document.createElement('div')
 				document.body.appendChild(root)
-				const watched = document.createElement('div')
-				root.appendChild(watched)
+				const watchedNode = document.createElement('div')
+				root.appendChild(watchedNode)
 				const outside = document.createElement('div')
 				document.body.appendChild(outside)
-				instance.watch(watched, onEvent, { events: [DOMObserver.CHANGE], root })
+				instance.watch(watchedNode, onEvent, { events: [DOMObserver.CHANGE], root })
 				outside.setAttribute('data-x', '1')
 				await _sleep()
 				expect(onEvent).not.toHaveBeenCalled()
-				watched.setAttribute('data-x', '1')
+				watchedNode.setAttribute('data-x', '1')
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledOnce()
 				outside.remove()
