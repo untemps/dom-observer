@@ -27,7 +27,7 @@ addButton.addEventListener('click', () => {
 	}
 })
 
-const onEvent = (node, event, { attributeName } = {}) => {
+const onEvent = ({ node, event, options: { attributeName } = {} }) => {
 	switch (event) {
 		case DOMObserver.ADD: {
 			log(`[ADD]\t\tElement id: ${node.id}`)
