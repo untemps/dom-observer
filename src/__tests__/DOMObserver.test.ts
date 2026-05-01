@@ -1,4 +1,13 @@
-import { DOMObserver, DOMObserverErrors, type OnEventCallback } from '../index'
+import {
+	DOMObserver,
+	InvalidEventsError,
+	InvalidOptionsError,
+	InvalidTimeoutError,
+	InvalidTargetError,
+	ObservationAbortedError,
+	type OnEventCallback,
+	TimeoutError,
+} from '../index'
 
 describe('DOMObserver', () => {
 	let instance: DOMObserver
@@ -72,33 +81,35 @@ describe('DOMObserver', () => {
 
 				it('Rejects promise when an element is not found after timeout is elapsed', async () => {
 					await expect(instance.wait('#bar', { events: [DOMObserver.ADD], timeout: 50 })).rejects.toThrow(
-						DOMObserverErrors.TIMEOUT
+						TimeoutError
 					)
 				})
 
 				it('Rejects the pending promise when wait() is called again', async () => {
 					const first = instance.wait('#bar', { events: [DOMObserver.ADD] })
 					instance.wait('#baz', { events: [DOMObserver.ADD] })
-					await expect(first).rejects.toThrow(DOMObserverErrors.ABORT)
+					await expect(first).rejects.toThrow(ObservationAbortedError)
 				})
 
 				it('Throws when events array is empty', async () => {
-					await expect(() => instance.wait('#foo', { events: [] })).rejects.toThrow()
+					await expect(() => instance.wait('#foo', { events: [] })).rejects.toThrow(InvalidEventsError)
 				})
 
-				it.each([[-1], [NaN], [Infinity], [-Infinity]])(
-					'Rejects with [TIMEOUT] when timeout is %s',
-					async (value) => {
-						await expect(instance.wait('#foo', { timeout: value })).rejects.toThrow(DOMObserverErrors.TIMEOUT)
-					}
-				)
-
-				it('Rejects with [TARGET] error when selector is invalid', async () => {
-					await expect(instance.wait('##invalid')).rejects.toThrow(DOMObserverErrors.TARGET)
+				it.each([
+					[-1],
+					[NaN],
+					[Infinity],
+					[-Infinity],
+				])('Rejects with InvalidTimeoutError when timeout is %s', async (value) => {
+					await expect(instance.wait('#foo', { timeout: value })).rejects.toThrow(InvalidTimeoutError)
 				})
 
-				it('Rejects with [TARGET] error when root selector is invalid', async () => {
-					await expect(instance.wait('#foo', { root: '##invalid' })).rejects.toThrow(DOMObserverErrors.TARGET)
+				it('Rejects with InvalidTargetError when selector is invalid', async () => {
+					await expect(instance.wait('##invalid')).rejects.toThrow(InvalidTargetError)
+				})
+
+				it('Rejects with InvalidTargetError when root selector is invalid', async () => {
+					await expect(instance.wait('#foo', { root: '##invalid' })).rejects.toThrow(InvalidTargetError)
 				})
 
 				it('Rejects immediately when signal is already aborted', async () => {
@@ -200,7 +211,7 @@ describe('DOMObserver', () => {
 					}, 30)
 					await expect(
 						instance.wait('button', { events: [DOMObserver.ADD], filter: () => false, timeout: 80 })
-					).rejects.toThrow(DOMObserverErrors.TIMEOUT)
+					).rejects.toThrow(TimeoutError)
 				})
 
 				it('Skips EXIST when filter returns false and resolves on next matching mutation', async () => {
@@ -289,14 +300,14 @@ describe('DOMObserver', () => {
 				expect(target).toBe('#second-wins')
 			})
 
-			it('Rejects with [TARGET] when any target selector is invalid', async () => {
-				await expect(instance.wait(['#foo', '##invalid'])).rejects.toThrow(DOMObserverErrors.TARGET)
+			it('Rejects with InvalidTargetError when any target selector is invalid', async () => {
+				await expect(instance.wait(['#foo', '##invalid'])).rejects.toThrow(InvalidTargetError)
 			})
 
-			it('Rejects with [TIMEOUT] when no target matches within the time limit', async () => {
+			it('Rejects with TimeoutError when no target matches within the time limit', async () => {
 				await expect(
 					instance.wait(['#missing1', '#missing2'], { events: [DOMObserver.ADD], timeout: 50 })
-				).rejects.toThrow(DOMObserverErrors.TIMEOUT)
+				).rejects.toThrow(TimeoutError)
 			})
 
 			it('Rejects with AbortError when signal is aborted during multi-target observation', async () => {
@@ -474,8 +485,8 @@ describe('DOMObserver', () => {
 				root.remove()
 			})
 
-			it('Throws with [TARGET] error when root selector is invalid', () => {
-				expect(() => instance.watch('#foo', onEvent, { root: '##invalid' })).toThrow(DOMObserverErrors.TARGET)
+			it('Throws InvalidTargetError when root selector is invalid', () => {
+				expect(() => instance.watch('#foo', onEvent, { root: '##invalid' })).toThrow(InvalidTargetError)
 			})
 
 			it('Respects root when observing CHANGE on an Element reference', async () => {
@@ -556,24 +567,26 @@ describe('DOMObserver', () => {
 			})
 
 			it('Throws when events array is empty', () => {
-				expect(() => instance.watch('#foo', onEvent, { events: [] })).toThrow(DOMObserverErrors.EVENTS)
+				expect(() => instance.watch('#foo', onEvent, { events: [] })).toThrow(InvalidEventsError)
 			})
 
-			it.each([[-1], [NaN], [Infinity], [-Infinity]])(
-				'Throws with [TIMEOUT] when timeout is %s',
-				(value) => {
-					expect(() => instance.watch('#foo', onEvent, { timeout: value })).toThrow(DOMObserverErrors.TIMEOUT)
-				}
-			)
+			it.each([
+				[-1],
+				[NaN],
+				[Infinity],
+				[-Infinity],
+			])('Throws InvalidTimeoutError when timeout is %s', (value) => {
+				expect(() => instance.watch('#foo', onEvent, { timeout: value })).toThrow(InvalidTimeoutError)
+			})
 
-			it('Throws with [TARGET] error when selector is invalid', () => {
-				expect(() => instance.watch('##invalid', onEvent)).toThrow(DOMObserverErrors.TARGET)
+			it('Throws InvalidTargetError when selector is invalid', () => {
+				expect(() => instance.watch('##invalid', onEvent)).toThrow(InvalidTargetError)
 			})
 
 			it('Rejects the pending wait() promise when watch() is called', async () => {
 				const pending = instance.wait('#bar', { events: [DOMObserver.ADD] })
 				instance.watch('#foo', onEvent)
-				await expect(pending).rejects.toThrow(DOMObserverErrors.ABORT)
+				await expect(pending).rejects.toThrow(ObservationAbortedError)
 			})
 
 			it('Returns the instance for chaining', () => {
@@ -607,7 +620,7 @@ describe('DOMObserver', () => {
 				await _sleep(100)
 				expect(onEvent).not.toHaveBeenCalled()
 				expect(onError).toHaveBeenCalledOnce()
-				expect((onError.mock.calls[0][0] as Error).message).toMatch(DOMObserverErrors.TIMEOUT)
+				expect(onError.mock.calls[0][0]).toBeInstanceOf(TimeoutError)
 			})
 
 			it('Does not call onError when a mutation occurs before timeout', async () => {
@@ -716,11 +729,70 @@ describe('DOMObserver', () => {
 	})
 })
 
-describe('DOMObserverErrors', () => {
-	it('Exports expected error code values', () => {
-		expect(DOMObserverErrors.TIMEOUT).toBe('[TIMEOUT]')
-		expect(DOMObserverErrors.ABORT).toBe('[ABORT]')
-		expect(DOMObserverErrors.EVENTS).toBe('[EVENTS]')
-		expect(DOMObserverErrors.TARGET).toBe('[TARGET]')
+describe('Error classes', () => {
+	it('TimeoutError exposes target and timeout properties', () => {
+		const err = new TimeoutError('#foo', 500)
+		expect(err).toBeInstanceOf(TimeoutError)
+		expect(err.name).toBe('TimeoutError')
+		expect(err.target).toBe('#foo')
+		expect(err.timeout).toBe(500)
+	})
+
+	it('TimeoutError formats selector targets in message', () => {
+		const err = new TimeoutError('#foo', 500)
+		expect(err.message).toBe('#foo could not be found after 500ms')
+	})
+
+	it('TimeoutError formats Element targets in message', () => {
+		const el = document.createElement('div')
+		el.id = 'bar'
+		const err = new TimeoutError(el, 300)
+		expect(err.message).toBe('<div#bar> could not be found after 300ms')
+		expect(err.target).toBe(el)
+	})
+
+	it('TimeoutError handles array targets', () => {
+		const err = new TimeoutError(['#a', '#b'], 200)
+		expect(err.target).toEqual(['#a', '#b'])
+		expect(err.message).toBe('None of [#a, #b] could not be found after 200ms')
+	})
+
+	it('ObservationAbortedError has correct name', () => {
+		const err = new ObservationAbortedError('test reason')
+		expect(err).toBeInstanceOf(ObservationAbortedError)
+		expect(err.name).toBe('ObservationAbortedError')
+		expect(err.message).toBe('test reason')
+	})
+
+	it('InvalidEventsError has correct name', () => {
+		const err = new InvalidEventsError()
+		expect(err).toBeInstanceOf(InvalidEventsError)
+		expect(err.name).toBe('InvalidEventsError')
+	})
+
+	it('InvalidTargetError exposes selector property', () => {
+		const err = new InvalidTargetError('##bad')
+		expect(err).toBeInstanceOf(InvalidTargetError)
+		expect(err.name).toBe('InvalidTargetError')
+		expect(err.selector).toBe('##bad')
+	})
+
+	it('InvalidOptionsError is a generic base with custom message', () => {
+		const err = new InvalidOptionsError('Some option is invalid')
+		expect(err).toBeInstanceOf(InvalidOptionsError)
+		expect(err.name).toBe('InvalidOptionsError')
+		expect(err.message).toBe('Some option is invalid')
+	})
+
+	it('InvalidTimeoutError has correct name and baked-in message', () => {
+		const err = new InvalidTimeoutError()
+		expect(err).toBeInstanceOf(InvalidTimeoutError)
+		expect(err.name).toBe('InvalidTimeoutError')
+		expect(err.message).toBe('Timeout must be 0 or a positive finite number')
+	})
+
+	it('InvalidTimeoutError is an instance of InvalidOptionsError', () => {
+		const err = new InvalidTimeoutError()
+		expect(err).toBeInstanceOf(InvalidOptionsError)
 	})
 })

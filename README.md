@@ -94,7 +94,7 @@ observer.watch('#foo', (node, event) => {
 | `options`           | Object            | Options object:                                                                                                                                          |
 | - `events`          | Array             | List of [events](#events) to observe (All events are observed by default)                                                                                |
 | - `attributeFilter` | Array             | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                       |
-| - `timeout`         | Number            | Duration (in ms) after which observation stops if no matching mutation occurred. Triggers `onError` when elapsed. Must be `0` or a positive finite number — throws `[TIMEOUT]` otherwise. |
+| - `timeout`         | Number            | Duration (in ms) after which observation stops if no matching mutation occurred. Triggers `onError` with a `TimeoutError` when elapsed. Must be `0` or a positive finite number — throws `InvalidTimeoutError` otherwise. |
 | - `onError`         | Function          | Callback triggered when `timeout` elapses with no matching mutation                                                                                      |
 | - `signal`          | AbortSignal       | An `AbortSignal` to stop the observation. If already aborted, `watch()` returns immediately without observing.                                           |
 | - `once`            | Boolean           | When `true`, automatically calls `clear()` after the first matching event. Defaults to `false`.                                                          |
@@ -156,7 +156,7 @@ const { node } = await observer.wait('#foo')
 console.log(observer.isObserving) // false — auto-cleared on resolution
 ```
 
-Calling `clear()` after `wait()` resolves is safe and is a no-op. If a `timeout` is set and elapses before any matching mutation, the Promise rejects with a `[TIMEOUT]` error.
+Calling `clear()` after `wait()` resolves is safe and is a no-op. If a `timeout` is set and elapses before any matching mutation, the Promise rejects with a `TimeoutError`.
 
 #### `wait` method arguments
 
@@ -165,7 +165,7 @@ Calling `clear()` after `wait()` resolves is safe and is a no-op. If a `timeout`
 | `target`            | Element, String, or Array  | DOM element, selector, or array of either. When an array is passed, resolves on the first match across all entries.                                      |
 | `options`           | Object            | Options object:                                                                                                                                          |
 | - `events`          | Array             | List of [events](#events) to observe (All events are observed by default)                                                                                |
-| - `timeout`         | Number            | Duration (in ms) before rejecting the Promise with a `[TIMEOUT]` error. `0` disables the timeout. Must be `0` or a positive finite number — rejects with `[TIMEOUT]` otherwise.          |
+| - `timeout`         | Number            | Duration (in ms) before rejecting the Promise with a `TimeoutError`. `0` disables the timeout. Must be `0` or a positive finite number — rejects with `InvalidTimeoutError` otherwise. |
 | - `attributeFilter` | Array             | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                       |
 | - `signal`          | AbortSignal       | An `AbortSignal` to cancel the observation. If already aborted, the Promise rejects immediately with an `AbortError`.                                    |
 | - `root`            | Element or String | DOM element or CSS selector to use as the observation root. Only mutations within this subtree are observed. Defaults to `document.documentElement`.     |
@@ -224,45 +224,46 @@ observer.clear()
 observer.clear().watch('#bar', onEvent)
 ```
 
-> **Note:** Calling `wait()` or `watch()` on an instance that already has a pending `wait()` Promise will automatically reject that Promise with an `[ABORT]` error before starting the new observation. Handle this rejection if necessary:
+> **Note:** Calling `wait()` or `watch()` on an instance that already has a pending `wait()` Promise will automatically reject that Promise with an `ObservationAbortedError` before starting the new observation. Handle this rejection if necessary:
 >
 > ```javascript
-> import { DOMObserver, DOMObserverErrors } from '@untemps/dom-observer'
+> import { DOMObserver, ObservationAbortedError } from '@untemps/dom-observer'
 >
 > const observer = new DOMObserver()
 > observer.wait('#foo').catch((err) => {
->     if (err.message.startsWith(DOMObserverErrors.ABORT)) return // replaced by a new observation
+>     if (err instanceof ObservationAbortedError) return // replaced by a new observation
 >     throw err
 > })
-> observer.wait('#bar')  // previous promise is rejected with [ABORT]
-> observer.watch('#baz', onEvent)  // also rejects a pending wait() with [ABORT]
+> observer.wait('#bar')  // previous promise is rejected with ObservationAbortedError
+> observer.watch('#baz', onEvent)  // also rejects a pending wait() with ObservationAbortedError
 > ```
 
-## Error constants
+## Error classes
 
-The library exports a `DOMObserverErrors` object and a `DOMObserverErrorCode` type for reliable error handling without fragile string matching:
+The library exports typed `Error` subclasses for reliable error handling with `instanceof` checks:
 
 ```typescript
-import { DOMObserver, DOMObserverErrors } from '@untemps/dom-observer'
+import { DOMObserver, TimeoutError, ObservationAbortedError } from '@untemps/dom-observer'
 
 try {
     await observer.wait('#foo', { timeout: 500 })
 } catch (e) {
-    const message = (e as Error).message
-    if (message.startsWith(DOMObserverErrors.TIMEOUT)) {
-        // handle timeout
-    } else if (message.startsWith(DOMObserverErrors.ABORT)) {
+    if (e instanceof TimeoutError) {
+        console.log(`Timed out waiting for ${e.target} after ${e.timeout}ms`)
+    } else if (e instanceof ObservationAbortedError) {
         // replaced by another observation
     }
 }
 ```
 
-| Constant | Value | Thrown by |
+| Class | Properties | Thrown by |
 |---|---|---|
-| `DOMObserverErrors.TIMEOUT` | `'[TIMEOUT]'` | `wait()`, `watch()` when `timeout` elapses; also when `timeout` is an invalid value (`-1`, `NaN`, `Infinity`) |
-| `DOMObserverErrors.ABORT` | `'[ABORT]'` | `wait()` when replaced by a new call |
-| `DOMObserverErrors.EVENTS` | `'[EVENTS]'` | `wait()`, `watch()` when `events` array is empty |
-| `DOMObserverErrors.TARGET` | `'[TARGET]'` | `wait()`, `watch()` when `target` is an invalid CSS selector |
+| `TimeoutError` | `target: DOMTarget \| DOMTarget[]`, `timeout: number` | `wait()`, `watch()` when `timeout` elapses |
+| `ObservationAbortedError` | — | `wait()` when replaced by a new call |
+| `InvalidEventsError` | — | `wait()`, `watch()` when `events` array is empty |
+| `InvalidTargetError` | `selector: string` | `wait()`, `watch()` when `target` is an invalid CSS selector |
+| `InvalidOptionsError` | — | Base class for all invalid-option errors; catch-all via `instanceof` |
+| `InvalidTimeoutError` | — | `wait()`, `watch()` when `timeout` is an invalid value (negative, `NaN`, `Infinity`); extends `InvalidOptionsError` |
 
 ## Example
 

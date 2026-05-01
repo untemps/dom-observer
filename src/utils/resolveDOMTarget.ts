@@ -1,5 +1,5 @@
-import type { DOMTarget } from '../DOMObserver'
-import { DOMObserverErrors } from '../DOMObserverErrors'
+import type { DOMTarget } from '../types'
+import { InvalidTargetError } from '../DOMObserverErrors'
 import isElement from './isElement'
 
 const resolveDOMTarget = (target: DOMTarget | undefined): Element | null => {
@@ -8,7 +8,7 @@ const resolveDOMTarget = (target: DOMTarget | undefined): Element | null => {
 	try {
 		return document.querySelector(target as string)
 	} catch {
-		throw new Error(`${DOMObserverErrors.TARGET}: "${target}" is not a valid CSS selector`)
+		throw new InvalidTargetError(target as string)
 	}
 }
 
