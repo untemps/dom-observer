@@ -148,7 +148,15 @@ const { node, target } = await observer.wait(['#success', '#error'], {
 console.log(`Matched: ${target}`)
 ```
 
-Once the first matching mutation occurs, the Promise resolves and the observation stops automatically. If a `timeout` is set and elapses before any matching mutation, the Promise rejects with a `[TIMEOUT]` error.
+Once the first matching mutation occurs, the Promise resolves and the observation stops automatically — the internal observer is disconnected and all state is reset before the Promise settles. `isObserving` is `false` immediately after `await`:
+
+```javascript
+const observer = new DOMObserver()
+const { node } = await observer.wait('#foo')
+console.log(observer.isObserving) // false — auto-cleared on resolution
+```
+
+Calling `clear()` after `wait()` resolves is safe and is a no-op. If a `timeout` is set and elapses before any matching mutation, the Promise rejects with a `[TIMEOUT]` error.
 
 #### `wait` method arguments
 

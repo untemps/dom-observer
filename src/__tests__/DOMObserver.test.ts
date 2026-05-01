@@ -124,6 +124,20 @@ describe('DOMObserver', () => {
 					expect(instance.isObserving).toBe(false)
 				})
 
+				it('Sets isObserving to false synchronously before .then() handler runs', async () => {
+					let observingInThen: boolean | undefined
+					await instance.wait('#foo').then(() => {
+						observingInThen = instance.isObserving
+					})
+					expect(observingInThen).toBe(false)
+				})
+
+				it('Calling clear() after wait() resolves is a no-op', async () => {
+					await instance.wait('#foo')
+					expect(() => instance.clear()).not.toThrow()
+					expect(instance.isObserving).toBe(false)
+				})
+
 				it('Does not clear a subsequent watch() when timeout was set', async () => {
 					await instance.wait('#foo', { timeout: 100 })
 					instance.watch('#foo', vi.fn<OnEventCallback>(), { events: [DOMObserver.CHANGE] })

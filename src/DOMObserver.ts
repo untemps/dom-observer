@@ -174,6 +174,7 @@ class DOMObserver {
 			}
 			const settle = (value: WaitResult) => {
 				cleanup()
+				this.clear()
 				resolve(value)
 			}
 			const cancel = (error: Error | DOMException) => {
