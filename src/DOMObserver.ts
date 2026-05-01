@@ -151,7 +151,7 @@ class DOMObserver {
 		}
 
 		if (timeout !== 0 && (!Number.isFinite(timeout) || timeout < 0)) {
-			return Promise.reject(new InvalidOptionsError('Timeout must be 0 or a positive finite number'))
+			return Promise.reject(new InvalidOptionsError())
 		}
 
 		if (signal?.aborted) {
@@ -255,7 +255,7 @@ class DOMObserver {
 		}
 
 		if (timeout !== 0 && (!Number.isFinite(timeout) || timeout < 0)) {
-			throw new InvalidOptionsError('Timeout must be 0 or a positive finite number')
+			throw new InvalidOptionsError()
 		}
 
 		if (signal?.aborted) {

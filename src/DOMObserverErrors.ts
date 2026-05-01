@@ -1,13 +1,14 @@
 import type { DOMTarget } from './types'
 
+const formatTarget = (t: DOMTarget): string =>
+	t instanceof Element ? `<${t.tagName.toLowerCase()}${t.id ? `#${t.id}` : ''}>` : String(t)
+
 export class TimeoutError extends Error {
 	readonly target: DOMTarget | DOMTarget[]
 	readonly timeout: number
 
 	constructor(target: DOMTarget | DOMTarget[], timeout: number) {
-		const fmt = (t: DOMTarget): string =>
-			t instanceof Element ? `<${t.tagName.toLowerCase()}${t.id ? `#${t.id}` : ''}>` : String(t)
-		const label = Array.isArray(target) ? `None of [${target.map(fmt).join(', ')}]` : fmt(target)
+		const label = Array.isArray(target) ? `None of [${target.map(formatTarget).join(', ')}]` : formatTarget(target)
 		super(`${label} could not be found after ${timeout}ms`)
 		this.name = 'TimeoutError'
 		this.target = target
@@ -40,8 +41,8 @@ export class InvalidTargetError extends Error {
 }
 
 export class InvalidOptionsError extends Error {
-	constructor(message: string) {
-		super(message)
+	constructor() {
+		super('Timeout must be 0 or a positive finite number')
 		this.name = 'InvalidOptionsError'
 	}
 }

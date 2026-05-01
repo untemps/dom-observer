@@ -776,10 +776,10 @@ describe('Error classes', () => {
 		expect(err.selector).toBe('##bad')
 	})
 
-	it('InvalidOptionsError has correct name', () => {
-		const err = new InvalidOptionsError('timeout must be positive')
+	it('InvalidOptionsError has correct name and baked-in message', () => {
+		const err = new InvalidOptionsError()
 		expect(err).toBeInstanceOf(InvalidOptionsError)
 		expect(err.name).toBe('InvalidOptionsError')
-		expect(err.message).toBe('timeout must be positive')
+		expect(err.message).toBe('Timeout must be 0 or a positive finite number')
 	})
 })
