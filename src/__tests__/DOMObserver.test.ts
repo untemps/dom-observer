@@ -205,7 +205,7 @@ describe('DOMObserver', () => {
 					expect(node.classList.contains('primary')).toBe(true)
 				})
 
-				it('Rejects with TIMEOUT when filter never passes', async () => {
+				it('Rejects with TimeoutError when filter never passes', async () => {
 					setTimeout(() => {
 						document.body.appendChild(document.createElement('button'))
 					}, 30)
