@@ -165,7 +165,7 @@ Calling `clear()` after `wait()` resolves is safe and is a no-op. If a `timeout`
 | `target`            | Element, String, or Array  | DOM element, selector, or array of either. When an array is passed, resolves on the first match across all entries.                                      |
 | `options`           | Object            | Options object:                                                                                                                                          |
 | - `events`          | Array             | List of [events](#events) to observe (All events are observed by default)                                                                                |
-| - `timeout`         | Number            | Duration (in ms) before rejecting the Promise with a `TimeoutError`. `0` disables the timeout. Must be `0` or a positive finite number — rejects with `InvalidOptionsError` otherwise. |
+| - `timeout`         | Number            | Duration (in ms) before rejecting the Promise with a `TimeoutError`. `0` disables the timeout. Must be `0` or a positive finite number — rejects with `InvalidTimeoutError` otherwise. |
 | - `attributeFilter` | Array             | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                       |
 | - `signal`          | AbortSignal       | An `AbortSignal` to cancel the observation. If already aborted, the Promise rejects immediately with an `AbortError`.                                    |
 | - `root`            | Element or String | DOM element or CSS selector to use as the observation root. Only mutations within this subtree are observed. Defaults to `document.documentElement`.     |
