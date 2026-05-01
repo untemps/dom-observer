@@ -230,10 +230,14 @@ describe('DOMObserver', () => {
 					const filter = vi.fn(() => true)
 					setTimeout(() => _modifyElement('#foo', 'class', 'updated'), 50)
 					await instance.wait('#foo', { events: [DOMObserver.CHANGE], filter })
-					expect(filter).toHaveBeenCalledWith({ node: el, event: DOMObserver.CHANGE, options: {
-						attributeName: 'class',
-						oldValue: 'bar',
-					} })
+					expect(filter).toHaveBeenCalledWith({
+						node: el,
+						event: DOMObserver.CHANGE,
+						options: {
+							attributeName: 'class',
+							oldValue: 'bar',
+						},
+					})
 				})
 
 				it('Leaves result.target undefined for a single-target call', async () => {
@@ -394,14 +398,22 @@ describe('DOMObserver', () => {
 				_modifyElement('#foo', 'class', 'change2')
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledTimes(2)
-				expect(onEvent).toHaveBeenNthCalledWith(1, { node: el, event: DOMObserver.CHANGE, options: {
-					attributeName: 'class',
-					oldValue: 'bar',
-				} })
-				expect(onEvent).toHaveBeenNthCalledWith(2, { node: el, event: DOMObserver.CHANGE, options: {
-					attributeName: 'class',
-					oldValue: 'change1',
-				} })
+				expect(onEvent).toHaveBeenNthCalledWith(1, {
+					node: el,
+					event: DOMObserver.CHANGE,
+					options: {
+						attributeName: 'class',
+						oldValue: 'bar',
+					},
+				})
+				expect(onEvent).toHaveBeenNthCalledWith(2, {
+					node: el,
+					event: DOMObserver.CHANGE,
+					options: {
+						attributeName: 'class',
+						oldValue: 'change1',
+					},
+				})
 			})
 
 			it('Triggers onEvent for each matching added and removed node', async () => {
@@ -427,8 +439,16 @@ describe('DOMObserver', () => {
 				b.setAttribute('data-x', '2')
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledTimes(2)
-				expect(onEvent).toHaveBeenCalledWith({ node: a, event: DOMObserver.CHANGE, options: { attributeName: 'data-x', oldValue: null } })
-				expect(onEvent).toHaveBeenCalledWith({ node: b, event: DOMObserver.CHANGE, options: { attributeName: 'data-x', oldValue: null } })
+				expect(onEvent).toHaveBeenCalledWith({
+					node: a,
+					event: DOMObserver.CHANGE,
+					options: { attributeName: 'data-x', oldValue: null },
+				})
+				expect(onEvent).toHaveBeenCalledWith({
+					node: b,
+					event: DOMObserver.CHANGE,
+					options: { attributeName: 'data-x', oldValue: null },
+				})
 			})
 
 			it('Only fires for attributes in the filter list', async () => {
@@ -441,10 +461,14 @@ describe('DOMObserver', () => {
 				_modifyElement('#foo', 'data-watched', 'y')
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledOnce()
-				expect(onEvent).toHaveBeenCalledWith({ node: el, event: DOMObserver.CHANGE, options: {
-					attributeName: 'data-watched',
-					oldValue: null,
-				} })
+				expect(onEvent).toHaveBeenCalledWith({
+					node: el,
+					event: DOMObserver.CHANGE,
+					options: {
+						attributeName: 'data-watched',
+						oldValue: null,
+					},
+				})
 			})
 
 			it('Only fires for mutations within the root element', async () => {
@@ -531,7 +555,11 @@ describe('DOMObserver', () => {
 				instance.watch('#foo', onEvent, { events: [DOMObserver.CHANGE], filter })
 				_modifyElement('#foo', 'class', 'updated')
 				await _sleep()
-				expect(filter).toHaveBeenCalledWith({ node: el, event: DOMObserver.CHANGE, options: { attributeName: 'class', oldValue: 'bar' } })
+				expect(filter).toHaveBeenCalledWith({
+					node: el,
+					event: DOMObserver.CHANGE,
+					options: { attributeName: 'class', oldValue: 'bar' },
+				})
 			})
 
 			it('Does not fire for ADD events rejected by filter', async () => {
@@ -680,10 +708,14 @@ describe('DOMObserver', () => {
 				_modifyElement('#foo', 'class', 'change1')
 				_modifyElement('#foo', 'class', 'change2')
 				await _sleep(150)
-				expect(onEvent).toHaveBeenCalledWith({ node: el, event: DOMObserver.CHANGE, options: {
-					attributeName: 'class',
-					oldValue: 'change1',
-				} })
+				expect(onEvent).toHaveBeenCalledWith({
+					node: el,
+					event: DOMObserver.CHANGE,
+					options: {
+						attributeName: 'class',
+						oldValue: 'change1',
+					},
+				})
 			})
 
 			it('Does not fire onEvent when clear() is called during the debounce period', async () => {
