@@ -11,7 +11,7 @@ import {
 
 describe('DOMObserver', () => {
 	let instance: DOMObserver
-	let el: HTMLElement
+	let node: HTMLElement
 	let onEvent: ReturnType<typeof vi.fn<OnEventCallback>>
 
 	beforeEach(() => {
@@ -32,12 +32,12 @@ describe('DOMObserver', () => {
 		describe('A promise is resolved as soon as an event occurs', () => {
 			describe('Element is already created and mounted in the DOM', () => {
 				beforeEach(() => {
-					el = _createElement('foo')
+					node = _createElement('foo')
 				})
 
 				it('Observes an element to be added', async () => {
-					const { node, event } = await instance.wait('#foo')
-					expect(node).toEqual(el)
+					const { node: found, event } = await instance.wait('#foo')
+					expect(found).toEqual(node)
 					expect(event).toBe(DOMObserver.EXIST)
 				})
 
@@ -45,8 +45,8 @@ describe('DOMObserver', () => {
 					setTimeout(() => {
 						_removeElement('#foo')
 					}, 100)
-					const { node, event } = await instance.wait('#foo', { events: [DOMObserver.REMOVE] })
-					expect(node).toEqual(el)
+					const { node: found, event } = await instance.wait('#foo', { events: [DOMObserver.REMOVE] })
+					expect(found).toEqual(node)
 					expect(event).toBe(DOMObserver.REMOVE)
 				})
 
@@ -55,13 +55,13 @@ describe('DOMObserver', () => {
 						_modifyElement('#foo', 'class', 'gag')
 					}, 100)
 					const {
-						node,
+						node: found,
 						event,
 						options: { attributeName, oldValue } = {},
 					} = await instance.wait('#foo', {
 						events: [DOMObserver.CHANGE],
 					})
-					expect(node).toEqual(el)
+					expect(found).toEqual(node)
 					expect(event).toBe(DOMObserver.CHANGE)
 					expect(attributeName).toBe('class')
 					expect(oldValue).toBe('bar')
@@ -184,8 +184,8 @@ describe('DOMObserver', () => {
 				})
 
 				it('Resolves immediately when filter passes for an existing element', async () => {
-					const { node, event } = await instance.wait('#foo', { filter: () => true })
-					expect(node).toEqual(el)
+					const { node: found, event } = await instance.wait('#foo', { filter: () => true })
+					expect(found).toEqual(node)
 					expect(event).toBe(DOMObserver.EXIST)
 				})
 
@@ -231,7 +231,7 @@ describe('DOMObserver', () => {
 					setTimeout(() => _modifyElement('#foo', 'class', 'updated'), 50)
 					await instance.wait('#foo', { events: [DOMObserver.CHANGE], filter })
 					expect(filter).toHaveBeenCalledWith({
-						node: el,
+						node,
 						event: DOMObserver.CHANGE,
 						options: {
 							attributeName: 'class',
@@ -249,10 +249,10 @@ describe('DOMObserver', () => {
 			describe('Element creation and mounting are delayed', () => {
 				it('Observes an element to be added', async () => {
 					setTimeout(() => {
-						el = _createElement('foo')
+						node = _createElement('foo')
 					}, 100)
-					const { node, event } = await instance.wait('#foo')
-					expect(node).toEqual(el)
+					const { node: found, event } = await instance.wait('#foo')
+					expect(found).toEqual(node)
 					expect(event).toBe(DOMObserver.ADD)
 				})
 			})
@@ -260,12 +260,12 @@ describe('DOMObserver', () => {
 
 		describe('Multiple targets', () => {
 			beforeEach(() => {
-				el = _createElement('foo')
+				node = _createElement('foo')
 			})
 
 			it('Resolves on EXIST for the first target found in the DOM', async () => {
-				const { node, event, target } = await instance.wait(['#foo', '#bar'])
-				expect(node).toEqual(el)
+				const { node: found, event, target } = await instance.wait(['#foo', '#bar'])
+				expect(found).toEqual(node)
 				expect(event).toBe(DOMObserver.EXIST)
 				expect(target).toBe('#foo')
 			})
@@ -378,17 +378,17 @@ describe('DOMObserver', () => {
 
 		describe('Element is already created and mounted in the DOM', () => {
 			beforeEach(() => {
-				el = _createElement('foo')
+				node = _createElement('foo')
 			})
 
 			it('Triggers onEvent immediately with EXIST when element is present', () => {
 				instance.watch('#foo', onEvent)
-				expect(onEvent).toHaveBeenCalledWith({ node: el, event: DOMObserver.EXIST })
+				expect(onEvent).toHaveBeenCalledWith({ node, event: DOMObserver.EXIST })
 			})
 
 			it('Accepts an Element reference as target', () => {
-				instance.watch(el, onEvent)
-				expect(onEvent).toHaveBeenCalledWith({ node: el, event: DOMObserver.EXIST })
+				instance.watch(node, onEvent)
+				expect(onEvent).toHaveBeenCalledWith({ node, event: DOMObserver.EXIST })
 			})
 
 			it('Triggers onEvent on every successive attribute change', async () => {
@@ -399,7 +399,7 @@ describe('DOMObserver', () => {
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledTimes(2)
 				expect(onEvent).toHaveBeenNthCalledWith(1, {
-					node: el,
+					node,
 					event: DOMObserver.CHANGE,
 					options: {
 						attributeName: 'class',
@@ -407,7 +407,7 @@ describe('DOMObserver', () => {
 					},
 				})
 				expect(onEvent).toHaveBeenNthCalledWith(2, {
-					node: el,
+					node,
 					event: DOMObserver.CHANGE,
 					options: {
 						attributeName: 'class',
@@ -418,34 +418,34 @@ describe('DOMObserver', () => {
 
 			it('Triggers onEvent for each matching added and removed node', async () => {
 				instance.watch('.item', onEvent, { events: [DOMObserver.ADD, DOMObserver.REMOVE] })
-				const a = _createElementWithClass('item')
-				const b = _createElementWithClass('item')
+				const nodeA = _createElementWithClass('item')
+				const nodeB = _createElementWithClass('item')
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledTimes(2)
-				expect(onEvent).toHaveBeenCalledWith({ node: a, event: DOMObserver.ADD })
-				expect(onEvent).toHaveBeenCalledWith({ node: b, event: DOMObserver.ADD })
-				document.body.removeChild(a)
+				expect(onEvent).toHaveBeenCalledWith({ node: nodeA, event: DOMObserver.ADD })
+				expect(onEvent).toHaveBeenCalledWith({ node: nodeB, event: DOMObserver.ADD })
+				document.body.removeChild(nodeA)
 				await _sleep()
-				expect(onEvent).toHaveBeenCalledWith({ node: a, event: DOMObserver.REMOVE })
+				expect(onEvent).toHaveBeenCalledWith({ node: nodeA, event: DOMObserver.REMOVE })
 				expect(onEvent).toHaveBeenCalledTimes(3)
 			})
 
 			it('Fires CHANGE for all elements matching a class selector, not just the first', async () => {
-				const a = _createElementWithClass('item')
-				const b = _createElementWithClass('item')
+				const nodeA = _createElementWithClass('item')
+				const nodeB = _createElementWithClass('item')
 				instance.watch('.item', onEvent, { events: [DOMObserver.CHANGE] })
-				a.setAttribute('data-x', '1')
+				nodeA.setAttribute('data-x', '1')
 				await _sleep()
-				b.setAttribute('data-x', '2')
+				nodeB.setAttribute('data-x', '2')
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledTimes(2)
 				expect(onEvent).toHaveBeenCalledWith({
-					node: a,
+					node: nodeA,
 					event: DOMObserver.CHANGE,
 					options: { attributeName: 'data-x', oldValue: null },
 				})
 				expect(onEvent).toHaveBeenCalledWith({
-					node: b,
+					node: nodeB,
 					event: DOMObserver.CHANGE,
 					options: { attributeName: 'data-x', oldValue: null },
 				})
@@ -462,7 +462,7 @@ describe('DOMObserver', () => {
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledOnce()
 				expect(onEvent).toHaveBeenCalledWith({
-					node: el,
+					node,
 					event: DOMObserver.CHANGE,
 					options: {
 						attributeName: 'data-watched',
@@ -516,15 +516,15 @@ describe('DOMObserver', () => {
 			it('Respects root when observing CHANGE on an Element reference', async () => {
 				const root = document.createElement('div')
 				document.body.appendChild(root)
-				const el = document.createElement('div')
-				root.appendChild(el)
+				const watched = document.createElement('div')
+				root.appendChild(watched)
 				const outside = document.createElement('div')
 				document.body.appendChild(outside)
-				instance.watch(el, onEvent, { events: [DOMObserver.CHANGE], root })
+				instance.watch(watched, onEvent, { events: [DOMObserver.CHANGE], root })
 				outside.setAttribute('data-x', '1')
 				await _sleep()
 				expect(onEvent).not.toHaveBeenCalled()
-				el.setAttribute('data-x', '1')
+				watched.setAttribute('data-x', '1')
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledOnce()
 				outside.remove()
@@ -556,7 +556,7 @@ describe('DOMObserver', () => {
 				_modifyElement('#foo', 'class', 'updated')
 				await _sleep()
 				expect(filter).toHaveBeenCalledWith({
-					node: el,
+					node,
 					event: DOMObserver.CHANGE,
 					options: { attributeName: 'class', oldValue: 'bar' },
 				})
@@ -709,7 +709,7 @@ describe('DOMObserver', () => {
 				_modifyElement('#foo', 'class', 'change2')
 				await _sleep(150)
 				expect(onEvent).toHaveBeenCalledWith({
-					node: el,
+					node,
 					event: DOMObserver.CHANGE,
 					options: {
 						attributeName: 'class',
@@ -747,9 +747,9 @@ describe('DOMObserver', () => {
 		describe('Element creation and mounting are delayed', () => {
 			it('Triggers onEvent when element is added', async () => {
 				instance.watch('#foo', onEvent)
-				el = _createElement('foo')
+				node = _createElement('foo')
 				await _sleep()
-				expect(onEvent).toHaveBeenCalledWith({ node: el, event: DOMObserver.ADD })
+				expect(onEvent).toHaveBeenCalledWith({ node, event: DOMObserver.ADD })
 			})
 		})
 	})
