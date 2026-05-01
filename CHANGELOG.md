@@ -1,3 +1,17 @@
+# [5.0.0-beta.2](https://github.com/untemps/dom-observer/compare/v5.0.0-beta.1...v5.0.0-beta.2) (2026-05-01)
+
+
+### Features
+
+* Replace magic string errors with typed Error subclasses ([#71](https://github.com/untemps/dom-observer/issues/71)) ([314741d](https://github.com/untemps/dom-observer/commit/314741de8d0bbf06d9141f6183aa272d707ac47d))
+
+
+### BREAKING CHANGES
+
+* DOMObserverErrors constants and DOMObserverErrorCode type are removed. All throws and rejections now use typed Error subclasses. Consumers who matched on error message strings must migrate to instanceof checks.
+Error messages no longer carry [TIMEOUT]/[ABORT]/[EVENTS]/[TARGET] prefixes.
+The AbortSignal rejection path (DOMException, name: 'AbortError') is unchanged.
+
 # [5.0.0-beta.1](https://github.com/untemps/dom-observer/compare/v4.8.0...v5.0.0-beta.1) (2026-05-01)
 
 
