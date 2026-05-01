@@ -1,13 +1,13 @@
-import type { DOMTarget } from './DOMObserver'
+import type { DOMTarget } from './types'
 
 export class TimeoutError extends Error {
 	readonly target: DOMTarget | DOMTarget[]
 	readonly timeout: number
 
 	constructor(target: DOMTarget | DOMTarget[], timeout: number) {
-		const label = Array.isArray(target)
-			? `None of [${(target as DOMTarget[]).join(', ')}]`
-			: `Element "${target}"`
+		const fmt = (t: DOMTarget): string =>
+			t instanceof Element ? `<${t.tagName.toLowerCase()}${t.id ? `#${t.id}` : ''}>` : String(t)
+		const label = Array.isArray(target) ? `None of [${target.map(fmt).join(', ')}]` : fmt(target)
 		super(`${label} could not be found after ${timeout}ms`)
 		this.name = 'TimeoutError'
 		this.target = target
@@ -16,15 +16,15 @@ export class TimeoutError extends Error {
 }
 
 export class ObservationAbortedError extends Error {
-	constructor(reason?: string) {
-		super(reason ?? 'Observation replaced by a newer call')
+	constructor(reason: string) {
+		super(reason)
 		this.name = 'ObservationAbortedError'
 	}
 }
 
 export class InvalidEventsError extends Error {
 	constructor() {
-		super('events array cannot be empty')
+		super('Events array cannot be empty')
 		this.name = 'InvalidEventsError'
 	}
 }

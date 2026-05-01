@@ -1,9 +1,9 @@
 import { InvalidEventsError, InvalidOptionsError, ObservationAbortedError, TimeoutError } from './DOMObserverErrors'
+import type { DOMTarget } from './types'
 import isElement from './utils/isElement'
 import resolveDOMTarget from './utils/resolveDOMTarget'
 
-/** A CSS selector string or a direct DOM Element reference used to identify the observed target. */
-export type DOMTarget = Element | string
+export type { DOMTarget }
 
 /** Union of all event types emitted by DOMObserver. */
 export type DOMObserverEvent = 'DOMObserver_exist' | 'DOMObserver_add' | 'DOMObserver_remove' | 'DOMObserver_change'
@@ -151,7 +151,7 @@ class DOMObserver {
 		}
 
 		if (timeout !== 0 && (!Number.isFinite(timeout) || timeout < 0)) {
-			return Promise.reject(new InvalidOptionsError('timeout must be 0 or a positive finite number'))
+			return Promise.reject(new InvalidOptionsError('Timeout must be 0 or a positive finite number'))
 		}
 
 		if (signal?.aborted) {
@@ -255,7 +255,7 @@ class DOMObserver {
 		}
 
 		if (timeout !== 0 && (!Number.isFinite(timeout) || timeout < 0)) {
-			throw new InvalidOptionsError('timeout must be 0 or a positive finite number')
+			throw new InvalidOptionsError('Timeout must be 0 or a positive finite number')
 		}
 
 		if (signal?.aborted) {

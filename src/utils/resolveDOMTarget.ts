@@ -1,4 +1,4 @@
-import type { DOMTarget } from '../DOMObserver'
+import type { DOMTarget } from '../types'
 import { InvalidTargetError } from '../DOMObserverErrors'
 import isElement from './isElement'
 
