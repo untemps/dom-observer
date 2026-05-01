@@ -1,3 +1,25 @@
+# [5.0.0-beta.1](https://github.com/untemps/dom-observer/compare/v4.8.0...v5.0.0-beta.1) (2026-05-01)
+
+
+### Features
+
+* Auto-disconnect observer after wait() resolves ([#70](https://github.com/untemps/dom-observer/issues/70)) ([235af7c](https://github.com/untemps/dom-observer/commit/235af7ce354c5aca826e40ab2424bc8c2cb9d98e))
+
+
+### BREAKING CHANGES
+
+* wait() now clears internal state synchronously before the Promise resolves, instead of relying on .finally() for deferred cleanup.
+Before: 
+   const { node } = await obs.wait('#foo')
+   obs.isObserving // true — observer still running at this point
+After:
+   const { node } = await obs.wait('#foo')
+   obs.isObserving // false — cleared before promise settles
+Affected scenarios:
+   - Code checking obs.isObserving === true after await obs.wait() must update that expectation to false.
+   - Code calling obs.clear() after wait() resolves continues to work (no-op).
+   - Code relying on the timeout timer firing after resolution: cleanup now happens at resolution time, not when the timer would have expired.
+
 # [4.8.0](https://github.com/untemps/dom-observer/compare/v4.7.0...v4.8.0) (2026-04-28)
 
 
