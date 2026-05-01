@@ -806,8 +806,8 @@ describe('EventPayload type narrowing', () => {
 		await _sleep()
 
 		expect(capturedPayload).not.toBeNull()
-		expect((capturedPayload as unknown as EventPayload).event).toBe(DOMObserver.ADD)
-		expect((capturedPayload as unknown as EventPayload).options).toBeUndefined()
+		expect(capturedPayload!.event).toBe(DOMObserver.ADD)
+		expect(capturedPayload!.options).toBeUndefined()
 	})
 
 	it('wait() resolves ChangePayload with options typed as ChangeOptions after CHANGE guard', async () => {
@@ -816,6 +816,7 @@ describe('EventPayload type narrowing', () => {
 
 		const result = await instance.wait('#foo', { events: [DOMObserver.CHANGE] })
 
+		expect(result.event).toBe(DOMObserver.CHANGE)
 		if (result.event === DOMObserver.CHANGE) {
 			expectTypeOf(result).toEqualTypeOf<ChangePayload & { target?: string | Element }>()
 			expect(result.options.attributeName).toBe('class')
