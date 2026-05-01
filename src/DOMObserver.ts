@@ -1,4 +1,4 @@
-import { DOMObserverErrors } from './DOMObserverErrors'
+import { InvalidEventsError, InvalidOptionsError, InvalidTargetError, ObservationAbortedError, TimeoutError } from './DOMObserverErrors'
 import isElement from './utils/isElement'
 import resolveDOMTarget from './utils/resolveDOMTarget'
 
@@ -47,7 +47,7 @@ export interface WaitResult {
 export interface WaitOptions {
 	/** Event types to listen for. Defaults to all four event types. */
 	events?: DOMObserverEvent[]
-	/** Maximum time in milliseconds to wait before rejecting with a `[TIMEOUT]` error. `0` disables the timeout. Must be `0` or a positive finite number — rejects with `[TIMEOUT]` otherwise. */
+	/** Maximum time in milliseconds to wait before rejecting with a `TimeoutError`. `0` disables the timeout. Must be `0` or a positive finite number — rejects with `InvalidOptionsError` otherwise. */
 	timeout?: number
 	/** Restrict attribute observation to these attribute names. Passed directly to `MutationObserver.observe()`. */
 	attributeFilter?: string[]
@@ -68,10 +68,10 @@ export interface WatchOptions {
 	/**
 	 * Maximum time in milliseconds to wait for the first matching mutation before stopping observation.
 	 * The timeout is cancelled as soon as any mutation fires. `0` disables the timeout. Must be `0` or
-	 * a positive finite number — throws `[TIMEOUT]` otherwise.
+	 * a positive finite number — throws `InvalidOptionsError` otherwise.
 	 */
 	timeout?: number
-	/** Called with a `[TIMEOUT]` error when the timeout elapses with no matching mutation. */
+	/** Called with a `TimeoutError` when the timeout elapses with no matching mutation. */
 	onError?: (error: Error) => void
 	/** When provided, aborting the signal stops observation immediately. */
 	signal?: AbortSignal
@@ -119,7 +119,7 @@ class DOMObserver {
 	 * resolves synchronously on the next microtask. The observer is automatically disconnected as soon
 	 * as the Promise settles — whether by resolution, rejection, timeout, or abort.
 	 *
-	 * Calling `wait()` while a previous call is still pending rejects the previous Promise with `[ABORT]`
+	 * Calling `wait()` while a previous call is still pending rejects the previous Promise with `ObservationAbortedError`
 	 * and starts a fresh observation.
 	 *
 	 * When an array of targets is passed, the Promise resolves as soon as any one of them fires a
@@ -129,9 +129,9 @@ class DOMObserver {
 	 * @param target - CSS selector, Element, or array of either to observe.
 	 * @param options - Observation options.
 	 * @returns A Promise that resolves with the matching node, event type, and optional change metadata.
-	 * @throws `[EVENTS]` when the `events` array is empty.
-	 * @throws `[TIMEOUT]` when `timeout` is negative, `NaN`, or `Infinity`.
-	 * @throws `[TARGET]` when any target string is not a valid CSS selector.
+	 * @throws `InvalidEventsError` when the `events` array is empty.
+	 * @throws `InvalidOptionsError` when `timeout` is negative, `NaN`, or `Infinity`.
+	 * @throws `InvalidTargetError` when any target string is not a valid CSS selector.
 	 */
 	wait(target: DOMTarget, options?: WaitOptions): Promise<WaitResult>
 	wait(targets: DOMTarget[], options?: WaitOptions): Promise<WaitResult>
@@ -147,18 +147,18 @@ class DOMObserver {
 		}: WaitOptions = {}
 	): Promise<WaitResult> {
 		if (!events?.length) {
-			return Promise.reject(new Error(`${DOMObserverErrors.EVENTS}: events array cannot be empty`))
+			return Promise.reject(new InvalidEventsError())
 		}
 
 		if (timeout !== 0 && (!Number.isFinite(timeout) || timeout < 0)) {
-			return Promise.reject(new Error(`${DOMObserverErrors.TIMEOUT}: timeout must be 0 or a positive finite number`))
+			return Promise.reject(new InvalidOptionsError('timeout must be 0 or a positive finite number'))
 		}
 
 		if (signal?.aborted) {
 			return Promise.reject(signal.reason ?? new DOMException('Aborted', 'AbortError'))
 		}
 
-		this._pendingReject?.(new Error(`${DOMObserverErrors.ABORT}: Observation replaced by a new wait() call`))
+		this._pendingReject?.(new ObservationAbortedError('Observation replaced by a new wait() call'))
 		this._pendingReject = null
 		this.clear()
 
@@ -198,20 +198,8 @@ class DOMObserver {
 			}
 
 			if (timeout > 0) {
-				const formatTarget = (t: DOMTarget): string =>
-					isElement(t) ? `<${t.tagName.toLowerCase()}${t.id ? `#${t.id}` : ''}>` : String(t)
-				const targetLabel = isMulti
-					? `[${(target as DOMTarget[]).map(formatTarget).join(', ')}]`
-					: formatTarget(target as DOMTarget)
 				this._timeout = setTimeout(
-					() =>
-						cancel(
-							new Error(
-								isMulti
-									? `${DOMObserverErrors.TIMEOUT}: None of ${targetLabel} could be found after ${timeout}ms`
-									: `${DOMObserverErrors.TIMEOUT}: Element ${targetLabel} cannot be found after ${timeout}ms`
-							)
-						),
+					() => cancel(new TimeoutError(target, timeout)),
 					timeout
 				)
 			}
@@ -230,7 +218,7 @@ class DOMObserver {
 	 * If the target already exists in the DOM and `EXIST` is among the requested events, `onEvent` is
 	 * called synchronously before this method returns.
 	 *
-	 * Calling `watch()` while a previous `wait()` is still pending rejects that Promise with `[ABORT]`
+	 * Calling `watch()` while a previous `wait()` is still pending rejects that Promise with `ObservationAbortedError`
 	 * and starts a fresh observation.
 	 *
 	 * When `timeout` is set, the observation stops automatically after the first matching mutation —
@@ -246,9 +234,9 @@ class DOMObserver {
 	 * @param onEvent - Callback invoked on every matching event.
 	 * @param options - Observation options.
 	 * @returns The `DOMObserver` instance, allowing method chaining.
-	 * @throws `[EVENTS]` when the `events` array is empty.
-	 * @throws `[TIMEOUT]` when `timeout` is negative, `NaN`, or `Infinity`.
-	 * @throws `[TARGET]` when `target` is a string that is not a valid CSS selector.
+	 * @throws `InvalidEventsError` when the `events` array is empty.
+	 * @throws `InvalidOptionsError` when `timeout` is negative, `NaN`, or `Infinity`.
+	 * @throws `InvalidTargetError` when `target` is a string that is not a valid CSS selector.
 	 */
 	watch(
 		target: DOMTarget,
@@ -266,18 +254,18 @@ class DOMObserver {
 		}: WatchOptions = {}
 	): this {
 		if (!events?.length) {
-			throw new Error(`${DOMObserverErrors.EVENTS}: events array cannot be empty`)
+			throw new InvalidEventsError()
 		}
 
 		if (timeout !== 0 && (!Number.isFinite(timeout) || timeout < 0)) {
-			throw new Error(`${DOMObserverErrors.TIMEOUT}: timeout must be 0 or a positive finite number`)
+			throw new InvalidOptionsError('timeout must be 0 or a positive finite number')
 		}
 
 		if (signal?.aborted) {
 			return this
 		}
 
-		this._pendingReject?.(new Error(`${DOMObserverErrors.ABORT}: Observation replaced by a new watch() call`))
+		this._pendingReject?.(new ObservationAbortedError('Observation replaced by a new watch() call'))
 		this._pendingReject = null
 		this.clear()
 
@@ -296,9 +284,7 @@ class DOMObserver {
 			}
 			this._timeout = setTimeout(() => {
 				this.clear()
-				onError?.(
-					new Error(`${DOMObserverErrors.TIMEOUT}: Element ${target} cannot be found after ${timeout}ms`)
-				)
+				onError?.(new TimeoutError(target, timeout))
 			}, timeout)
 		}
 		if (debounce > 0) {
