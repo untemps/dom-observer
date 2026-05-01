@@ -1,3 +1,23 @@
+# [5.0.0-beta.3](https://github.com/untemps/dom-observer/compare/v5.0.0-beta.2...v5.0.0-beta.3) (2026-05-01)
+
+
+### Features
+
+* Change callback signature to single payload object ([#72](https://github.com/untemps/dom-observer/issues/72)) ([4c33477](https://github.com/untemps/dom-observer/commit/4c33477ef1add462279b6553859039325c8fbfd6))
+
+
+### BREAKING CHANGES
+
+* OnEventCallback and FilterCallback now receive a single EventPayload object instead of three positional arguments.
+Before:
+   obs.watch('#foo', (node, event, options) => { ... })
+   obs.watch('#foo', (node, event, options) => { ... }, { filter: (node, event, options) => ... })
+After:
+   obs.watch('#foo', ({ node, event, options }) => { ... })
+   obs.watch('#foo', ({ node, event, options }) => { ... }, { filter: ({ node, event, options }) => ... }
+Migration is mechanical: wrap the parameter list in braces.
+The EventPayload type is exported for explicit annotation.
+
 # [5.0.0-beta.2](https://github.com/untemps/dom-observer/compare/v5.0.0-beta.1...v5.0.0-beta.2) (2026-05-01)
 
 
