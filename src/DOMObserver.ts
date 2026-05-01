@@ -16,29 +16,31 @@ export interface ChangeOptions {
 	oldValue: string | null
 }
 
-/**
- * Callback invoked by `watch()` whenever an observed event occurs.
- *
- * @param node - The matching DOM element.
- * @param event - The event type that fired.
- * @param options - Additional mutation metadata, present only for `CHANGE` events.
- */
-export type OnEventCallback = (node: Element, event: DOMObserverEvent, options?: ChangeOptions) => void
-
-/**
- * Predicate called before invoking the event callback. Return `true` to let the event through,
- * `false` to skip it. Receives the same arguments as `OnEventCallback`.
- */
-export type FilterCallback = (node: Element, event: DOMObserverEvent, options?: ChangeOptions) => boolean
-
-/** Resolved value of the Promise returned by `wait()`. */
-export interface WaitResult {
+/** Payload delivered to `OnEventCallback` and `FilterCallback`. */
+export interface EventPayload {
 	/** The matching DOM element. */
 	node: Element
-	/** The event type that caused the Promise to settle. */
+	/** The event type that fired. */
 	event: DOMObserverEvent
 	/** Additional mutation metadata, present only for `CHANGE` events. */
 	options?: ChangeOptions
+}
+
+/**
+ * Callback invoked by `watch()` whenever an observed event occurs.
+ *
+ * @param payload - Object containing `node`, `event`, and optional `options`.
+ */
+export type OnEventCallback = (payload: EventPayload) => void
+
+/**
+ * Predicate called before invoking the event callback. Return `true` to let the event through,
+ * `false` to skip it. Receives the same payload as `OnEventCallback`.
+ */
+export type FilterCallback = (payload: EventPayload) => boolean
+
+/** Resolved value of the Promise returned by `wait()`. */
+export interface WaitResult extends EventPayload {
 	/** The target entry that triggered the match. Only populated when `wait()` was called with an array of targets. */
 	target?: DOMTarget
 }
@@ -186,8 +188,8 @@ class DOMObserver {
 
 			// onMatch always fires synchronously before fireCallback in _observe, so matchedTarget
 			// is guaranteed to be set before callback runs.
-			const callback: OnEventCallback = (node, event, options) => {
-				const result: WaitResult = options ? { node, event, options } : { node, event }
+			const callback: OnEventCallback = ({ node, event, options }) => {
+				const result: WaitResult = options !== undefined ? { node, event, options } : { node, event }
 				if (isMulti) result.target = matchedTarget
 				settle(result)
 			}
@@ -275,9 +277,9 @@ class DOMObserver {
 		let callback: OnEventCallback = onEvent
 		if (timeout > 0) {
 			const wrapped = callback
-			callback = (...args) => {
+			callback = (payload) => {
 				clearTimeout(this._timeout)
-				wrapped(...args)
+				wrapped(payload)
 			}
 			this._timeout = setTimeout(() => {
 				this.clear()
@@ -286,16 +288,16 @@ class DOMObserver {
 		}
 		if (debounce > 0) {
 			const wrapped = callback
-			callback = (...args) => {
+			callback = (payload) => {
 				clearTimeout(this._debounceTimer)
-				this._debounceTimer = setTimeout(() => wrapped(...args), debounce)
+				this._debounceTimer = setTimeout(() => wrapped(payload), debounce)
 			}
 		}
 		if (once) {
 			const wrapped = callback
-			callback = (...args) => {
+			callback = (payload) => {
 				this.clear()
-				wrapped(...args)
+				wrapped(payload)
 			}
 		}
 
@@ -325,8 +327,9 @@ class DOMObserver {
 		const defaultRoot = resolveDOMTarget(root) ?? document.documentElement
 
 		const fireCallback = (node: Element, event: DOMObserverEvent, opts?: ChangeOptions) => {
-			if (filter && !filter(node, event, opts)) return
-			opts !== undefined ? callback(node, event, opts) : callback(node, event)
+			const payload: EventPayload = opts !== undefined ? { node, event, options: opts } : { node, event }
+			if (filter && !filter(payload)) return
+			callback(payload)
 		}
 
 		const nodeMatchesTarget = (node: Node, t: DOMTarget): boolean =>

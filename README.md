@@ -38,13 +38,13 @@ import { DOMObserver } from '@untemps/dom-observer'
 
 // Track every attribute change on an element
 const observer = new DOMObserver()
-observer.watch('#foo', (node, event, { attributeName, oldValue } = {}) => {
+observer.watch('#foo', ({ node, options: { attributeName, oldValue } = {} }) => {
 	console.log(`${attributeName} changed from ${oldValue} to ${node.getAttribute(attributeName)}`)
 }, { events: [DOMObserver.CHANGE] })
 
 // React to every matching node added or removed
 const listObserver = new DOMObserver()
-listObserver.watch('.list-item', (node, event) => {
+listObserver.watch('.list-item', ({ node, event }) => {
 	if (event === DOMObserver.ADD) console.log(`Item added: ${node.textContent}`)
 	if (event === DOMObserver.REMOVE) console.log(`Item removed: ${node.textContent}`)
 }, { events: [DOMObserver.ADD, DOMObserver.REMOVE] })
@@ -55,7 +55,7 @@ Unlike `wait`, `watch` does not return a Promise. It returns `this`, allowing me
 Pass `once: true` to stop the observation automatically after the first matching event, without needing to call `clear()` manually:
 
 ```javascript
-observer.watch('#foo', (node, event) => {
+observer.watch('#foo', ({ node }) => {
 	doSomething(node)  // called exactly once
 }, { events: [DOMObserver.ADD], once: true })
 ```
@@ -63,7 +63,7 @@ observer.watch('#foo', (node, event) => {
 Pass `debounce` to delay the callback until mutations have stopped for a given number of milliseconds — useful when you only care about the final state after a burst of rapid changes:
 
 ```javascript
-observer.watch('#progress', (node) => {
+observer.watch('#progress', ({ node }) => {
 	console.log('final value:', node.getAttribute('data-value'))
 }, {
 	events: [DOMObserver.CHANGE],
@@ -76,7 +76,7 @@ Pass a `timeout` to automatically stop the observation if no matching mutation o
 
 ```javascript
 const observer = new DOMObserver()
-observer.watch('#foo', (node, event) => {
+observer.watch('#foo', ({ node, event }) => {
 	console.log(`Event: ${event}`)
 }, {
 	events: [DOMObserver.ADD],
@@ -100,7 +100,7 @@ observer.watch('#foo', (node, event) => {
 | - `once`            | Boolean           | When `true`, automatically calls `clear()` after the first matching event. Defaults to `false`.                                                          |
 | - `debounce`        | Number            | Milliseconds to wait after the last mutation before invoking the callback. The callback receives the last mutation's arguments. `0` disables debouncing. |
 | - `root`            | Element or String | DOM element or CSS selector to use as the observation root. Only mutations within this subtree are observed. Defaults to `document.documentElement`.     |
-| - `filter`          | Function          | `(node, event, options?) => boolean`. Called before invoking the callback. Return `false` to skip the event and keep observing.                           |
+| - `filter`          | Function          | `({ node, event, options? }) => boolean`. Called before invoking the callback. Return `false` to skip the event and keep observing.                           |
 
 #### `onEvent` callback arguments
 
@@ -169,7 +169,7 @@ Calling `clear()` after `wait()` resolves is safe and is a no-op. If a `timeout`
 | - `attributeFilter` | Array             | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                       |
 | - `signal`          | AbortSignal       | An `AbortSignal` to cancel the observation. If already aborted, the Promise rejects immediately with an `AbortError`.                                    |
 | - `root`            | Element or String | DOM element or CSS selector to use as the observation root. Only mutations within this subtree are observed. Defaults to `document.documentElement`.     |
-| - `filter`          | Function          | `(node, event, options?) => boolean`. Called before resolving the Promise. Return `false` to skip the event and keep waiting.                             |
+| - `filter`          | Function          | `({ node, event, options? }) => boolean`. Called before resolving the Promise. Return `false` to skip the event and keep waiting.                             |
 
 #### Resolved value
 
@@ -207,7 +207,7 @@ The `isObserving` getter returns `true` when an observation is currently active:
 
 ```javascript
 const observer = new DOMObserver()
-observer.watch('#foo', (node, event) => { /* ... */ })
+observer.watch('#foo', ({ node, event }) => { /* ... */ })
 console.log(observer.isObserving) // true
 observer.clear()
 console.log(observer.isObserving) // false
@@ -275,7 +275,7 @@ const onError = (err) => console.error(err.message)
 const observer = new DOMObserver()
 observer.watch(
     '.foo',
-    (node, event, { attributeName } = {}) => {
+    ({ node, event, options: { attributeName } = {} }) => {
         switch (event) {
             case DOMObserver.EXIST: {
                 console.log('Element ' + node.id + ' exists already')
