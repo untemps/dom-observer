@@ -302,8 +302,7 @@ observer.watch(
                 break
             }
             case DOMObserver.CHANGE: {
-                // options is ChangeOptions here — no fallback needed
-                console.log('Element ' + node.id + ' has been changed (' + options.attributeName + ')')
+                console.log('Element ' + node.id + ' has been changed (' + options?.attributeName + ')')
                 break
             }
         }
