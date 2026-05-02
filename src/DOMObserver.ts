@@ -5,8 +5,13 @@ import resolveDOMTarget from './utils/resolveDOMTarget'
 
 export type { DOMTarget }
 
+type ExistEvent  = 'DOMObserver_exist'
+type AddEvent    = 'DOMObserver_add'
+type RemoveEvent = 'DOMObserver_remove'
+type ChangeEvent = 'DOMObserver_change'
+
 /** Union of all event types emitted by DOMObserver. */
-export type DOMObserverEvent = 'DOMObserver_exist' | 'DOMObserver_add' | 'DOMObserver_remove' | 'DOMObserver_change'
+export type DOMObserverEvent = ExistEvent | AddEvent | RemoveEvent | ChangeEvent
 
 /** Metadata attached to a `CHANGE` event, mirroring the relevant fields of `MutationRecord`. */
 export interface ChangeOptions {
@@ -21,7 +26,7 @@ export interface ExistPayload {
 	/** The matching DOM element. */
 	node: Element
 	/** The event type that fired. */
-	event: 'DOMObserver_exist'
+	event: ExistEvent
 	options?: never
 }
 
@@ -30,7 +35,7 @@ export interface AddPayload {
 	/** The matching DOM element. */
 	node: Element
 	/** The event type that fired. */
-	event: 'DOMObserver_add'
+	event: AddEvent
 	options?: never
 }
 
@@ -39,7 +44,7 @@ export interface RemovePayload {
 	/** The matching DOM element. */
 	node: Element
 	/** The event type that fired. */
-	event: 'DOMObserver_remove'
+	event: RemoveEvent
 	options?: never
 }
 
@@ -48,7 +53,7 @@ export interface ChangePayload {
 	/** The matching DOM element. */
 	node: Element
 	/** The event type that fired. */
-	event: 'DOMObserver_change'
+	event: ChangeEvent
 	/** Mutation metadata — always present for `CHANGE` events. */
 	options: ChangeOptions
 }
@@ -173,6 +178,7 @@ class DOMObserver {
 	 * @param target - CSS selector, Element, or array of either to observe.
 	 * @param options - Observation options.
 	 * @returns A Promise that resolves with the matching node, event type, and optional change metadata.
+	 *   Narrow on `result.event` before accessing `result.options` to avoid optional chaining: `if (result.event === DOMObserver.CHANGE) { result.options.attributeName }`.
 	 * @throws `InvalidEventsError` when the `events` array is empty.
 	 * @throws `InvalidTimeoutError` when `timeout` is negative, `NaN`, or `Infinity`.
 	 * @throws `InvalidTargetError` when any target string is not a valid CSS selector.

@@ -1,13 +1,13 @@
 import {
+	type ChangeOptions,
+	type ChangePayload,
 	DOMObserver,
+	type EventPayload,
 	InvalidEventsError,
 	InvalidOptionsError,
 	InvalidTargetError,
 	InvalidTimeoutError,
 	ObservationAbortedError,
-	type ChangeOptions,
-	type ChangePayload,
-	type EventPayload,
 	type OnEventCallback,
 	TimeoutError,
 } from '../index'
@@ -796,18 +796,16 @@ describe('EventPayload type narrowing', () => {
 	})
 
 	it('options is absent for non-CHANGE events', async () => {
-		let capturedPayload: EventPayload | null = null
+		const captured: EventPayload[] = []
 
-		instance.watch('#foo', (payload) => {
-			capturedPayload = payload
-		}, { events: [DOMObserver.ADD] })
+		instance.watch('#foo', (payload) => captured.push(payload), { events: [DOMObserver.ADD] })
 
 		_createElement('foo')
 		await _sleep()
 
-		expect(capturedPayload).not.toBeNull()
-		expect(capturedPayload!.event).toBe(DOMObserver.ADD)
-		expect(capturedPayload!.options).toBeUndefined()
+		expect(captured).toHaveLength(1)
+		expect(captured[0].event).toBe(DOMObserver.ADD)
+		expect(captured[0].options).toBeUndefined()
 	})
 
 	it('wait() resolves ChangePayload with options typed as ChangeOptions after CHANGE guard', async () => {
