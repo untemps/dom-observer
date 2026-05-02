@@ -1,12 +1,12 @@
 {
 	"name": "@untemps/dom-observer",
-	"version": "4.8.0",
-	"description": "Class to observe DOM mutations",
+	"version": "5.0.0",
+	"description": "Observe DOM mutations with a factory-based API",
 	"repository": "git@github.com:untemps/dom-observer.git",
 	"keywords": [
 		"dom",
 		"mutations-observer",
-		"class",
+		"factory",
 		"typescript"
 	],
 	"author": "Vincent Le Badezet <v.lebadezet@untemps.net>",

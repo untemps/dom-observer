@@ -1,13 +1,25 @@
 export type {
+	AddPayload,
 	ChangeOptions,
-	DOMObserverEvent,
+	ChangePayload,
+	DOMObserverEventValue,
+	DOMObserverInstance,
 	DOMTarget,
+	EventPayload,
+	ExistPayload,
 	FilterCallback,
+	ObserveOnceOptions,
+	ObserveOnceResult,
+	ObserveOptions,
 	OnEventCallback,
-	WaitOptions,
-	WaitResult,
-	WatchOptions,
+	RemovePayload,
 } from './DOMObserver'
-export { default as DOMObserver } from './DOMObserver'
-export type { DOMObserverErrorCode } from './DOMObserverErrors'
-export { DOMObserverErrors } from './DOMObserverErrors'
+export { createDOMObserver, DOMObserverEvent, DOMObserverEvents } from './DOMObserver'
+export {
+	InvalidEventsError,
+	InvalidOptionsError,
+	InvalidTargetError,
+	InvalidTimeoutError,
+	ObservationAbortedError,
+	TimeoutError,
+} from './DOMObserverErrors'
