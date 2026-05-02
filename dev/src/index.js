@@ -46,23 +46,23 @@ const onEvent = ({ node, event, options }) => {
 const tooltipObserver = createDOMObserver()
 tooltipObserver.observe(tooltip, onEvent, { events: [DOMObserverEvent.ADD, DOMObserverEvent.REMOVE] })
 
-const watchCard = () => {
+const observeCard = () => {
 	createDOMObserver()
 		.observeOnce(`#card`)
 		.then(({ node }) => {
 			log(`[ADD]\t\tElement id: ${node.id}`)
-			const cardWatcher = createDOMObserver()
-			cardWatcher.observe(
+			const cardObserver = createDOMObserver()
+			cardObserver.observe(
 				`#card`,
 				(payload) => {
 					onEvent(payload)
 					if (payload.event === DOMObserverEvent.REMOVE) {
-						cardWatcher.disconnect()
-						watchCard()
+						cardObserver.disconnect()
+						observeCard()
 					}
 				},
 				{ events: [DOMObserverEvent.REMOVE, DOMObserverEvent.CHANGE] }
 			)
 		})
 }
-watchCard()
+observeCard()
