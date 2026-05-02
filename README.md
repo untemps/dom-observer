@@ -20,7 +20,7 @@ yarn add @untemps/dom-observer
 Import `DOMObserver`:
 
 ```javascript
-import { DOMObserver } from '@untemps/dom-observer'
+import { DOMObserver, DOMObserverEvent } from '@untemps/dom-observer'
 ```
 
 Create an instance of `DOMObserver`:
@@ -34,20 +34,20 @@ const observer = new DOMObserver()
 Use the `watch` method when you want to be notified **every time** a mutation occurs — for instance, tracking all successive attribute changes on an element or reacting to every matching node added to the DOM.
 
 ```javascript
-import { DOMObserver } from '@untemps/dom-observer'
+import { DOMObserver, DOMObserverEvent } from '@untemps/dom-observer'
 
 // Track every attribute change on an element
 const observer = new DOMObserver()
 observer.watch('#foo', ({ node, options }) => {
 	console.log(`${options?.attributeName} changed from ${options?.oldValue} to ${node.getAttribute(options?.attributeName ?? '')}`)
-}, { events: [DOMObserver.CHANGE] })
+}, { events: [DOMObserverEvent.CHANGE] })
 
 // React to every matching node added or removed
 const listObserver = new DOMObserver()
 listObserver.watch('.list-item', ({ node, event }) => {
-	if (event === DOMObserver.ADD) console.log(`Item added: ${node.textContent}`)
-	if (event === DOMObserver.REMOVE) console.log(`Item removed: ${node.textContent}`)
-}, { events: [DOMObserver.ADD, DOMObserver.REMOVE] })
+	if (event === DOMObserverEvent.ADD) console.log(`Item added: ${node.textContent}`)
+	if (event === DOMObserverEvent.REMOVE) console.log(`Item removed: ${node.textContent}`)
+}, { events: [DOMObserverEvent.ADD, DOMObserverEvent.REMOVE] })
 ```
 
 Unlike `wait`, `watch` does not return a Promise. It returns `this`, allowing method chaining. Call `clear()` to stop the observation.
@@ -57,7 +57,7 @@ Pass `once: true` to stop the observation automatically after the first matching
 ```javascript
 observer.watch('#foo', ({ node }) => {
 	doSomething(node)  // called exactly once
-}, { events: [DOMObserver.ADD], once: true })
+}, { events: [DOMObserverEvent.ADD], once: true })
 ```
 
 Pass `debounce` to delay the callback until mutations have stopped for a given number of milliseconds — useful when you only care about the final state after a burst of rapid changes:
@@ -66,7 +66,7 @@ Pass `debounce` to delay the callback until mutations have stopped for a given n
 observer.watch('#progress', ({ node }) => {
 	console.log('final value:', node.getAttribute('data-value'))
 }, {
-	events: [DOMObserver.CHANGE],
+	events: [DOMObserverEvent.CHANGE],
 	attributeFilter: ['data-value'],
 	debounce: 100,
 })
@@ -79,7 +79,7 @@ const observer = new DOMObserver()
 observer.watch('#foo', ({ node, event }) => {
 	console.log(`Event: ${event}`)
 }, {
-	events: [DOMObserver.ADD],
+	events: [DOMObserverEvent.ADD],
 	timeout: 3000,
 	onError: (err) => console.error(err.message),
 })
@@ -93,7 +93,7 @@ observer.watch('#foo', ({ node, event }) => {
 | `onEvent`           | Function          | Callback triggered each time an event occurs on the observed element                                                                                    |
 | `options`           | Object            | Options object:                                                                                                                                          |
 | - `events`          | Array             | List of [events](#events) to observe (All events are observed by default)                                                                                |
-| - `attributeFilter` | Array             | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                       |
+| - `attributeFilter` | Array             | List of attribute names to observe (DOMObserverEvent.CHANGE event only)                                                                                       |
 | - `timeout`         | Number            | Duration (in ms) after which observation stops if no matching mutation occurred. Triggers `onError` with a `TimeoutError` when elapsed. Must be `0` or a positive finite number — throws `InvalidTimeoutError` otherwise. |
 | - `onError`         | Function          | Callback triggered when `timeout` elapses with no matching mutation                                                                                      |
 | - `signal`          | AbortSignal       | An `AbortSignal` to stop the observation. If already aborted, `watch()` returns immediately without observing.                                           |
@@ -108,7 +108,7 @@ The callback receives a single `EventPayload` object — a **discriminated union
 
 ```typescript
 observer.watch('#foo', ({ event, node, options }) => {
-	if (event === DOMObserver.CHANGE) {
+	if (event === DOMObserverEvent.CHANGE) {
 		console.log(options.attributeName) // ✅ ChangeOptions — never undefined here
 	}
 })
@@ -133,16 +133,16 @@ observer.watch('#foo', ({ event, node, options }) => {
 Use the `wait` method to get a Promise that resolves on the **first** matching mutation.
 
 ```javascript
-import { DOMObserver } from '@untemps/dom-observer'
+import { DOMObserver, DOMObserverEvent } from '@untemps/dom-observer'
 
 const observer = new DOMObserver()
-const result = await observer.wait('#foo', { events: [DOMObserver.REMOVE, DOMObserver.CHANGE] })
+const result = await observer.wait('#foo', { events: [DOMObserverEvent.REMOVE, DOMObserverEvent.CHANGE] })
 switch (result.event) {
-	case DOMObserver.REMOVE: {
+	case DOMObserverEvent.REMOVE: {
 		console.log('Element ' + result.node.id + ' has been removed')
 		break
 	}
-	case DOMObserver.CHANGE: {
+	case DOMObserverEvent.CHANGE: {
 		// options is ChangeOptions here — no fallback needed
 		console.log('Element ' + result.node.id + ' has been changed (' + result.options.attributeName + ')')
 		break
@@ -154,7 +154,7 @@ Pass an **array of targets** to resolve as soon as any one of them fires a match
 
 ```javascript
 const { node, target } = await observer.wait(['#success', '#error'], {
-	events: [DOMObserver.ADD],
+	events: [DOMObserverEvent.ADD],
 })
 console.log(`Matched: ${target}`)
 ```
@@ -177,7 +177,7 @@ Calling `clear()` after `wait()` resolves is safe and is a no-op. If a `timeout`
 | `options`           | Object            | Options object:                                                                                                                                          |
 | - `events`          | Array             | List of [events](#events) to observe (All events are observed by default)                                                                                |
 | - `timeout`         | Number            | Duration (in ms) before rejecting the Promise with a `TimeoutError`. `0` disables the timeout. Must be `0` or a positive finite number — rejects with `InvalidTimeoutError` otherwise. |
-| - `attributeFilter` | Array             | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                       |
+| - `attributeFilter` | Array             | List of attribute names to observe (DOMObserverEvent.CHANGE event only)                                                                                       |
 | - `signal`          | AbortSignal       | An `AbortSignal` to cancel the observation. If already aborted, the Promise rejects immediately with an `AbortError`.                                    |
 | - `root`            | Element or String | DOM element or CSS selector to use as the observation root. Only mutations within this subtree are observed. Defaults to `document.documentElement`.     |
 | - `filter`          | Function          | `(payload: EventPayload) => boolean`. Called before resolving the Promise. Return `false` to skip the event and keep waiting.                                 |
@@ -195,21 +195,21 @@ Calling `clear()` after `wait()` resolves is safe and is a no-op. If a `timeout`
 
 #### Events
 
-DOMObserver static properties list all observable events.
+All observable event constants are exported from the `DOMObserverEvent` object.
 
 | Props                | Description                                                                               |
 |----------------------|-------------------------------------------------------------------------------------------|
-| `DOMObserver.EXIST`  | Observe whether the element is already present in the DOM at observation start            |
-| `DOMObserver.ADD`    | Observe when the element is added to the DOM                                              |
-| `DOMObserver.REMOVE` | Observe when the element is removed from the DOM                                          |
-| `DOMObserver.CHANGE` | Observe when an attribute has changed on the element                                      |
-| `DOMObserver.EVENTS` | Array of all four events                                                                  |
+| `DOMObserverEvent.EXIST`  | Observe whether the element is already present in the DOM at observation start            |
+| `DOMObserverEvent.ADD`    | Observe when the element is added to the DOM                                              |
+| `DOMObserverEvent.REMOVE` | Observe when the element is removed from the DOM                                          |
+| `DOMObserverEvent.CHANGE` | Observe when an attribute has changed on the element                                      |
+| `DOMObserverEvents` | Array of all four events                                                                  |
 
 One or more events can be passed to the `events` option of `wait` or `watch`. By default, all events are observed.
 
 ```javascript
-{ events: [DOMObserver.ADD, DOMObserver.REMOVE] }
-{ events: DOMObserver.EVENTS }
+{ events: [DOMObserverEvent.ADD, DOMObserverEvent.REMOVE] }
+{ events: DOMObserverEvents }
 ```
 
 ### Check observation state
@@ -254,7 +254,7 @@ observer.clear().watch('#bar', onEvent)
 The library exports typed `Error` subclasses for reliable error handling with `instanceof` checks:
 
 ```typescript
-import { DOMObserver, TimeoutError, ObservationAbortedError } from '@untemps/dom-observer'
+import { DOMObserver, DOMObserverEvent, TimeoutError, ObservationAbortedError } from '@untemps/dom-observer'
 
 try {
     await observer.wait('#foo', { timeout: 500 })
@@ -279,7 +279,7 @@ try {
 ## Example
 
 ```javascript
-import { DOMObserver } from '@untemps/dom-observer'
+import { DOMObserver, DOMObserverEvent } from '@untemps/dom-observer'
 
 // Continuous observation with timeout
 const onError = (err) => console.error(err.message)
@@ -288,26 +288,26 @@ observer.watch(
     '.foo',
     ({ node, event, options }) => {
         switch (event) {
-            case DOMObserver.EXIST: {
+            case DOMObserverEvent.EXIST: {
                 console.log('Element ' + node.id + ' exists already')
                 break
             }
-            case DOMObserver.ADD: {
+            case DOMObserverEvent.ADD: {
                 console.log('Element ' + node.id + ' has been added')
                 break
             }
-            case DOMObserver.REMOVE: {
+            case DOMObserverEvent.REMOVE: {
                 console.log('Element ' + node.id + ' has been removed')
                 break
             }
-            case DOMObserver.CHANGE: {
+            case DOMObserverEvent.CHANGE: {
                 console.log('Element ' + node.id + ' has been changed (' + options?.attributeName + ')')
                 break
             }
         }
     },
     {
-        events: [DOMObserver.EXIST, DOMObserver.ADD, DOMObserver.REMOVE, DOMObserver.CHANGE],
+        events: [DOMObserverEvent.EXIST, DOMObserverEvent.ADD, DOMObserverEvent.REMOVE, DOMObserverEvent.CHANGE],
         timeout: 2000,
         onError,
         attributeFilter: ['class'],
