@@ -55,6 +55,7 @@ Unlike `observeOnce`, `observe` does not return a Promise. It returns `this`, al
 Pass `once: true` to stop the observation automatically after the first matching event, without needing to call `disconnect()` manually:
 
 ```javascript
+const instance = createDOMObserver()
 instance.observe('#foo', ({ node }) => {
 	doSomething(node)  // called exactly once
 }, { events: [DOMObserverEvent.ADD], once: true })
@@ -63,6 +64,7 @@ instance.observe('#foo', ({ node }) => {
 Pass `debounce` to delay the callback until mutations have stopped for a given number of milliseconds — useful when you only care about the final state after a burst of rapid changes:
 
 ```javascript
+const instance = createDOMObserver()
 instance.observe('#progress', ({ node }) => {
 	console.log('final value:', node.getAttribute('data-value'))
 }, {
@@ -107,6 +109,7 @@ instance.observe('#foo', ({ node, event }) => {
 The callback receives a single `EventPayload` object — a **discriminated union** on `event`. Narrow on `event` to access `options` without optional chaining:
 
 ```typescript
+const instance = createDOMObserver()
 instance.observe('#foo', ({ event, node, options }) => {
 	if (event === DOMObserverEvent.CHANGE) {
 		console.log(options.attributeName) // ✅ ChangeOptions — never undefined here
@@ -153,6 +156,7 @@ switch (result.event) {
 Pass an **array of targets** to resolve as soon as any one of them fires a matching event. The resolved value includes a `target` field identifying which entry won:
 
 ```javascript
+const instance = createDOMObserver()
 const { node, target } = await instance.observeOnce(['#success', '#error'], {
 	events: [DOMObserverEvent.ADD],
 })
@@ -205,7 +209,7 @@ All observable event constants are exported from the `DOMObserverEvent` object.
 | `DOMObserverEvent.CHANGE` | Observe when an attribute has changed on the element                                      |
 | `DOMObserverEvents` | Array of all four events                                                                  |
 
-One or more events can be passed to the `events` option of `wait` or `watch`. By default, all events are observed.
+One or more events can be passed to the `events` option of `observeOnce()` or `observe()`. By default, all events are observed.
 
 ```javascript
 { events: [DOMObserverEvent.ADD, DOMObserverEvent.REMOVE] }
@@ -234,7 +238,7 @@ import { createDOMObserver, type DOMObserverInstance } from '@untemps/dom-observ
 let instance: DOMObserverInstance
 
 function setup() {
-    observer = createDOMObserver()
+    instance = createDOMObserver()
     instance.observe('#foo', ({ node }) => doSomething(node))
 }
 ```
@@ -244,6 +248,7 @@ function setup() {
 Call the `disconnect()` method to stop the active observation. It returns `this`, allowing method chaining:
 
 ```javascript
+const instance = createDOMObserver()
 instance.disconnect()
 
 // Stop and immediately restart with a different target
