@@ -15,7 +15,7 @@ import {
 	TimeoutError,
 } from '../index'
 
-describe('DOMObserver', () => {
+describe('createDOMObserver', () => {
 	let instance: DOMObserverInstance
 	let node: HTMLElement
 	let onEvent: ReturnType<typeof vi.fn<OnEventCallback>>
@@ -32,6 +32,15 @@ describe('DOMObserver', () => {
 
 	it('Creates an instance with no error', () => {
 		expect(() => createDOMObserver()).not.toThrow()
+	})
+
+	it('Returns independent instances', () => {
+		const a = createDOMObserver()
+		const b = createDOMObserver()
+		a.watch('#foo', vi.fn())
+		expect(a.isObserving).toBe(true)
+		expect(b.isObserving).toBe(false)
+		a.clear()
 	})
 
 	describe('wait', () => {
