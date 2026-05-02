@@ -43,7 +43,7 @@ describe('createDOMObserver', () => {
 		a.disconnect()
 	})
 
-	describe('wait', () => {
+	describe('observeOnce', () => {
 		describe('A promise is resolved as soon as an event occurs', () => {
 			describe('Element is already created and mounted in the DOM', () => {
 				beforeEach(() => {
@@ -102,7 +102,7 @@ describe('createDOMObserver', () => {
 					).rejects.toThrow(TimeoutError)
 				})
 
-				it('Rejects the pending promise when wait() is called again', async () => {
+				it('Rejects the pending promise when observeOnce() is called again', async () => {
 					const first = instance.observeOnce('#bar', { events: [DOMObserverEvent.ADD] })
 					instance.observeOnce('#baz', { events: [DOMObserverEvent.ADD] })
 					await expect(first).rejects.toThrow(ObservationAbortedError)
@@ -162,13 +162,13 @@ describe('createDOMObserver', () => {
 					expect(observingInThen).toBe(false)
 				})
 
-				it('Calling clear() after wait() resolves is a no-op', async () => {
+				it('Calling disconnect() after observeOnce() resolves is a no-op', async () => {
 					await instance.observeOnce('#foo')
 					expect(() => instance.disconnect()).not.toThrow()
 					expect(instance.isObserving).toBe(false)
 				})
 
-				it('Does not clear a subsequent observe() when timeout was set', async () => {
+				it('Does not disconnect a subsequent observe() when timeout was set', async () => {
 					await instance.observeOnce('#foo', { timeout: 100 })
 					instance.observe('#foo', vi.fn<OnEventCallback>(), { events: [DOMObserverEvent.CHANGE] })
 					await _sleep(150)
@@ -759,7 +759,7 @@ describe('createDOMObserver', () => {
 				})
 			})
 
-			it('Does not fire onEvent when clear() is called during the debounce period', async () => {
+			it('Does not fire onEvent when disconnect() is called during the debounce period', async () => {
 				instance.observe('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], debounce: 100 })
 				_modifyElement('#foo', 'class', 'change1')
 				instance.disconnect()
@@ -800,7 +800,7 @@ describe('createDOMObserver', () => {
 		})
 	})
 
-	describe('clear', () => {
+	describe('disconnect', () => {
 		it('Returns the instance for chaining', () => {
 			expect(instance.disconnect()).toBe(instance)
 		})
@@ -851,7 +851,7 @@ describe('EventPayload type narrowing', () => {
 		expect(captured[0].options).toBeUndefined()
 	})
 
-	it('wait() resolves ChangePayload with options typed as ChangeOptions after CHANGE guard', async () => {
+	it('observeOnce() resolves ChangePayload with options typed as ChangeOptions after CHANGE guard', async () => {
 		_createElement('foo')
 		setTimeout(() => _modifyElement('#foo', 'class', 'updated'), 50)
 
