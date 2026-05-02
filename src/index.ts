@@ -8,11 +8,11 @@ export type {
 	EventPayload,
 	ExistPayload,
 	FilterCallback,
+	ObserveOnceOptions,
+	ObserveOnceResult,
+	ObserveOptions,
 	OnEventCallback,
 	RemovePayload,
-	WaitOptions,
-	WaitResult,
-	WatchOptions,
 } from './DOMObserver'
 export { createDOMObserver, DOMObserverEvent, DOMObserverEvents } from './DOMObserver'
 export {
