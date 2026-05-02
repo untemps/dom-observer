@@ -1,3 +1,20 @@
+# [5.0.0-beta.4](https://github.com/untemps/dom-observer/compare/v5.0.0-beta.3...v5.0.0-beta.4) (2026-05-02)
+
+
+### Features
+
+* Make callback payload a discriminated union based on event type ([#75](https://github.com/untemps/dom-observer/issues/75)) ([69847bf](https://github.com/untemps/dom-observer/commit/69847bfa5cfa46a809126d45789c2ba58025c7f4))
+
+
+### BREAKING CHANGES
+
+* EventPayload and WaitResult are now type aliases, not interfaces. Code using `extends EventPayload`, `extends WaitResult`, or `implements` either type must migrate to intersection types:
+// Before
+interface MyPayload extends EventPayload { extra: string }
+// After
+type MyPayload = EventPayload & { extra: string }
+Code that accesses `options?.attributeName` defensively continues to compile without changes.
+
 # [5.0.0-beta.3](https://github.com/untemps/dom-observer/compare/v5.0.0-beta.2...v5.0.0-beta.3) (2026-05-01)
 
 
