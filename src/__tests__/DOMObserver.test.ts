@@ -25,7 +25,7 @@ describe('createDOMObserver', () => {
 	})
 
 	afterEach(() => {
-		instance.clear()
+		instance.disconnect()
 
 		document.body.innerHTML = ''
 	})
@@ -37,13 +37,13 @@ describe('createDOMObserver', () => {
 	it('Returns independent instances', () => {
 		const a = createDOMObserver()
 		const b = createDOMObserver()
-		a.watch('#foo', vi.fn())
+		a.observe('#foo', vi.fn())
 		expect(a.isObserving).toBe(true)
 		expect(b.isObserving).toBe(false)
-		a.clear()
+		a.disconnect()
 	})
 
-	describe('wait', () => {
+	describe('observeOnce', () => {
 		describe('A promise is resolved as soon as an event occurs', () => {
 			describe('Element is already created and mounted in the DOM', () => {
 				beforeEach(() => {
@@ -51,7 +51,7 @@ describe('createDOMObserver', () => {
 				})
 
 				it('Observes an element to be added', async () => {
-					const { node: foundNode, event } = await instance.wait('#foo')
+					const { node: foundNode, event } = await instance.observeOnce('#foo')
 					expect(foundNode).toEqual(node)
 					expect(event).toBe(DOMObserverEvent.EXIST)
 				})
@@ -60,7 +60,7 @@ describe('createDOMObserver', () => {
 					setTimeout(() => {
 						_removeElement('#foo')
 					}, 100)
-					const { node: foundNode, event } = await instance.wait('#foo', {
+					const { node: foundNode, event } = await instance.observeOnce('#foo', {
 						events: [DOMObserverEvent.REMOVE],
 					})
 					expect(foundNode).toEqual(node)
@@ -75,7 +75,7 @@ describe('createDOMObserver', () => {
 						node: foundNode,
 						event,
 						options: { attributeName, oldValue } = {},
-					} = await instance.wait('#foo', {
+					} = await instance.observeOnce('#foo', {
 						events: [DOMObserverEvent.CHANGE],
 					})
 					expect(foundNode).toEqual(node)
@@ -87,29 +87,29 @@ describe('createDOMObserver', () => {
 				it('Resolves only when a filtered attribute changes', async () => {
 					setTimeout(() => {
 						_modifyElement('#foo', 'data-ignored', 'x')
-						_modifyElement('#foo', 'data-watched', 'y')
+						_modifyElement('#foo', 'data-observed', 'y')
 					}, 50)
-					const { options } = await instance.wait('#foo', {
+					const { options } = await instance.observeOnce('#foo', {
 						events: [DOMObserverEvent.CHANGE],
-						attributeFilter: ['data-watched'],
+						attributeFilter: ['data-observed'],
 					})
-					expect(options?.attributeName).toBe('data-watched')
+					expect(options?.attributeName).toBe('data-observed')
 				})
 
 				it('Rejects promise when an element is not found after timeout is elapsed', async () => {
 					await expect(
-						instance.wait('#bar', { events: [DOMObserverEvent.ADD], timeout: 50 })
+						instance.observeOnce('#bar', { events: [DOMObserverEvent.ADD], timeout: 50 })
 					).rejects.toThrow(TimeoutError)
 				})
 
-				it('Rejects the pending promise when wait() is called again', async () => {
-					const first = instance.wait('#bar', { events: [DOMObserverEvent.ADD] })
-					instance.wait('#baz', { events: [DOMObserverEvent.ADD] })
+				it('Rejects the pending promise when observeOnce() is called again', async () => {
+					const first = instance.observeOnce('#bar', { events: [DOMObserverEvent.ADD] })
+					instance.observeOnce('#baz', { events: [DOMObserverEvent.ADD] })
 					await expect(first).rejects.toThrow(ObservationAbortedError)
 				})
 
 				it('Throws when events array is empty', async () => {
-					await expect(() => instance.wait('#foo', { events: [] })).rejects.toThrow(InvalidEventsError)
+					await expect(() => instance.observeOnce('#foo', { events: [] })).rejects.toThrow(InvalidEventsError)
 				})
 
 				it.each([
@@ -118,28 +118,30 @@ describe('createDOMObserver', () => {
 					[Infinity],
 					[-Infinity],
 				])('Rejects with InvalidTimeoutError when timeout is %s', async (value) => {
-					await expect(instance.wait('#foo', { timeout: value })).rejects.toThrow(InvalidTimeoutError)
+					await expect(instance.observeOnce('#foo', { timeout: value })).rejects.toThrow(InvalidTimeoutError)
 				})
 
 				it('Rejects with InvalidTargetError when selector is invalid', async () => {
-					await expect(instance.wait('##invalid')).rejects.toThrow(InvalidTargetError)
+					await expect(instance.observeOnce('##invalid')).rejects.toThrow(InvalidTargetError)
 				})
 
 				it('Rejects with InvalidTargetError when root selector is invalid', async () => {
-					await expect(instance.wait('#foo', { root: '##invalid' })).rejects.toThrow(InvalidTargetError)
+					await expect(instance.observeOnce('#foo', { root: '##invalid' })).rejects.toThrow(
+						InvalidTargetError
+					)
 				})
 
 				it('Rejects immediately when signal is already aborted', async () => {
 					const controller = new AbortController()
 					controller.abort()
-					await expect(instance.wait('#foo', { signal: controller.signal })).rejects.toMatchObject({
+					await expect(instance.observeOnce('#foo', { signal: controller.signal })).rejects.toMatchObject({
 						name: 'AbortError',
 					})
 				})
 
 				it('Rejects and disconnects when signal is aborted during observation', async () => {
 					const controller = new AbortController()
-					const promise = instance.wait('#bar', {
+					const promise = instance.observeOnce('#bar', {
 						events: [DOMObserverEvent.ADD],
 						signal: controller.signal,
 					})
@@ -148,27 +150,27 @@ describe('createDOMObserver', () => {
 				})
 
 				it('Sets isObserving to false after the promise resolves', async () => {
-					await instance.wait('#foo')
+					await instance.observeOnce('#foo')
 					expect(instance.isObserving).toBe(false)
 				})
 
 				it('Sets isObserving to false synchronously before .then() handler runs', async () => {
 					let observingInThen: boolean | undefined
-					await instance.wait('#foo').then(() => {
+					await instance.observeOnce('#foo').then(() => {
 						observingInThen = instance.isObserving
 					})
 					expect(observingInThen).toBe(false)
 				})
 
-				it('Calling clear() after wait() resolves is a no-op', async () => {
-					await instance.wait('#foo')
-					expect(() => instance.clear()).not.toThrow()
+				it('Calling disconnect() after observeOnce() resolves is a no-op', async () => {
+					await instance.observeOnce('#foo')
+					expect(() => instance.disconnect()).not.toThrow()
 					expect(instance.isObserving).toBe(false)
 				})
 
-				it('Does not clear a subsequent watch() when timeout was set', async () => {
-					await instance.wait('#foo', { timeout: 100 })
-					instance.watch('#foo', vi.fn<OnEventCallback>(), { events: [DOMObserverEvent.CHANGE] })
+				it('Does not disconnect a subsequent observe() when timeout was set', async () => {
+					await instance.observeOnce('#foo', { timeout: 100 })
+					instance.observe('#foo', vi.fn<OnEventCallback>(), { events: [DOMObserverEvent.CHANGE] })
 					await _sleep(150)
 					expect(instance.isObserving).toBe(true)
 				})
@@ -181,7 +183,7 @@ describe('createDOMObserver', () => {
 						child.id = 'scoped'
 						root.appendChild(child)
 					}, 50)
-					const { node } = await instance.wait('#scoped', { events: [DOMObserverEvent.ADD], root })
+					const { node } = await instance.observeOnce('#scoped', { events: [DOMObserverEvent.ADD], root })
 					expect(node.id).toBe('scoped')
 					root.remove()
 				})
@@ -195,7 +197,7 @@ describe('createDOMObserver', () => {
 						child.id = 'scoped2'
 						root.appendChild(child)
 					}, 50)
-					const { node } = await instance.wait('#scoped2', {
+					const { node } = await instance.observeOnce('#scoped2', {
 						events: [DOMObserverEvent.ADD],
 						root: '#root-scope',
 					})
@@ -204,7 +206,7 @@ describe('createDOMObserver', () => {
 				})
 
 				it('Resolves immediately when filter passes for an existing element', async () => {
-					const { node: foundNode, event } = await instance.wait('#foo', { filter: () => true })
+					const { node: foundNode, event } = await instance.observeOnce('#foo', { filter: () => true })
 					expect(foundNode).toEqual(node)
 					expect(event).toBe(DOMObserverEvent.EXIST)
 				})
@@ -218,7 +220,7 @@ describe('createDOMObserver', () => {
 						btn.className = 'primary'
 						document.body.appendChild(btn)
 					}, 100)
-					const { node } = await instance.wait('button', {
+					const { node } = await instance.observeOnce('button', {
 						events: [DOMObserverEvent.ADD],
 						filter: ({ node }) => node.classList.contains('primary'),
 					})
@@ -230,7 +232,11 @@ describe('createDOMObserver', () => {
 						document.body.appendChild(document.createElement('button'))
 					}, 30)
 					await expect(
-						instance.wait('button', { events: [DOMObserverEvent.ADD], filter: () => false, timeout: 80 })
+						instance.observeOnce('button', {
+							events: [DOMObserverEvent.ADD],
+							filter: () => false,
+							timeout: 80,
+						})
 					).rejects.toThrow(TimeoutError)
 				})
 
@@ -238,7 +244,7 @@ describe('createDOMObserver', () => {
 					const btn = document.createElement('button')
 					document.body.appendChild(btn)
 					setTimeout(() => btn.setAttribute('data-ready', 'true'), 50)
-					const { node } = await instance.wait('button', {
+					const { node } = await instance.observeOnce('button', {
 						events: [DOMObserverEvent.EXIST, DOMObserverEvent.CHANGE],
 						filter: ({ node }) => node.hasAttribute('data-ready'),
 					})
@@ -249,7 +255,7 @@ describe('createDOMObserver', () => {
 				it('Passes ChangeOptions to filter for CHANGE events', async () => {
 					const filter = vi.fn(() => true)
 					setTimeout(() => _modifyElement('#foo', 'class', 'updated'), 50)
-					await instance.wait('#foo', { events: [DOMObserverEvent.CHANGE], filter })
+					await instance.observeOnce('#foo', { events: [DOMObserverEvent.CHANGE], filter })
 					expect(filter).toHaveBeenCalledWith({
 						node,
 						event: DOMObserverEvent.CHANGE,
@@ -261,7 +267,7 @@ describe('createDOMObserver', () => {
 				})
 
 				it('Leaves result.target undefined for a single-target call', async () => {
-					const { target } = await instance.wait('#foo')
+					const { target } = await instance.observeOnce('#foo')
 					expect(target).toBeUndefined()
 				})
 			})
@@ -271,7 +277,7 @@ describe('createDOMObserver', () => {
 					setTimeout(() => {
 						node = _createElement('foo')
 					}, 100)
-					const { node: foundNode, event } = await instance.wait('#foo')
+					const { node: foundNode, event } = await instance.observeOnce('#foo')
 					expect(foundNode).toEqual(node)
 					expect(event).toBe(DOMObserverEvent.ADD)
 				})
@@ -284,7 +290,7 @@ describe('createDOMObserver', () => {
 			})
 
 			it('Resolves on EXIST for the first target found in the DOM', async () => {
-				const { node: foundNode, event, target } = await instance.wait(['#foo', '#bar'])
+				const { node: foundNode, event, target } = await instance.observeOnce(['#foo', '#bar'])
 				expect(foundNode).toEqual(node)
 				expect(event).toBe(DOMObserverEvent.EXIST)
 				expect(target).toBe('#foo')
@@ -294,7 +300,7 @@ describe('createDOMObserver', () => {
 				const second = document.createElement('div')
 				second.id = 'second'
 				document.body.appendChild(second)
-				const { node, target } = await instance.wait(['#missing', '#second'])
+				const { node, target } = await instance.observeOnce(['#missing', '#second'])
 				expect(node.id).toBe('second')
 				expect(target).toBe('#second')
 				second.remove()
@@ -306,7 +312,9 @@ describe('createDOMObserver', () => {
 					div.id = 'winner'
 					document.body.appendChild(div)
 				}, 50)
-				const { node, target } = await instance.wait(['#winner', '#loser'], { events: [DOMObserverEvent.ADD] })
+				const { node, target } = await instance.observeOnce(['#winner', '#loser'], {
+					events: [DOMObserverEvent.ADD],
+				})
 				expect(node.id).toBe('winner')
 				expect(target).toBe('#winner')
 			})
@@ -317,7 +325,7 @@ describe('createDOMObserver', () => {
 					div.id = 'second-wins'
 					document.body.appendChild(div)
 				}, 50)
-				const { node, target } = await instance.wait(['#first-never', '#second-wins'], {
+				const { node, target } = await instance.observeOnce(['#first-never', '#second-wins'], {
 					events: [DOMObserverEvent.ADD],
 				})
 				expect(node.id).toBe('second-wins')
@@ -325,18 +333,18 @@ describe('createDOMObserver', () => {
 			})
 
 			it('Rejects with InvalidTargetError when any target selector is invalid', async () => {
-				await expect(instance.wait(['#foo', '##invalid'])).rejects.toThrow(InvalidTargetError)
+				await expect(instance.observeOnce(['#foo', '##invalid'])).rejects.toThrow(InvalidTargetError)
 			})
 
 			it('Rejects with TimeoutError when no target matches within the time limit', async () => {
 				await expect(
-					instance.wait(['#missing1', '#missing2'], { events: [DOMObserverEvent.ADD], timeout: 50 })
+					instance.observeOnce(['#missing1', '#missing2'], { events: [DOMObserverEvent.ADD], timeout: 50 })
 				).rejects.toThrow(TimeoutError)
 			})
 
 			it('Rejects with AbortError when signal is aborted during multi-target observation', async () => {
 				const controller = new AbortController()
-				const promise = instance.wait(['#missing1', '#missing2'], {
+				const promise = instance.observeOnce(['#missing1', '#missing2'], {
 					events: [DOMObserverEvent.ADD],
 					signal: controller.signal,
 				})
@@ -349,7 +357,7 @@ describe('createDOMObserver', () => {
 				second.id = 'removable'
 				document.body.appendChild(second)
 				setTimeout(() => second.remove(), 50)
-				const { node, target } = await instance.wait(['#foo', '#removable'], {
+				const { node, target } = await instance.observeOnce(['#foo', '#removable'], {
 					events: [DOMObserverEvent.REMOVE],
 				})
 				expect(node.id).toBe('removable')
@@ -361,7 +369,7 @@ describe('createDOMObserver', () => {
 				second.id = 'changeable'
 				document.body.appendChild(second)
 				setTimeout(() => second.setAttribute('data-x', '1'), 50)
-				const { node, target } = await instance.wait(['#foo', '#changeable'], {
+				const { node, target } = await instance.observeOnce(['#foo', '#changeable'], {
 					events: [DOMObserverEvent.CHANGE],
 				})
 				expect(node.id).toBe('changeable')
@@ -381,7 +389,7 @@ describe('createDOMObserver', () => {
 					div.id = 'filtered-b'
 					document.body.appendChild(div)
 				}, 50)
-				const { node, target } = await instance.wait(['#filtered-a', '#filtered-b'], {
+				const { node, target } = await instance.observeOnce(['#filtered-a', '#filtered-b'], {
 					events: [DOMObserverEvent.ADD],
 					filter: ({ node }) => {
 						callCount++
@@ -395,7 +403,7 @@ describe('createDOMObserver', () => {
 		})
 	})
 
-	describe('watch', () => {
+	describe('observe', () => {
 		beforeEach(() => {
 			onEvent = vi.fn<OnEventCallback>()
 		})
@@ -406,17 +414,17 @@ describe('createDOMObserver', () => {
 			})
 
 			it('Triggers onEvent immediately with EXIST when element is present', () => {
-				instance.watch('#foo', onEvent)
+				instance.observe('#foo', onEvent)
 				expect(onEvent).toHaveBeenCalledWith({ node, event: DOMObserverEvent.EXIST })
 			})
 
 			it('Accepts an Element reference as target', () => {
-				instance.watch(node, onEvent)
+				instance.observe(node, onEvent)
 				expect(onEvent).toHaveBeenCalledWith({ node, event: DOMObserverEvent.EXIST })
 			})
 
 			it('Triggers onEvent on every successive attribute change', async () => {
-				instance.watch('#foo', onEvent, { events: [DOMObserverEvent.CHANGE] })
+				instance.observe('#foo', onEvent, { events: [DOMObserverEvent.CHANGE] })
 				_modifyElement('#foo', 'class', 'change1')
 				await _sleep()
 				_modifyElement('#foo', 'class', 'change2')
@@ -441,7 +449,7 @@ describe('createDOMObserver', () => {
 			})
 
 			it('Triggers onEvent for each matching added and removed node', async () => {
-				instance.watch('.item', onEvent, { events: [DOMObserverEvent.ADD, DOMObserverEvent.REMOVE] })
+				instance.observe('.item', onEvent, { events: [DOMObserverEvent.ADD, DOMObserverEvent.REMOVE] })
 				const nodeA = _createElementWithClass('item')
 				const nodeB = _createElementWithClass('item')
 				await _sleep()
@@ -457,7 +465,7 @@ describe('createDOMObserver', () => {
 			it('Fires CHANGE for all elements matching a class selector, not just the first', async () => {
 				const nodeA = _createElementWithClass('item')
 				const nodeB = _createElementWithClass('item')
-				instance.watch('.item', onEvent, { events: [DOMObserverEvent.CHANGE] })
+				instance.observe('.item', onEvent, { events: [DOMObserverEvent.CHANGE] })
 				nodeA.setAttribute('data-x', '1')
 				await _sleep()
 				nodeB.setAttribute('data-x', '2')
@@ -476,20 +484,20 @@ describe('createDOMObserver', () => {
 			})
 
 			it('Only fires for attributes in the filter list', async () => {
-				instance.watch('#foo', onEvent, {
+				instance.observe('#foo', onEvent, {
 					events: [DOMObserverEvent.CHANGE],
-					attributeFilter: ['data-watched'],
+					attributeFilter: ['data-observed'],
 				})
 				_modifyElement('#foo', 'data-ignored', 'x')
 				await _sleep()
-				_modifyElement('#foo', 'data-watched', 'y')
+				_modifyElement('#foo', 'data-observed', 'y')
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledOnce()
 				expect(onEvent).toHaveBeenCalledWith({
 					node,
 					event: DOMObserverEvent.CHANGE,
 					options: {
-						attributeName: 'data-watched',
+						attributeName: 'data-observed',
 						oldValue: null,
 					},
 				})
@@ -500,7 +508,7 @@ describe('createDOMObserver', () => {
 				document.body.appendChild(root)
 				const inside = document.createElement('div')
 				inside.id = 'inside'
-				instance.watch('#inside', onEvent, { events: [DOMObserverEvent.ADD], root })
+				instance.observe('#inside', onEvent, { events: [DOMObserverEvent.ADD], root })
 				root.appendChild(inside)
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledOnce()
@@ -512,7 +520,7 @@ describe('createDOMObserver', () => {
 				document.body.appendChild(root)
 				const outside = document.createElement('div')
 				outside.id = 'outside'
-				instance.watch('#outside', onEvent, { events: [DOMObserverEvent.ADD], root })
+				instance.observe('#outside', onEvent, { events: [DOMObserverEvent.ADD], root })
 				document.body.appendChild(outside)
 				await _sleep()
 				expect(onEvent).not.toHaveBeenCalled()
@@ -522,11 +530,11 @@ describe('createDOMObserver', () => {
 
 			it('Accepts a CSS selector as root', async () => {
 				const root = document.createElement('div')
-				root.id = 'watch-root'
+				root.id = 'observe-root'
 				document.body.appendChild(root)
 				const inside = document.createElement('div')
 				inside.id = 'inside2'
-				instance.watch('#inside2', onEvent, { events: [DOMObserverEvent.ADD], root: '#watch-root' })
+				instance.observe('#inside2', onEvent, { events: [DOMObserverEvent.ADD], root: '#observe-root' })
 				root.appendChild(inside)
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledOnce()
@@ -534,21 +542,21 @@ describe('createDOMObserver', () => {
 			})
 
 			it('Throws InvalidTargetError when root selector is invalid', () => {
-				expect(() => instance.watch('#foo', onEvent, { root: '##invalid' })).toThrow(InvalidTargetError)
+				expect(() => instance.observe('#foo', onEvent, { root: '##invalid' })).toThrow(InvalidTargetError)
 			})
 
 			it('Respects root when observing CHANGE on an Element reference', async () => {
 				const root = document.createElement('div')
 				document.body.appendChild(root)
-				const watchedNode = document.createElement('div')
-				root.appendChild(watchedNode)
+				const observedNode = document.createElement('div')
+				root.appendChild(observedNode)
 				const outside = document.createElement('div')
 				document.body.appendChild(outside)
-				instance.watch(watchedNode, onEvent, { events: [DOMObserverEvent.CHANGE], root })
+				instance.observe(observedNode, onEvent, { events: [DOMObserverEvent.CHANGE], root })
 				outside.setAttribute('data-x', '1')
 				await _sleep()
 				expect(onEvent).not.toHaveBeenCalled()
-				watchedNode.setAttribute('data-x', '1')
+				observedNode.setAttribute('data-x', '1')
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledOnce()
 				outside.remove()
@@ -556,27 +564,27 @@ describe('createDOMObserver', () => {
 			})
 
 			it('Calls onEvent when filter passes', async () => {
-				instance.watch('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], filter: () => true })
+				instance.observe('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], filter: () => true })
 				_modifyElement('#foo', 'class', 'change1')
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledOnce()
 			})
 
 			it('Does not call onEvent when filter returns false', async () => {
-				instance.watch('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], filter: () => false })
+				instance.observe('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], filter: () => false })
 				_modifyElement('#foo', 'class', 'change1')
 				await _sleep()
 				expect(onEvent).not.toHaveBeenCalled()
 			})
 
 			it('Does not fire EXIST when filter returns false for an existing element', () => {
-				instance.watch('#foo', onEvent, { filter: () => false })
+				instance.observe('#foo', onEvent, { filter: () => false })
 				expect(onEvent).not.toHaveBeenCalled()
 			})
 
 			it('Passes ChangeOptions to filter for CHANGE events', async () => {
 				const filter = vi.fn(() => true)
-				instance.watch('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], filter })
+				instance.observe('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], filter })
 				_modifyElement('#foo', 'class', 'updated')
 				await _sleep()
 				expect(filter).toHaveBeenCalledWith({
@@ -589,7 +597,7 @@ describe('createDOMObserver', () => {
 			it('Does not fire for ADD events rejected by filter', async () => {
 				const inside = document.createElement('div')
 				inside.id = 'allowed'
-				instance.watch('div', onEvent, {
+				instance.observe('div', onEvent, {
 					events: [DOMObserverEvent.ADD],
 					filter: ({ node }) => node.id === 'allowed',
 				})
@@ -603,7 +611,11 @@ describe('createDOMObserver', () => {
 			})
 
 			it('Does not fire once when filter blocks all events', async () => {
-				instance.watch('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], once: true, filter: () => false })
+				instance.observe('#foo', onEvent, {
+					events: [DOMObserverEvent.CHANGE],
+					once: true,
+					filter: () => false,
+				})
 				_modifyElement('#foo', 'class', 'change1')
 				await _sleep()
 				expect(onEvent).not.toHaveBeenCalled()
@@ -611,7 +623,7 @@ describe('createDOMObserver', () => {
 			})
 
 			it('Fires once and stops when filter passes', async () => {
-				instance.watch('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], once: true, filter: () => true })
+				instance.observe('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], once: true, filter: () => true })
 				_modifyElement('#foo', 'class', 'change1')
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledOnce()
@@ -619,7 +631,7 @@ describe('createDOMObserver', () => {
 			})
 
 			it('Throws when events array is empty', () => {
-				expect(() => instance.watch('#foo', onEvent, { events: [] })).toThrow(InvalidEventsError)
+				expect(() => instance.observe('#foo', onEvent, { events: [] })).toThrow(InvalidEventsError)
 			})
 
 			it.each([
@@ -628,35 +640,35 @@ describe('createDOMObserver', () => {
 				[Infinity],
 				[-Infinity],
 			])('Throws InvalidTimeoutError when timeout is %s', (value) => {
-				expect(() => instance.watch('#foo', onEvent, { timeout: value })).toThrow(InvalidTimeoutError)
+				expect(() => instance.observe('#foo', onEvent, { timeout: value })).toThrow(InvalidTimeoutError)
 			})
 
 			it('Throws InvalidTargetError when selector is invalid', () => {
-				expect(() => instance.watch('##invalid', onEvent)).toThrow(InvalidTargetError)
+				expect(() => instance.observe('##invalid', onEvent)).toThrow(InvalidTargetError)
 			})
 
-			it('Rejects the pending wait() promise when watch() is called', async () => {
-				const pending = instance.wait('#bar', { events: [DOMObserverEvent.ADD] })
-				instance.watch('#foo', onEvent)
+			it('Rejects the pending observeOnce() promise when observe() is called', async () => {
+				const pending = instance.observeOnce('#bar', { events: [DOMObserverEvent.ADD] })
+				instance.observe('#foo', onEvent)
 				await expect(pending).rejects.toThrow(ObservationAbortedError)
 			})
 
 			it('Returns the instance for chaining', () => {
-				const result = instance.watch('#foo', onEvent)
+				const result = instance.observe('#foo', onEvent)
 				expect(result).toBe(instance)
 			})
 
 			it('Does nothing when signal is already aborted', () => {
 				const controller = new AbortController()
 				controller.abort()
-				instance.watch('#foo', onEvent, { signal: controller.signal })
+				instance.observe('#foo', onEvent, { signal: controller.signal })
 				expect(onEvent).not.toHaveBeenCalled()
 				expect(instance.isObserving).toBe(false)
 			})
 
 			it('Stops observation when signal is aborted', async () => {
 				const controller = new AbortController()
-				instance.watch('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], signal: controller.signal })
+				instance.observe('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], signal: controller.signal })
 				_modifyElement('#foo', 'class', 'change1')
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledTimes(1)
@@ -668,7 +680,7 @@ describe('createDOMObserver', () => {
 
 			it('Calls onError when timeout elapses with no matching mutation', async () => {
 				const onError = vi.fn()
-				instance.watch('#bar', onEvent, { events: [DOMObserverEvent.ADD], timeout: 50, onError })
+				instance.observe('#bar', onEvent, { events: [DOMObserverEvent.ADD], timeout: 50, onError })
 				await _sleep(100)
 				expect(onEvent).not.toHaveBeenCalled()
 				expect(onError).toHaveBeenCalledOnce()
@@ -677,7 +689,7 @@ describe('createDOMObserver', () => {
 
 			it('Does not call onError when a mutation occurs before timeout', async () => {
 				const onError = vi.fn()
-				instance.watch('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], timeout: 200, onError })
+				instance.observe('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], timeout: 200, onError })
 				_modifyElement('#foo', 'class', 'change1')
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledOnce()
@@ -687,13 +699,13 @@ describe('createDOMObserver', () => {
 
 			it('Stops observation after timeout elapses', async () => {
 				const onError = vi.fn()
-				instance.watch('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], timeout: 50, onError })
+				instance.observe('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], timeout: 50, onError })
 				await _sleep(100)
 				expect(instance.isObserving).toBe(false)
 			})
 
 			it('Fires onEvent only once when once is true', async () => {
-				instance.watch('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], once: true })
+				instance.observe('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], once: true })
 				_modifyElement('#foo', 'class', 'change1')
 				await _sleep()
 				_modifyElement('#foo', 'class', 'change2')
@@ -702,7 +714,7 @@ describe('createDOMObserver', () => {
 			})
 
 			it('Sets isObserving to false after the first event when once is true', async () => {
-				instance.watch('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], once: true })
+				instance.observe('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], once: true })
 				_modifyElement('#foo', 'class', 'change1')
 				await _sleep()
 				expect(instance.isObserving).toBe(false)
@@ -710,7 +722,7 @@ describe('createDOMObserver', () => {
 
 			it('Cancels timeout after the first event when once and timeout are both set', async () => {
 				const onError = vi.fn()
-				instance.watch('#foo', onEvent, {
+				instance.observe('#foo', onEvent, {
 					events: [DOMObserverEvent.CHANGE],
 					once: true,
 					timeout: 200,
@@ -724,7 +736,7 @@ describe('createDOMObserver', () => {
 			})
 
 			it('Fires onEvent once after a burst of mutations when debounce is set', async () => {
-				instance.watch('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], debounce: 50 })
+				instance.observe('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], debounce: 50 })
 				_modifyElement('#foo', 'class', 'change1')
 				_modifyElement('#foo', 'class', 'change2')
 				_modifyElement('#foo', 'class', 'change3')
@@ -733,7 +745,7 @@ describe('createDOMObserver', () => {
 			})
 
 			it('Forwards the last mutation arguments when debounce is set', async () => {
-				instance.watch('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], debounce: 50 })
+				instance.observe('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], debounce: 50 })
 				_modifyElement('#foo', 'class', 'change1')
 				_modifyElement('#foo', 'class', 'change2')
 				await _sleep(150)
@@ -747,16 +759,16 @@ describe('createDOMObserver', () => {
 				})
 			})
 
-			it('Does not fire onEvent when clear() is called during the debounce period', async () => {
-				instance.watch('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], debounce: 100 })
+			it('Does not fire onEvent when disconnect() is called during the debounce period', async () => {
+				instance.observe('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], debounce: 100 })
 				_modifyElement('#foo', 'class', 'change1')
-				instance.clear()
+				instance.disconnect()
 				await _sleep(200)
 				expect(onEvent).not.toHaveBeenCalled()
 			})
 
 			it('Fires onEvent once and stops when debounce and once are both set', async () => {
-				instance.watch('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], debounce: 50, once: true })
+				instance.observe('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], debounce: 50, once: true })
 				_modifyElement('#foo', 'class', 'change1')
 				_modifyElement('#foo', 'class', 'change2')
 				await _sleep(150)
@@ -766,7 +778,12 @@ describe('createDOMObserver', () => {
 
 			it('Fires onError on timeout when no mutation occurs even with debounce set', async () => {
 				const onError = vi.fn()
-				instance.watch('#bar', onEvent, { events: [DOMObserverEvent.ADD], timeout: 50, debounce: 200, onError })
+				instance.observe('#bar', onEvent, {
+					events: [DOMObserverEvent.ADD],
+					timeout: 50,
+					debounce: 200,
+					onError,
+				})
 				await _sleep(100)
 				expect(onEvent).not.toHaveBeenCalled()
 				expect(onError).toHaveBeenCalledOnce()
@@ -775,7 +792,7 @@ describe('createDOMObserver', () => {
 
 		describe('Element creation and mounting are delayed', () => {
 			it('Triggers onEvent when element is added', async () => {
-				instance.watch('#foo', onEvent)
+				instance.observe('#foo', onEvent)
 				node = _createElement('foo')
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledWith({ node, event: DOMObserverEvent.ADD })
@@ -783,9 +800,9 @@ describe('createDOMObserver', () => {
 		})
 	})
 
-	describe('clear', () => {
+	describe('disconnect', () => {
 		it('Returns the instance for chaining', () => {
-			expect(instance.clear()).toBe(instance)
+			expect(instance.disconnect()).toBe(instance)
 		})
 	})
 })
@@ -798,7 +815,7 @@ describe('EventPayload type narrowing', () => {
 	})
 
 	afterEach(() => {
-		instance.clear()
+		instance.disconnect()
 		document.body.innerHTML = ''
 	})
 
@@ -807,7 +824,7 @@ describe('EventPayload type narrowing', () => {
 		setTimeout(() => _modifyElement('#foo', 'data-x', 'new'), 50)
 
 		await new Promise<void>((resolve) => {
-			instance.watch(
+			instance.observe(
 				'#foo',
 				({ event, options }) => {
 					if (event === DOMObserverEvent.CHANGE) {
@@ -824,7 +841,7 @@ describe('EventPayload type narrowing', () => {
 	it('options is absent for non-CHANGE events', async () => {
 		const captured: EventPayload[] = []
 
-		instance.watch('#foo', (payload) => captured.push(payload), { events: [DOMObserverEvent.ADD] })
+		instance.observe('#foo', (payload) => captured.push(payload), { events: [DOMObserverEvent.ADD] })
 
 		_createElement('foo')
 		await _sleep()
@@ -834,11 +851,11 @@ describe('EventPayload type narrowing', () => {
 		expect(captured[0].options).toBeUndefined()
 	})
 
-	it('wait() resolves ChangePayload with options typed as ChangeOptions after CHANGE guard', async () => {
+	it('observeOnce() resolves ChangePayload with options typed as ChangeOptions after CHANGE guard', async () => {
 		_createElement('foo')
 		setTimeout(() => _modifyElement('#foo', 'class', 'updated'), 50)
 
-		const result = await instance.wait('#foo', { events: [DOMObserverEvent.CHANGE] })
+		const result = await instance.observeOnce('#foo', { events: [DOMObserverEvent.CHANGE] })
 
 		expect(result.event).toBe(DOMObserverEvent.CHANGE)
 		if (result.event === DOMObserverEvent.CHANGE) {
