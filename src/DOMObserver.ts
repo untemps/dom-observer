@@ -21,7 +21,7 @@ export const DOMObserverEvent = {
 export type DOMObserverEventValue = (typeof DOMObserverEvent)[keyof typeof DOMObserverEvent]
 
 /** Convenience array of all event types, used as the default value for the `events` option. */
-export const DOMObserverEvents: DOMObserverEventValue[] = Object.values(DOMObserverEvent)
+export const DOMObserverEvents: readonly DOMObserverEventValue[] = Object.values(DOMObserverEvent)
 
 type ExistEvent = typeof DOMObserverEvent.EXIST
 type AddEvent = typeof DOMObserverEvent.ADD
@@ -110,7 +110,7 @@ export type WaitResult = EventPayload & {
 /** Options accepted by `wait()`. */
 export interface WaitOptions {
 	/** Event types to listen for. Defaults to all four event types. */
-	events?: DOMObserverEventValue[]
+	events?: readonly DOMObserverEventValue[]
 	/** Maximum time in milliseconds to wait before rejecting with a `TimeoutError`. `0` disables the timeout. Must be `0` or a positive finite number — rejects with `InvalidTimeoutError` otherwise. */
 	timeout?: number
 	/** Restrict attribute observation to these attribute names. Passed directly to `MutationObserver.observe()`. */
@@ -126,7 +126,7 @@ export interface WaitOptions {
 /** Options accepted by `watch()`. */
 export interface WatchOptions {
 	/** Event types to listen for. Defaults to all four event types. */
-	events?: DOMObserverEventValue[]
+	events?: readonly DOMObserverEventValue[]
 	/** Restrict attribute observation to these attribute names. Passed directly to `MutationObserver.observe()`. */
 	attributeFilter?: string[]
 	/**
@@ -363,7 +363,7 @@ class DOMObserver {
 			attributeFilter,
 			root,
 			filter,
-		}: { events: DOMObserverEventValue[]; attributeFilter?: string[]; root?: DOMTarget; filter?: FilterCallback },
+		}: { events: readonly DOMObserverEventValue[]; attributeFilter?: string[]; root?: DOMTarget; filter?: FilterCallback },
 		onMatch?: (matchedTarget: DOMTarget) => void
 	): void {
 		const hasExist = events.includes(DOMObserverEvent.EXIST)
