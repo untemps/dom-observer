@@ -1,4 +1,4 @@
-import { DOMObserver } from '../../src'
+import { DOMObserver, DOMObserverEvent } from '../../src'
 
 import { createCard, createTooltip } from './elements'
 import { log } from './log'
@@ -27,27 +27,27 @@ addButton.addEventListener('click', () => {
 	}
 })
 
-const onEvent = ({ node, event, options: { attributeName } = {} }) => {
+const onEvent = ({ node, event, options }) => {
 	switch (event) {
-		case DOMObserver.ADD: {
+		case DOMObserverEvent.ADD: {
 			log(`[ADD]\t\tElement id: ${node.id}`)
 			break
 		}
-		case DOMObserver.REMOVE: {
+		case DOMObserverEvent.REMOVE: {
 			log(`[REMOVE]\tElement id: ${node.id}`)
 			break
 		}
 		default: {
-			log(`[CHANGE]\tElement id: ${node.id} - Attribute: ${attributeName}`)
+			log(`[CHANGE]\tElement id: ${node.id} - Attribute: ${options?.attributeName}`)
 		}
 	}
 }
 
 const tooltipObserver = new DOMObserver()
-tooltipObserver.watch(tooltip, onEvent, { events: [DOMObserver.ADD, DOMObserver.REMOVE] })
+tooltipObserver.watch(tooltip, onEvent, { events: [DOMObserverEvent.ADD, DOMObserverEvent.REMOVE] })
 
 const cardObserver = new DOMObserver()
 cardObserver.wait(`#card`).then(({ node }) => {
 	log(`[ADD]\t\tElement id: ${node.id}`)
-	new DOMObserver().watch(`#card`, onEvent, { events: [DOMObserver.REMOVE, DOMObserver.CHANGE] })
+	new DOMObserver().watch(`#card`, onEvent, { events: [DOMObserverEvent.REMOVE, DOMObserverEvent.CHANGE] })
 })
