@@ -5,8 +5,13 @@ import resolveDOMTarget from './utils/resolveDOMTarget'
 
 export type { DOMTarget }
 
+type ExistEvent = 'DOMObserver_exist'
+type AddEvent = 'DOMObserver_add'
+type RemoveEvent = 'DOMObserver_remove'
+type ChangeEvent = 'DOMObserver_change'
+
 /** Union of all event types emitted by DOMObserver. */
-export type DOMObserverEvent = 'DOMObserver_exist' | 'DOMObserver_add' | 'DOMObserver_remove' | 'DOMObserver_change'
+export type DOMObserverEvent = ExistEvent | AddEvent | RemoveEvent | ChangeEvent
 
 /** Metadata attached to a `CHANGE` event, mirroring the relevant fields of `MutationRecord`. */
 export interface ChangeOptions {
@@ -16,20 +21,62 @@ export interface ChangeOptions {
 	oldValue: string | null
 }
 
-/** Payload delivered to `OnEventCallback` and `FilterCallback`. */
-export interface EventPayload {
+/** Payload for `EXIST` events. `options` is always absent. */
+export interface ExistPayload {
 	/** The matching DOM element. */
 	node: Element
 	/** The event type that fired. */
-	event: DOMObserverEvent
-	/** Additional mutation metadata, present only for `CHANGE` events. */
-	options?: ChangeOptions
+	event: ExistEvent
+	options?: never
 }
+
+/** Payload for `ADD` events. `options` is always absent. */
+export interface AddPayload {
+	/** The matching DOM element. */
+	node: Element
+	/** The event type that fired. */
+	event: AddEvent
+	options?: never
+}
+
+/** Payload for `REMOVE` events. `options` is always absent. */
+export interface RemovePayload {
+	/** The matching DOM element. */
+	node: Element
+	/** The event type that fired. */
+	event: RemoveEvent
+	options?: never
+}
+
+/** Payload for `CHANGE` events. `options` is always present. */
+export interface ChangePayload {
+	/** The matching DOM element. */
+	node: Element
+	/** The event type that fired. */
+	event: ChangeEvent
+	/** Mutation metadata — always present for `CHANGE` events. */
+	options: ChangeOptions
+}
+
+/**
+ * Discriminated union of all event payloads delivered to `OnEventCallback` and `FilterCallback`.
+ * Narrow on `event` to access `options` without optional chaining.
+ *
+ * @example
+ * ```typescript
+ * obs.watch('#foo', ({ event, node, options }) => {
+ *   if (event === DOMObserver.CHANGE) {
+ *     console.log(options.attributeName) // ✅ ChangeOptions — not undefined
+ *   }
+ * })
+ * ```
+ */
+export type EventPayload = ExistPayload | AddPayload | RemovePayload | ChangePayload
 
 /**
  * Callback invoked by `watch()` whenever an observed event occurs.
  *
- * @param payload - Object containing `node`, `event`, and optional `options`.
+ * @param payload - Discriminated union narrowed by `event`.
  */
 export type OnEventCallback = (payload: EventPayload) => void
 
@@ -40,7 +87,7 @@ export type OnEventCallback = (payload: EventPayload) => void
 export type FilterCallback = (payload: EventPayload) => boolean
 
 /** Resolved value of the Promise returned by `wait()`. */
-export interface WaitResult extends EventPayload {
+export type WaitResult = EventPayload & {
 	/** The target entry that triggered the match. Only populated when `wait()` was called with an array of targets. */
 	target?: DOMTarget
 }
@@ -188,10 +235,8 @@ class DOMObserver {
 
 			// onMatch always fires synchronously before fireCallback in _observe, so matchedTarget
 			// is guaranteed to be set before callback runs.
-			const callback: OnEventCallback = ({ node, event, options }) => {
-				const result: WaitResult = options !== undefined ? { node, event, options } : { node, event }
-				if (isMulti) result.target = matchedTarget
-				settle(result)
+			const callback: OnEventCallback = (payload) => {
+				settle(isMulti ? ({ ...payload, target: matchedTarget } as WaitResult) : (payload as WaitResult))
 			}
 
 			if (signal) {
@@ -327,7 +372,7 @@ class DOMObserver {
 		const defaultRoot = resolveDOMTarget(root) ?? document.documentElement
 
 		const fireCallback = (node: Element, event: DOMObserverEvent, opts?: ChangeOptions) => {
-			const payload: EventPayload = opts !== undefined ? { node, event, options: opts } : { node, event }
+			const payload = (opts !== undefined ? { node, event, options: opts } : { node, event }) as EventPayload
 			if (filter && !filter(payload)) return
 			callback(payload)
 		}

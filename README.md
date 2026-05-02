@@ -38,8 +38,8 @@ import { DOMObserver } from '@untemps/dom-observer'
 
 // Track every attribute change on an element
 const observer = new DOMObserver()
-observer.watch('#foo', ({ node, options: { attributeName, oldValue } = {} }) => {
-	console.log(`${attributeName} changed from ${oldValue} to ${node.getAttribute(attributeName)}`)
+observer.watch('#foo', ({ node, options }) => {
+	console.log(`${options?.attributeName} changed from ${options?.oldValue} to ${node.getAttribute(options?.attributeName ?? '')}`)
 }, { events: [DOMObserver.CHANGE] })
 
 // React to every matching node added or removed
@@ -100,15 +100,25 @@ observer.watch('#foo', ({ node, event }) => {
 | - `once`            | Boolean           | When `true`, automatically calls `clear()` after the first matching event. Defaults to `false`.                                                          |
 | - `debounce`        | Number            | Milliseconds to wait after the last mutation before invoking the callback. The callback receives the last mutation's arguments. `0` disables debouncing. |
 | - `root`            | Element or String | DOM element or CSS selector to use as the observation root. Only mutations within this subtree are observed. Defaults to `document.documentElement`.     |
-| - `filter`          | Function          | `({ node, event, options? }) => boolean`. Called before invoking the callback. Return `false` to skip the event and keep observing.                           |
+| - `filter`          | Function          | `(payload: EventPayload) => boolean`. Called before invoking the callback. Return `false` to skip the event and keep observing.                               |
 
-#### `onEvent` callback arguments
+#### `onEvent` callback payload
+
+The callback receives a single `EventPayload` object — a **discriminated union** on `event`. Narrow on `event` to access `options` without optional chaining:
+
+```typescript
+observer.watch('#foo', ({ event, node, options }) => {
+	if (event === DOMObserver.CHANGE) {
+		console.log(options.attributeName) // ✅ ChangeOptions — never undefined here
+	}
+})
+```
 
 | Props             | Type           | Description                                                                 |
 | ----------------- | -------------- | --------------------------------------------------------------------------- |
 | `node`            | Element        | Observed element node                                                       |
 | `event`           | String         | Event that triggered the callback                                           |
-| `options`         | Object         | Present only for `CHANGE` events:                                           |
+| `options`         | Object         | `ChangeOptions` for `CHANGE` events, absent (`never`) for all other events: |
 | - `attributeName` | String         | Name of the attribute that changed                                          |
 | - `oldValue`      | String or null | Value of the attribute before the mutation                                  |
 
@@ -126,14 +136,15 @@ Use the `wait` method to get a Promise that resolves on the **first** matching m
 import { DOMObserver } from '@untemps/dom-observer'
 
 const observer = new DOMObserver()
-const { node, event, options: { attributeName } = {} } = await observer.wait('#foo', { events: [DOMObserver.REMOVE, DOMObserver.CHANGE] })
-switch (event) {
+const result = await observer.wait('#foo', { events: [DOMObserver.REMOVE, DOMObserver.CHANGE] })
+switch (result.event) {
 	case DOMObserver.REMOVE: {
-		console.log('Element ' + node.id + ' has been removed')
+		console.log('Element ' + result.node.id + ' has been removed')
 		break
 	}
 	case DOMObserver.CHANGE: {
-		console.log('Element ' + node.id + ' has been changed (' + attributeName + ')')
+		// options is ChangeOptions here — no fallback needed
+		console.log('Element ' + result.node.id + ' has been changed (' + result.options.attributeName + ')')
 		break
 	}
 }
@@ -169,7 +180,7 @@ Calling `clear()` after `wait()` resolves is safe and is a no-op. If a `timeout`
 | - `attributeFilter` | Array             | List of attribute names to observe (DOMObserver.CHANGE event only)                                                                                       |
 | - `signal`          | AbortSignal       | An `AbortSignal` to cancel the observation. If already aborted, the Promise rejects immediately with an `AbortError`.                                    |
 | - `root`            | Element or String | DOM element or CSS selector to use as the observation root. Only mutations within this subtree are observed. Defaults to `document.documentElement`.     |
-| - `filter`          | Function          | `({ node, event, options? }) => boolean`. Called before resolving the Promise. Return `false` to skip the event and keep waiting.                             |
+| - `filter`          | Function          | `(payload: EventPayload) => boolean`. Called before resolving the Promise. Return `false` to skip the event and keep waiting.                                 |
 
 #### Resolved value
 
@@ -178,7 +189,7 @@ Calling `clear()` after `wait()` resolves is safe and is a no-op. If a `timeout`
 | `node`            | Element               | The matching DOM element                                                                             |
 | `event`           | String                | The event type that caused the Promise to settle                                                     |
 | `target`          | Element, String, or undefined | The entry from the targets array that matched. `undefined` when a single target was passed. |
-| `options`         | Object                | Present only for `CHANGE` events:                                                                    |
+| `options`         | Object                | `ChangeOptions` for `CHANGE` events, absent (`never`) for all other events:                         |
 | - `attributeName` | String                | Name of the attribute that changed                                                                   |
 | - `oldValue`      | String or null        | Value of the attribute before the mutation                                                           |
 
@@ -275,7 +286,7 @@ const onError = (err) => console.error(err.message)
 const observer = new DOMObserver()
 observer.watch(
     '.foo',
-    ({ node, event, options: { attributeName } = {} }) => {
+    ({ node, event, options }) => {
         switch (event) {
             case DOMObserver.EXIST: {
                 console.log('Element ' + node.id + ' exists already')
@@ -290,7 +301,7 @@ observer.watch(
                 break
             }
             case DOMObserver.CHANGE: {
-                console.log('Element ' + node.id + ' has been changed (' + attributeName + ')')
+                console.log('Element ' + node.id + ' has been changed (' + options?.attributeName + ')')
                 break
             }
         }
