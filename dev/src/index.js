@@ -1,4 +1,4 @@
-import { DOMObserver, DOMObserverEvent } from '../../src'
+import { createDOMObserver, DOMObserverEvent } from '../../src'
 
 import { createCard, createTooltip } from './elements'
 import { log } from './log'
@@ -43,11 +43,26 @@ const onEvent = ({ node, event, options }) => {
 	}
 }
 
-const tooltipObserver = new DOMObserver()
+const tooltipObserver = createDOMObserver()
 tooltipObserver.watch(tooltip, onEvent, { events: [DOMObserverEvent.ADD, DOMObserverEvent.REMOVE] })
 
-const cardObserver = new DOMObserver()
-cardObserver.wait(`#card`).then(({ node }) => {
-	log(`[ADD]\t\tElement id: ${node.id}`)
-	new DOMObserver().watch(`#card`, onEvent, { events: [DOMObserverEvent.REMOVE, DOMObserverEvent.CHANGE] })
-})
+const watchCard = () => {
+	createDOMObserver()
+		.wait(`#card`)
+		.then(({ node }) => {
+			log(`[ADD]\t\tElement id: ${node.id}`)
+			const cardWatcher = createDOMObserver()
+			cardWatcher.watch(
+				`#card`,
+				(payload) => {
+					onEvent(payload)
+					if (payload.event === DOMObserverEvent.REMOVE) {
+						cardWatcher.clear()
+						watchCard()
+					}
+				},
+				{ events: [DOMObserverEvent.REMOVE, DOMObserverEvent.CHANGE] }
+			)
+		})
+}
+watchCard()
