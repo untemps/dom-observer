@@ -1,8 +1,9 @@
 import {
 	type ChangeOptions,
 	type ChangePayload,
-	DOMObserver,
+	createDOMObserver,
 	DOMObserverEvent,
+	type DOMObserverInstance,
 	type DOMTarget,
 	type EventPayload,
 	InvalidEventsError,
@@ -15,12 +16,12 @@ import {
 } from '../index'
 
 describe('DOMObserver', () => {
-	let instance: DOMObserver
+	let instance: DOMObserverInstance
 	let node: HTMLElement
 	let onEvent: ReturnType<typeof vi.fn<OnEventCallback>>
 
 	beforeEach(() => {
-		instance = new DOMObserver()
+		instance = createDOMObserver()
 	})
 
 	afterEach(() => {
@@ -29,8 +30,8 @@ describe('DOMObserver', () => {
 		document.body.innerHTML = ''
 	})
 
-	it('Instantiates the class with no error', () => {
-		expect(() => new DOMObserver()).not.toThrow()
+	it('Creates an instance with no error', () => {
+		expect(() => createDOMObserver()).not.toThrow()
 	})
 
 	describe('wait', () => {
@@ -50,7 +51,9 @@ describe('DOMObserver', () => {
 					setTimeout(() => {
 						_removeElement('#foo')
 					}, 100)
-					const { node: foundNode, event } = await instance.wait('#foo', { events: [DOMObserverEvent.REMOVE] })
+					const { node: foundNode, event } = await instance.wait('#foo', {
+						events: [DOMObserverEvent.REMOVE],
+					})
 					expect(foundNode).toEqual(node)
 					expect(event).toBe(DOMObserverEvent.REMOVE)
 				})
@@ -85,9 +88,9 @@ describe('DOMObserver', () => {
 				})
 
 				it('Rejects promise when an element is not found after timeout is elapsed', async () => {
-					await expect(instance.wait('#bar', { events: [DOMObserverEvent.ADD], timeout: 50 })).rejects.toThrow(
-						TimeoutError
-					)
+					await expect(
+						instance.wait('#bar', { events: [DOMObserverEvent.ADD], timeout: 50 })
+					).rejects.toThrow(TimeoutError)
 				})
 
 				it('Rejects the pending promise when wait() is called again', async () => {
@@ -183,7 +186,10 @@ describe('DOMObserver', () => {
 						child.id = 'scoped2'
 						root.appendChild(child)
 					}, 50)
-					const { node } = await instance.wait('#scoped2', { events: [DOMObserverEvent.ADD], root: '#root-scope' })
+					const { node } = await instance.wait('#scoped2', {
+						events: [DOMObserverEvent.ADD],
+						root: '#root-scope',
+					})
 					expect(node.id).toBe('scoped2')
 					root.remove()
 				})
@@ -334,7 +340,9 @@ describe('DOMObserver', () => {
 				second.id = 'removable'
 				document.body.appendChild(second)
 				setTimeout(() => second.remove(), 50)
-				const { node, target } = await instance.wait(['#foo', '#removable'], { events: [DOMObserverEvent.REMOVE] })
+				const { node, target } = await instance.wait(['#foo', '#removable'], {
+					events: [DOMObserverEvent.REMOVE],
+				})
 				expect(node.id).toBe('removable')
 				expect(target).toBe('#removable')
 			})
@@ -344,7 +352,9 @@ describe('DOMObserver', () => {
 				second.id = 'changeable'
 				document.body.appendChild(second)
 				setTimeout(() => second.setAttribute('data-x', '1'), 50)
-				const { node, target } = await instance.wait(['#foo', '#changeable'], { events: [DOMObserverEvent.CHANGE] })
+				const { node, target } = await instance.wait(['#foo', '#changeable'], {
+					events: [DOMObserverEvent.CHANGE],
+				})
 				expect(node.id).toBe('changeable')
 				expect(target).toBe('#changeable')
 				second.remove()
@@ -691,7 +701,12 @@ describe('DOMObserver', () => {
 
 			it('Cancels timeout after the first event when once and timeout are both set', async () => {
 				const onError = vi.fn()
-				instance.watch('#foo', onEvent, { events: [DOMObserverEvent.CHANGE], once: true, timeout: 200, onError })
+				instance.watch('#foo', onEvent, {
+					events: [DOMObserverEvent.CHANGE],
+					once: true,
+					timeout: 200,
+					onError,
+				})
 				_modifyElement('#foo', 'class', 'change1')
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledOnce()
@@ -767,10 +782,10 @@ describe('DOMObserver', () => {
 })
 
 describe('EventPayload type narrowing', () => {
-	let instance: DOMObserver
+	let instance: DOMObserverInstance
 
 	beforeEach(() => {
-		instance = new DOMObserver()
+		instance = createDOMObserver()
 	})
 
 	afterEach(() => {
