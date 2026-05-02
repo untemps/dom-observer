@@ -534,7 +534,7 @@ describe('createDOMObserver', () => {
 				document.body.appendChild(root)
 				const inside = document.createElement('div')
 				inside.id = 'inside2'
-				instance.observe('#inside2', onEvent, { events: [DOMObserverEvent.ADD], root: '#watch-root' })
+				instance.observe('#inside2', onEvent, { events: [DOMObserverEvent.ADD], root: '#observe-root' })
 				root.appendChild(inside)
 				await _sleep()
 				expect(onEvent).toHaveBeenCalledOnce()
