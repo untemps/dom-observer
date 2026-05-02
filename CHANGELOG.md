@@ -1,3 +1,23 @@
+# [5.0.0-beta.6](https://github.com/untemps/dom-observer/compare/v5.0.0-beta.5...v5.0.0-beta.6) (2026-05-02)
+
+
+### Features
+
+* Expose createDOMObserver() factory and remove DOMObserver class export ([#77](https://github.com/untemps/dom-observer/issues/77)) ([8740fa4](https://github.com/untemps/dom-observer/commit/8740fa47db0815ce8aeec314a75ee9ac098036f1))
+
+
+### BREAKING CHANGES
+
+* The DOMObserver class is no longer exported.
+Migration:
+   import { DOMObserver } from '@untemps/dom-observer'
+   const obs = new DOMObserver()
+   let obs: DOMObserver
+→
+   import { createDOMObserver, type DOMObserverInstance } from '@untemps/dom-observer'
+   const obs = createDOMObserver()
+   let obs: DOMObserverInstance
+
 # [5.0.0-beta.5](https://github.com/untemps/dom-observer/compare/v5.0.0-beta.4...v5.0.0-beta.5) (2026-05-02)
 
 
