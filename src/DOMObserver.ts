@@ -152,7 +152,17 @@ export interface WatchOptions {
 	filter?: FilterCallback
 }
 
-class DOMObserver {
+/** Public interface of the observer instance returned by `createDOMObserver()`. */
+export interface DOMObserverInstance {
+	/** `true` while an observation is active, `false` after `clear()` is called or the observation settles. */
+	readonly isObserving: boolean
+	wait(target: DOMTarget, options?: WaitOptions): Promise<WaitResult>
+	wait(targets: DOMTarget[], options?: WaitOptions): Promise<WaitResult>
+	watch(target: DOMTarget, onEvent: OnEventCallback, options?: WatchOptions): this
+	clear(): this
+}
+
+class DOMObserver implements DOMObserverInstance {
 	private _observer: MutationObserver | null = null
 	private _pendingReject: ((error: Error | DOMException) => void) | null = null
 	private _signal: AbortSignal | null = null
@@ -363,7 +373,12 @@ class DOMObserver {
 			attributeFilter,
 			root,
 			filter,
-		}: { events: readonly DOMObserverEventValue[]; attributeFilter?: string[]; root?: DOMTarget; filter?: FilterCallback },
+		}: {
+			events: readonly DOMObserverEventValue[]
+			attributeFilter?: string[]
+			root?: DOMTarget
+			filter?: FilterCallback
+		},
 		onMatch?: (matchedTarget: DOMTarget) => void
 	): void {
 		const hasExist = events.includes(DOMObserverEvent.EXIST)
@@ -456,4 +471,6 @@ class DOMObserver {
 	}
 }
 
-export default DOMObserver
+export function createDOMObserver(): DOMObserverInstance {
+	return new DOMObserver()
+}
