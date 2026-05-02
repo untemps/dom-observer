@@ -37,10 +37,9 @@ Use the `watch` method when you want to be notified **every time** a mutation oc
 import { DOMObserver } from '@untemps/dom-observer'
 
 // Track every attribute change on an element
-// options is always ChangeOptions when events: [DOMObserver.CHANGE]
 const observer = new DOMObserver()
 observer.watch('#foo', ({ node, options }) => {
-	console.log(`${options.attributeName} changed from ${options.oldValue} to ${node.getAttribute(options.attributeName)}`)
+	console.log(`${options?.attributeName} changed from ${options?.oldValue} to ${node.getAttribute(options?.attributeName ?? '')}`)
 }, { events: [DOMObserver.CHANGE] })
 
 // React to every matching node added or removed
