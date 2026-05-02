@@ -2,6 +2,7 @@ import {
 	type ChangeOptions,
 	type ChangePayload,
 	DOMObserver,
+	type DOMTarget,
 	type EventPayload,
 	InvalidEventsError,
 	InvalidOptionsError,
@@ -816,7 +817,7 @@ describe('EventPayload type narrowing', () => {
 
 		expect(result.event).toBe(DOMObserver.CHANGE)
 		if (result.event === DOMObserver.CHANGE) {
-			expectTypeOf(result).toEqualTypeOf<ChangePayload & { target?: string | Element }>()
+			expectTypeOf(result).toEqualTypeOf<ChangePayload & { target?: DOMTarget }>()
 			expect(result.options.attributeName).toBe('class')
 		}
 	})

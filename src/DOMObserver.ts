@@ -5,8 +5,8 @@ import resolveDOMTarget from './utils/resolveDOMTarget'
 
 export type { DOMTarget }
 
-type ExistEvent  = 'DOMObserver_exist'
-type AddEvent    = 'DOMObserver_add'
+type ExistEvent = 'DOMObserver_exist'
+type AddEvent = 'DOMObserver_add'
 type RemoveEvent = 'DOMObserver_remove'
 type ChangeEvent = 'DOMObserver_change'
 
@@ -178,7 +178,6 @@ class DOMObserver {
 	 * @param target - CSS selector, Element, or array of either to observe.
 	 * @param options - Observation options.
 	 * @returns A Promise that resolves with the matching node, event type, and optional change metadata.
-	 *   Narrow on `result.event` before accessing `result.options` to avoid optional chaining: `if (result.event === DOMObserver.CHANGE) { result.options.attributeName }`.
 	 * @throws `InvalidEventsError` when the `events` array is empty.
 	 * @throws `InvalidTimeoutError` when `timeout` is negative, `NaN`, or `Infinity`.
 	 * @throws `InvalidTargetError` when any target string is not a valid CSS selector.
