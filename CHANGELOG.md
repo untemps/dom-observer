@@ -1,3 +1,23 @@
+# [5.0.0-beta.5](https://github.com/untemps/dom-observer/compare/v5.0.0-beta.4...v5.0.0-beta.5) (2026-05-02)
+
+
+### Features
+
+* Replace static class properties with exported DOMObserverEvent const ([#76](https://github.com/untemps/dom-observer/issues/76)) ([2733b44](https://github.com/untemps/dom-observer/commit/2733b44578979d00b2c700d1c291fe9b1d91966b))
+
+
+### BREAKING CHANGES
+
+* Static class properties removed.
+Migration:
+   DOMObserver.ADD    → DOMObserverEvent.ADD
+   DOMObserver.EXIST  → DOMObserverEvent.EXIST
+   DOMObserver.REMOVE → DOMObserverEvent.REMOVE
+   DOMObserver.CHANGE → DOMObserverEvent.CHANGE
+   DOMObserver.EVENTS → DOMObserverEvents
+   type DOMObserverEvent → type DOMObserverEventValue
+A global find-and-replace handles most cases. The type rename only affects code that references DOMObserverEvent as a TypeScript type (not as a value).
+
 # [5.0.0-beta.4](https://github.com/untemps/dom-observer/compare/v5.0.0-beta.3...v5.0.0-beta.4) (2026-05-02)
 
 
