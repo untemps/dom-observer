@@ -1,8 +1,8 @@
 # @untemps/dom-observer
 
-Class to observe DOM mutations of a specific element in one-shot or continuous mode.
+Observe DOM mutations of a specific element in one-shot or continuous mode.
 
-The class is a wrapper around the MutationObserver API to target an element in particular.  
+A factory-based wrapper around the MutationObserver API targeting a specific element.  
 That means you can observe an element to be added to the DOM and access to its properties, an attribute from that element to be changed and get the old and the new values, the element to be removed from the DOM and destroy all its dependencies.
 
 ![npm](https://img.shields.io/npm/v/@untemps/dom-observer?style=for-the-badge)
@@ -17,16 +17,16 @@ yarn add @untemps/dom-observer
 
 ## Usage
 
-Import `DOMObserver`:
+Import `createDOMObserver`:
 
 ```javascript
-import { DOMObserver, DOMObserverEvent } from '@untemps/dom-observer'
+import { createDOMObserver, DOMObserverEvent } from '@untemps/dom-observer'
 ```
 
-Create an instance of `DOMObserver`:
+Create an observer instance:
 
 ```javascript
-const observer = new DOMObserver()
+const observer = createDOMObserver()
 ```
 
 ### Watch for recurring mutations
@@ -34,16 +34,16 @@ const observer = new DOMObserver()
 Use the `watch` method when you want to be notified **every time** a mutation occurs — for instance, tracking all successive attribute changes on an element or reacting to every matching node added to the DOM.
 
 ```javascript
-import { DOMObserver, DOMObserverEvent } from '@untemps/dom-observer'
+import { createDOMObserver, DOMObserverEvent } from '@untemps/dom-observer'
 
 // Track every attribute change on an element
-const observer = new DOMObserver()
+const observer = createDOMObserver()
 observer.watch('#foo', ({ node, options }) => {
 	console.log(`${options?.attributeName} changed from ${options?.oldValue} to ${node.getAttribute(options?.attributeName ?? '')}`)
 }, { events: [DOMObserverEvent.CHANGE] })
 
 // React to every matching node added or removed
-const listObserver = new DOMObserver()
+const listObserver = createDOMObserver()
 listObserver.watch('.list-item', ({ node, event }) => {
 	if (event === DOMObserverEvent.ADD) console.log(`Item added: ${node.textContent}`)
 	if (event === DOMObserverEvent.REMOVE) console.log(`Item removed: ${node.textContent}`)
@@ -75,7 +75,7 @@ observer.watch('#progress', ({ node }) => {
 Pass a `timeout` to automatically stop the observation if no matching mutation occurs within the allotted time:
 
 ```javascript
-const observer = new DOMObserver()
+const observer = createDOMObserver()
 observer.watch('#foo', ({ node, event }) => {
 	console.log(`Event: ${event}`)
 }, {
@@ -133,9 +133,9 @@ observer.watch('#foo', ({ event, node, options }) => {
 Use the `wait` method to get a Promise that resolves on the **first** matching mutation.
 
 ```javascript
-import { DOMObserver, DOMObserverEvent } from '@untemps/dom-observer'
+import { createDOMObserver, DOMObserverEvent } from '@untemps/dom-observer'
 
-const observer = new DOMObserver()
+const observer = createDOMObserver()
 const result = await observer.wait('#foo', { events: [DOMObserverEvent.REMOVE, DOMObserverEvent.CHANGE] })
 switch (result.event) {
 	case DOMObserverEvent.REMOVE: {
@@ -162,7 +162,7 @@ console.log(`Matched: ${target}`)
 Once the first matching mutation occurs, the Promise resolves and the observation stops automatically — the internal observer is disconnected and all state is reset before the Promise settles. `isObserving` is `false` immediately after `await`:
 
 ```javascript
-const observer = new DOMObserver()
+const observer = createDOMObserver()
 const { node } = await observer.wait('#foo')
 console.log(observer.isObserving) // false — auto-cleared on resolution
 ```
@@ -217,11 +217,26 @@ One or more events can be passed to the `events` option of `wait` or `watch`. By
 The `isObserving` getter returns `true` when an observation is currently active:
 
 ```javascript
-const observer = new DOMObserver()
+const observer = createDOMObserver()
 observer.watch('#foo', ({ node, event }) => { /* ... */ })
 console.log(observer.isObserving) // true
 observer.clear()
 console.log(observer.isObserving) // false
+```
+
+### TypeScript: typing observer instances
+
+Use the exported `DOMObserverInstance` type to annotate variables that hold an observer:
+
+```typescript
+import { createDOMObserver, type DOMObserverInstance } from '@untemps/dom-observer'
+
+let observer: DOMObserverInstance
+
+function setup() {
+    observer = createDOMObserver()
+    observer.watch('#foo', ({ node }) => doSomething(node))
+}
 ```
 
 ### Discard observation
@@ -238,9 +253,9 @@ observer.clear().watch('#bar', onEvent)
 > **Note:** Calling `wait()` or `watch()` on an instance that already has a pending `wait()` Promise will automatically reject that Promise with an `ObservationAbortedError` before starting the new observation. Handle this rejection if necessary:
 >
 > ```javascript
-> import { DOMObserver, ObservationAbortedError } from '@untemps/dom-observer'
+> import { createDOMObserver, ObservationAbortedError } from '@untemps/dom-observer'
 >
-> const observer = new DOMObserver()
+> const observer = createDOMObserver()
 > observer.wait('#foo').catch((err) => {
 >     if (err instanceof ObservationAbortedError) return // replaced by a new observation
 >     throw err
@@ -254,8 +269,9 @@ observer.clear().watch('#bar', onEvent)
 The library exports typed `Error` subclasses for reliable error handling with `instanceof` checks:
 
 ```typescript
-import { DOMObserver, DOMObserverEvent, TimeoutError, ObservationAbortedError } from '@untemps/dom-observer'
+import { createDOMObserver, DOMObserverEvent, TimeoutError, ObservationAbortedError } from '@untemps/dom-observer'
 
+const observer = createDOMObserver()
 try {
     await observer.wait('#foo', { timeout: 500 })
 } catch (e) {
@@ -279,11 +295,11 @@ try {
 ## Example
 
 ```javascript
-import { DOMObserver, DOMObserverEvent } from '@untemps/dom-observer'
+import { createDOMObserver, DOMObserverEvent } from '@untemps/dom-observer'
 
 // Continuous observation with timeout
 const onError = (err) => console.error(err.message)
-const observer = new DOMObserver()
+const observer = createDOMObserver()
 observer.watch(
     '.foo',
     ({ node, event, options }) => {

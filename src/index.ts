@@ -3,6 +3,7 @@ export type {
 	ChangeOptions,
 	ChangePayload,
 	DOMObserverEventValue,
+	DOMObserverInstance,
 	DOMTarget,
 	EventPayload,
 	ExistPayload,
@@ -13,7 +14,7 @@ export type {
 	WaitResult,
 	WatchOptions,
 } from './DOMObserver'
-export { default as DOMObserver, DOMObserverEvent, DOMObserverEvents } from './DOMObserver'
+export { createDOMObserver, DOMObserverEvent, DOMObserverEvents } from './DOMObserver'
 export {
 	InvalidEventsError,
 	InvalidOptionsError,
