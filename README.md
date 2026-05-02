@@ -168,7 +168,7 @@ Once the first matching mutation occurs, the Promise resolves and the observatio
 ```javascript
 const instance = createDOMObserver()
 const { node } = await instance.observeOnce('#foo')
-console.log(instance.isObserving) // false — auto-cleared on resolution
+console.log(instance.isObserving) // false — auto-disconnected on resolution
 ```
 
 Calling `disconnect()` after `observeOnce()` resolves is safe and is a no-op. If a `timeout` is set and elapses before any matching mutation, the Promise rejects with a `TimeoutError`.
