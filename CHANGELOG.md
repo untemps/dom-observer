@@ -1,3 +1,22 @@
+# [5.0.0-beta.7](https://github.com/untemps/dom-observer/compare/v5.0.0-beta.6...v5.0.0-beta.7) (2026-05-02)
+
+
+### Features
+
+* Rename watch/wait/clear to observe/observeOnce/disconnect ([#78](https://github.com/untemps/dom-observer/issues/78)) ([bd6e2b3](https://github.com/untemps/dom-observer/commit/bd6e2b335e119b37a08d6e8d5fc457759310cdf0))
+
+
+### BREAKING CHANGES
+
+* Three methods and three types renamed.
+Migration:
+   .watch(target, cb, opts)  → .observe(target, cb, opts)
+   .wait(target, opts) → .observeOnce(target, opts)
+   .clear() → .disconnect()
+   WatchOptions → ObserveOptions
+   WaitOptions → ObserveOnceOptions
+   WaitResult → ObserveOnceResult
+
 # [5.0.0-beta.6](https://github.com/untemps/dom-observer/compare/v5.0.0-beta.5...v5.0.0-beta.6) (2026-05-02)
 
 
