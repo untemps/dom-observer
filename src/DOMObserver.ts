@@ -5,13 +5,28 @@ import resolveDOMTarget from './utils/resolveDOMTarget'
 
 export type { DOMTarget }
 
-type ExistEvent = 'DOMObserver_exist'
-type AddEvent = 'DOMObserver_add'
-type RemoveEvent = 'DOMObserver_remove'
-type ChangeEvent = 'DOMObserver_change'
+/** Enumeration of all event types emitted by DOMObserver. */
+export const DOMObserverEvent = {
+	/** Fired synchronously when the target element is already present in the DOM at observation time. */
+	EXIST: 'DOMObserver_exist',
+	/** Fired when the target element is added to the DOM. */
+	ADD: 'DOMObserver_add',
+	/** Fired when the target element is removed from the DOM. */
+	REMOVE: 'DOMObserver_remove',
+	/** Fired when an attribute of the target element changes. */
+	CHANGE: 'DOMObserver_change',
+} as const
 
-/** Union of all event types emitted by DOMObserver. */
-export type DOMObserverEvent = ExistEvent | AddEvent | RemoveEvent | ChangeEvent
+/** Union of all event type values emitted by DOMObserver. */
+export type DOMObserverEventValue = (typeof DOMObserverEvent)[keyof typeof DOMObserverEvent]
+
+/** Convenience array of all event types, used as the default value for the `events` option. */
+export const DOMObserverEvents: DOMObserverEventValue[] = Object.values(DOMObserverEvent)
+
+type ExistEvent = typeof DOMObserverEvent.EXIST
+type AddEvent = typeof DOMObserverEvent.ADD
+type RemoveEvent = typeof DOMObserverEvent.REMOVE
+type ChangeEvent = typeof DOMObserverEvent.CHANGE
 
 /** Metadata attached to a `CHANGE` event, mirroring the relevant fields of `MutationRecord`. */
 export interface ChangeOptions {
@@ -65,7 +80,7 @@ export interface ChangePayload {
  * @example
  * ```typescript
  * obs.watch('#foo', ({ event, node, options }) => {
- *   if (event === DOMObserver.CHANGE) {
+ *   if (event === DOMObserverEvent.CHANGE) {
  *     console.log(options.attributeName) // ✅ ChangeOptions — not undefined
  *   }
  * })
@@ -95,7 +110,7 @@ export type WaitResult = EventPayload & {
 /** Options accepted by `wait()`. */
 export interface WaitOptions {
 	/** Event types to listen for. Defaults to all four event types. */
-	events?: DOMObserverEvent[]
+	events?: DOMObserverEventValue[]
 	/** Maximum time in milliseconds to wait before rejecting with a `TimeoutError`. `0` disables the timeout. Must be `0` or a positive finite number — rejects with `InvalidTimeoutError` otherwise. */
 	timeout?: number
 	/** Restrict attribute observation to these attribute names. Passed directly to `MutationObserver.observe()`. */
@@ -111,7 +126,7 @@ export interface WaitOptions {
 /** Options accepted by `watch()`. */
 export interface WatchOptions {
 	/** Event types to listen for. Defaults to all four event types. */
-	events?: DOMObserverEvent[]
+	events?: DOMObserverEventValue[]
 	/** Restrict attribute observation to these attribute names. Passed directly to `MutationObserver.observe()`. */
 	attributeFilter?: string[]
 	/**
@@ -138,17 +153,6 @@ export interface WatchOptions {
 }
 
 class DOMObserver {
-	/** Fired synchronously when the target element is already present in the DOM at observation time. */
-	static EXIST = 'DOMObserver_exist' as const satisfies DOMObserverEvent
-	/** Fired when the target element is added to the DOM. */
-	static ADD = 'DOMObserver_add' as const satisfies DOMObserverEvent
-	/** Fired when the target element is removed from the DOM. */
-	static REMOVE = 'DOMObserver_remove' as const satisfies DOMObserverEvent
-	/** Fired when an attribute of the target element changes. */
-	static CHANGE = 'DOMObserver_change' as const satisfies DOMObserverEvent
-	/** Convenience array containing all four event types, used as the default value for the `events` option. */
-	static EVENTS: DOMObserverEvent[] = [DOMObserver.EXIST, DOMObserver.ADD, DOMObserver.REMOVE, DOMObserver.CHANGE]
-
 	private _observer: MutationObserver | null = null
 	private _pendingReject: ((error: Error | DOMException) => void) | null = null
 	private _signal: AbortSignal | null = null
@@ -187,7 +191,7 @@ class DOMObserver {
 	wait(
 		target: DOMTarget | DOMTarget[],
 		{
-			events = DOMObserver.EVENTS,
+			events = DOMObserverEvents,
 			timeout = 0,
 			attributeFilter = undefined,
 			signal = undefined,
@@ -286,7 +290,7 @@ class DOMObserver {
 		target: DOMTarget,
 		onEvent: OnEventCallback,
 		{
-			events = DOMObserver.EVENTS,
+			events = DOMObserverEvents,
 			attributeFilter = undefined,
 			timeout = 0,
 			onError = undefined,
@@ -359,19 +363,19 @@ class DOMObserver {
 			attributeFilter,
 			root,
 			filter,
-		}: { events: DOMObserverEvent[]; attributeFilter?: string[]; root?: DOMTarget; filter?: FilterCallback },
+		}: { events: DOMObserverEventValue[]; attributeFilter?: string[]; root?: DOMTarget; filter?: FilterCallback },
 		onMatch?: (matchedTarget: DOMTarget) => void
 	): void {
-		const hasExist = events.includes(DOMObserver.EXIST)
-		const hasAdd = events.includes(DOMObserver.ADD)
-		const hasRemove = events.includes(DOMObserver.REMOVE)
-		const hasChange = events.includes(DOMObserver.CHANGE)
+		const hasExist = events.includes(DOMObserverEvent.EXIST)
+		const hasAdd = events.includes(DOMObserverEvent.ADD)
+		const hasRemove = events.includes(DOMObserverEvent.REMOVE)
+		const hasChange = events.includes(DOMObserverEvent.CHANGE)
 
 		const targets = Array.isArray(target) ? target : [target]
 		const resolvedTargets = targets.map((t) => ({ target: t, el: resolveDOMTarget(t) }))
 		const defaultRoot = resolveDOMTarget(root) ?? document.documentElement
 
-		const fireCallback = (node: Element, event: DOMObserverEvent, opts?: ChangeOptions) => {
+		const fireCallback = (node: Element, event: DOMObserverEventValue, opts?: ChangeOptions) => {
 			const payload = (opts !== undefined ? { node, event, options: opts } : { node, event }) as EventPayload
 			if (filter && !filter(payload)) return
 			callback(payload)
@@ -380,7 +384,7 @@ class DOMObserver {
 		const nodeMatchesTarget = (node: Node, t: DOMTarget): boolean =>
 			node === t || (!isElement(t) && (node as Element).matches?.(t as string))
 
-		const notify = (node: Node, event: DOMObserverEvent) => {
+		const notify = (node: Node, event: DOMObserverEventValue) => {
 			for (const { target: t } of resolvedTargets) {
 				if (nodeMatchesTarget(node, t)) {
 					onMatch?.(t)
@@ -394,7 +398,7 @@ class DOMObserver {
 			for (const { target: t, el } of resolvedTargets) {
 				if (el) {
 					onMatch?.(t)
-					fireCallback(el, DOMObserver.EXIST)
+					fireCallback(el, DOMObserverEvent.EXIST)
 					break
 				}
 			}
@@ -403,14 +407,14 @@ class DOMObserver {
 		this._observer = new MutationObserver((mutations) => {
 			mutations.forEach(({ type, target: targetNode, addedNodes, removedNodes, attributeName, oldValue }) => {
 				if (type === 'childList' && (hasAdd || hasRemove)) {
-					if (hasAdd) for (const node of addedNodes) notify(node, DOMObserver.ADD)
-					if (hasRemove) for (const node of removedNodes) notify(node, DOMObserver.REMOVE)
+					if (hasAdd) for (const node of addedNodes) notify(node, DOMObserverEvent.ADD)
+					if (hasRemove) for (const node of removedNodes) notify(node, DOMObserverEvent.REMOVE)
 				}
 				if (type === 'attributes' && hasChange) {
 					for (const { target: t } of resolvedTargets) {
 						if (nodeMatchesTarget(targetNode, t)) {
 							onMatch?.(t)
-							fireCallback(targetNode as Element, DOMObserver.CHANGE, { attributeName, oldValue })
+							fireCallback(targetNode as Element, DOMObserverEvent.CHANGE, { attributeName, oldValue })
 							break
 						}
 					}
