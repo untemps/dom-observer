@@ -471,7 +471,6 @@ class DOMObserver implements DOMObserverInstance {
 	}
 }
 
-/** Creates and returns a new DOM observer instance. */
 export function createDOMObserver(): DOMObserverInstance {
 	return new DOMObserver()
 }
