@@ -184,7 +184,7 @@ Calling `disconnect()` after `observeOnce()` resolves is safe and is a no-op. If
 | - `attributeFilter` | Array             | List of attribute names to observe (DOMObserverEvent.CHANGE event only)                                                                                       |
 | - `signal`          | AbortSignal       | An `AbortSignal` to cancel the observation. If already aborted, the Promise rejects immediately with an `AbortError`.                                    |
 | - `root`            | Element or String | DOM element or CSS selector to use as the observation root. Only mutations within this subtree are observed. Defaults to `document.documentElement`.     |
-| - `filter`          | Function          | `(payload: EventPayload) => boolean`. Called before resolving the Promise. Return `false` to skip the event and keep waiting.                                 |
+| - `filter`          | Function          | `(payload: EventPayload) => boolean`. Called before resolving the Promise. Return `false` to skip the event and keep observing.                                 |
 
 #### Resolved value
 
@@ -249,6 +249,9 @@ Call the `disconnect()` method to stop the active observation. It returns `this`
 
 ```javascript
 const instance = createDOMObserver()
+instance.observe('#foo', onEvent)
+
+// Stop observation
 instance.disconnect()
 
 // Stop and immediately restart with a different target

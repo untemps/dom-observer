@@ -119,7 +119,7 @@ export interface ObserveOnceOptions {
 	signal?: AbortSignal
 	/** DOM element or CSS selector to use as the observation root. Defaults to `document.documentElement`. */
 	root?: DOMTarget
-	/** Predicate applied to every matched node before resolving. Return `false` to skip the event and keep waiting. */
+	/** Predicate applied to every matched node before resolving. Return `false` to skip the event and keep observing. */
 	filter?: FilterCallback
 }
 
