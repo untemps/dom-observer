@@ -1,3 +1,75 @@
+# [5.0.0](https://github.com/untemps/dom-observer/compare/v4.8.0...v5.0.0) (2026-07-13)
+
+
+### Features
+
+* Auto-disconnect observer after wait() resolves ([#70](https://github.com/untemps/dom-observer/issues/70)) ([63174dc](https://github.com/untemps/dom-observer/commit/63174dc7b47e5fb242d74a35a9971e313cd55c9f))
+* Change callback signature to single payload object ([#72](https://github.com/untemps/dom-observer/issues/72)) ([75ed2ea](https://github.com/untemps/dom-observer/commit/75ed2ea526c419d039427e27dbea403c40a515c5))
+* Expose createDOMObserver() factory and remove DOMObserver class export ([#77](https://github.com/untemps/dom-observer/issues/77)) ([1c849fd](https://github.com/untemps/dom-observer/commit/1c849fd781b05d9dd43325434b659300cc832b25))
+* Make callback payload a discriminated union based on event type ([#75](https://github.com/untemps/dom-observer/issues/75)) ([6fca345](https://github.com/untemps/dom-observer/commit/6fca3450ac8e8ae3867ba631690cdede04157231))
+* Rename watch/wait/clear to observe/observeOnce/disconnect ([#78](https://github.com/untemps/dom-observer/issues/78)) ([54f6f5d](https://github.com/untemps/dom-observer/commit/54f6f5da0b58f147416c8cdf9b066d07f5a9b385))
+* Replace magic string errors with typed Error subclasses ([#71](https://github.com/untemps/dom-observer/issues/71)) ([00edff7](https://github.com/untemps/dom-observer/commit/00edff7859a183e55a422d3ffa9be4cff55af8a4))
+* Replace static class properties with exported DOMObserverEvent const ([#76](https://github.com/untemps/dom-observer/issues/76)) ([1d0ce51](https://github.com/untemps/dom-observer/commit/1d0ce519332e13e6d4333a404626c659f8752f0b))
+
+
+### BREAKING CHANGES
+
+* Three methods and three types renamed.
+Migration:
+   .watch(target, cb, opts)  → .observe(target, cb, opts)
+   .wait(target, opts) → .observeOnce(target, opts)
+   .clear() → .disconnect()
+   WatchOptions → ObserveOptions
+   WaitOptions → ObserveOnceOptions
+   WaitResult → ObserveOnceResult
+* The DOMObserver class is no longer exported.
+Migration:
+   import { DOMObserver } from '@untemps/dom-observer'
+   const obs = new DOMObserver()
+   let obs: DOMObserver
+→
+   import { createDOMObserver, type DOMObserverInstance } from '@untemps/dom-observer'
+   const obs = createDOMObserver()
+   let obs: DOMObserverInstance
+* Static class properties removed.
+Migration:
+   DOMObserver.ADD    → DOMObserverEvent.ADD
+   DOMObserver.EXIST  → DOMObserverEvent.EXIST
+   DOMObserver.REMOVE → DOMObserverEvent.REMOVE
+   DOMObserver.CHANGE → DOMObserverEvent.CHANGE
+   DOMObserver.EVENTS → DOMObserverEvents
+   type DOMObserverEvent → type DOMObserverEventValue
+A global find-and-replace handles most cases. The type rename only affects code that references DOMObserverEvent as a TypeScript type (not as a value).
+* EventPayload and WaitResult are now type aliases, not interfaces. Code using `extends EventPayload`, `extends WaitResult`, or `implements` either type must migrate to intersection types:
+// Before
+interface MyPayload extends EventPayload { extra: string }
+// After
+type MyPayload = EventPayload & { extra: string }
+Code that accesses `options?.attributeName` defensively continues to compile without changes.
+* OnEventCallback and FilterCallback now receive a single EventPayload object instead of three positional arguments.
+Before:
+   obs.watch('#foo', (node, event, options) => { ... })
+   obs.watch('#foo', (node, event, options) => { ... }, { filter: (node, event, options) => ... })
+After:
+   obs.watch('#foo', ({ node, event, options }) => { ... })
+   obs.watch('#foo', ({ node, event, options }) => { ... }, { filter: ({ node, event, options }) => ... }
+Migration is mechanical: wrap the parameter list in braces.
+The EventPayload type is exported for explicit annotation.
+* DOMObserverErrors constants and DOMObserverErrorCode type are removed. All throws and rejections now use typed Error subclasses. Consumers who matched on error message strings must migrate to instanceof checks.
+Error messages no longer carry [TIMEOUT]/[ABORT]/[EVENTS]/[TARGET] prefixes.
+The AbortSignal rejection path (DOMException, name: 'AbortError') is unchanged.
+* wait() now clears internal state synchronously before the Promise resolves, instead of relying on .finally() for deferred cleanup.
+Before: 
+   const { node } = await obs.wait('#foo')
+   obs.isObserving // true — observer still running at this point
+After:
+   const { node } = await obs.wait('#foo')
+   obs.isObserving // false — cleared before promise settles
+Affected scenarios:
+   - Code checking obs.isObserving === true after await obs.wait() must update that expectation to false.
+   - Code calling obs.clear() after wait() resolves continues to work (no-op).
+   - Code relying on the timeout timer firing after resolution: cleanup now happens at resolution time, not when the timer would have expired.
+
 # [4.8.0](https://github.com/untemps/dom-observer/compare/v4.7.0...v4.8.0) (2026-04-28)
 
 
