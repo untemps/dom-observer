@@ -1,9 +1,8 @@
 # @untemps/dom-observer
 
-Observe DOM mutations of a specific element in one-shot or continuous mode.
+Factory-based, zero-dependency wrapper around the MutationObserver API to track a specific DOM element in one-shot or continuous mode.
 
-A factory-based wrapper around the MutationObserver API targeting a specific element.  
-That means you can observe an element to be added to the DOM and access to its properties, an attribute from that element to be changed and get the old and the new values, the element to be removed from the DOM and destroy all its dependencies.
+You can observe an element to be added to the DOM and access to its properties, an attribute from that element to be changed and get the old and the new values, the element to be removed from the DOM and destroy all its dependencies.
 
 ![npm](https://img.shields.io/npm/v/@untemps/dom-observer?style=for-the-badge)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/untemps/dom-observer/publish.yml?style=for-the-badge)](https://github.com/untemps/dom-observer/actions)

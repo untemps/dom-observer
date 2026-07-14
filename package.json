@@ -1,13 +1,25 @@
 {
 	"name": "@untemps/dom-observer",
 	"version": "5.0.0",
-	"description": "Observe DOM mutations with a factory-based API",
+	"description": "Factory-based, zero-dependency wrapper around the MutationObserver API to track a specific DOM element in one-shot or continuous mode.",
 	"repository": "git@github.com:untemps/dom-observer.git",
 	"keywords": [
 		"dom",
-		"mutations-observer",
+		"mutation-observer",
+		"mutationobserver",
+		"dom-mutations",
+		"dom-observer",
+		"watch-element",
+		"wait-for-element",
+		"attribute-change",
 		"factory",
-		"typescript"
+		"promise",
+		"debounce",
+		"abortsignal",
+		"css-selector",
+		"zero-dependency",
+		"typescript",
+		"browser"
 	],
 	"author": "Vincent Le Badezet <v.lebadezet@untemps.net>",
 	"license": "MIT",
